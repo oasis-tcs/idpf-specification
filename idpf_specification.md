@@ -33,7 +33,7 @@ None of the standard interfaces available in the market provide for all these ne
 
 This is an abstraction of a physical or emulated Network PCIE Device as seen by the driver. It is modeled as having internally a **data path** component that carries out Packet handling and a **control plane** component that is used to configure and monitor the operations of the data-path.  An IDPF Device has the same interface whether used as a Physical Function (PF) PCIe device, a Virtual Function (VF) device (when virtualization is used) , or a composed PCIe entity. It is also Operating-system agnostic, and does not impose assumptions on the implementation of conformant Devices.
 
-![Figure 1 : Network Function Device Overview](Diagrams/IDPF_device.pdf)
+![Figure 1 : Network Function Device Overview](Diagrams/network_function_device_overview.svg)
 
 
 
