@@ -180,12 +180,12 @@ The Driver shall start the Mailbox communication with the Control plane by first
 VF/PF posts its highest supported version number to the CP (Control Plane Agent). CP responds with its virtchannel version number in the same format, along with a return code. Reply from CP has CP’s virtchannel major/minor versions.
 
 If there is a major version mismatch, then the VF/PF goes to the lowest version of virtchannel as the CP is assumed to support at least version 2.0 of virtchannel. If there is a minor version mismatch, then the PF/VF can operate but should add a warning to the system log.
-
+```C
     struct virtchnl_version_info {
 	    u32 major;
 	    u32 minor;
     };
-
+```
 ## Driver versioning
 
 The spec does not define a driver version, and this is maintained strictly to identify the revisions of driver codes and features.
@@ -199,7 +199,7 @@ For multiple generations of devices to support this interface, there is a small 
 Virtchannel is a SW protocol defined on top of a Device supported mailbox in case of a passthrough sideband going directly to Device. Device as mentioned previously can be a HW or a SW Device.
 
 ## Virtchannel Descriptor Structure
-
+```C
     struct virtchnl2_descriptor {
     __le16 flags;
     __le16 opcode;
@@ -217,7 +217,7 @@ Virtchannel is a SW protocol defined on top of a Device supported mailbox in cas
     __le32 addr_high;
     __le32 addr_low;
     };
-
+```
 ## Mailbox queues (Device Backed or SW emulated)
 
 The driver holds a transmit and receive mailbox queue pair for communication with the CP.
