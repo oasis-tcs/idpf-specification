@@ -124,3 +124,126 @@ All device capabilities and offloads are negotiable; this allows for running the
 
 Since the capabilities are negotiated with the device, this allows the Device Control Plane to enforce SLAs by creating templates of capabilities and offloads to expose to the Interface.
 
+# PCIE Host Interface
+
+## Device identification 
+
+The IDPF will use the following device IDs (Vendor ID = 0x8086), Device ID = 0x1452 as a PF device and 0x145c as a VF Device). The RevID  can be used by OEMs to specify different revisions of the Device. The subvendor and subsystem IDs are TBD.
+
+## BARs
+
+IDPF functions shall expose two BARs:
+
+* BAR0 (32 bits) or BAR0-1 (64 bits) that includes the registers described in the Registers section. This BAR size depends on the number of resources exposed by the function
+
+* BAR2 (32 bits) or BAR2-3 (64 bits) that includes the MSI-X vectors. The location of the vectors and the PBA bits shall be pointed by the standard MSI-X capability registers. The IMS vectors may be mapped in the BAR also.
+
+## PCIe capabilities
+
+The following capabilities shall be part of an IDPF function configuration space:
+
+* Power Management
+* MSI-X. MSI support is optional.
+* PCI Express
+
+The following capabilities shall be part of an IDPF function that exposes SR-IOV functions:
+
+* ARI
+* SR-IOV
+
+The following capabilities shall be part of an IDPF function that  exposes ADIs through SIOV:
+
+* SIOV DVSEC
+
+Other capabilities like ATS, VPD, serial number and others are optional and may be exposed based on the specific hardware capabilities. 
+
+## PCIE MMIO (Memory Mapped IO) map  
+
+### Registers
+
+Fixed: Mailbox registers. See register Register Section
+
+Flexible: Queue and Interrupt registers. See Register section.
+
+Note : When the driver writes a device register and then reads that same register the device might return the old register value (value before the register write) unless the driver keeps 2 ms latency between the write access and the read accesses.
+ 
+# Versioning (Device, Driver, virtchannel version)
+
+## Device versioning
+
+As mentioned in the Device identification, a Device ID and Subdev ID defines the Device version. A base Device ID for PF and VF Device is defined and a subdev ID of zero as a default for the device. The Device ID and subdev ID can be used to have separate register offsets for the fixed portions of register space such as the mailbox. 
+
+## Virtchannel: Mailbox protocol versioning
+
+The Driver shall start the Mailbox communication with the Control plane by first negotiating the mailbox protocol version that both can support. The information is passed in the mailbox buffer pointed to by the mailbox command descriptor.
+
+VF/PF posts its highest supported version number to the CP (Control Plane Agent). CP responds with its virtchannel version number in the same format, along with a return code. Reply from CP has CP’s virtchannel major/minor versions.
+
+If there is a major version mismatch, then the VF/PF goes to the lowest version of virtchannel as the CP is assumed to support at least version 2.0 of virtchannel. If there is a minor version mismatch, then the PF/VF can operate but should add a warning to the system log.
+
+    struct virtchnl_version_info {
+	    u32 major;
+	    u32 minor;
+    };
+
+## Driver versioning
+
+The spec does not define a driver version, and this is maintained strictly to identify the revisions of driver codes and features.
+
+# Compatibility Requirements
+
+For multiple generations of devices to support this interface, there is a small base set of interface definitions that needs to be fixed.
+
+# Virtchannel and Mailbox Queue
+
+Virtchannel is a SW protocol defined on top of a Device supported mailbox in case of a passthrough sideband going directly to Device. Device as mentioned previously can be a HW or a SW Device.
+
+## Virtchannel Descriptor Structure
+
+    struct virtchnl2_descriptor {
+    __le16 flags;
+    __le16 opcode;
+    __le16 datalen;
+    union {
+	    __le16 retval;
+	    __le16 pfid_vfid;
+    };
+    __le32 v_opcode:28;
+    __le32 v_dtype:4
+    __le32 v_retval;
+    __le32 reserved;
+    __le16 sw_cookie;
+    __le16 v_flags;
+    __le32 addr_high;
+    __le32 addr_low;
+    };
+
+## Mailbox queues (Device Backed or SW emulated)
+
+The driver holds a transmit and receive mailbox queue pair for communication with the CP.
+
+For both RX and TX queues the interface is like the “In order, single queue model” (see RX In order single queue model and TX In order single queue model) LAN (Local Area Network) queue with the following exceptions:
+
+* TX mailbox:
+  * The Maximum packet size is 4KB.
+  * Packet is pointed by a single 32B descriptor. Packet data resides in a single buffer.
+  * Packet can be a zero-byte packet (in that case, the descriptor does not point to a data buffer).
+  * Device reports completion (descriptor write back) for every mailbox packet/descriptor, which will be received into the RX Mailbox queue.
+* RX mailbox:
+  * SW fills the RX queue with 32B descriptors that point to 4KB buffers.
+  * The Maximum packet size is 4KB. RX packet data resides in a single buffer.
+  * Packet can be a zero-byte packet (in that case, data buffer remains empty).
+  * RX mailbox is set by device as fast drop in absence of sufficient RX descriptors/buffers posted by the driver, in order to avoid DDoS and blocking of the pipe.
+
+The mailbox queues CSRs (Control Status Registers) are in fixed addresses and are described in Appendix Section [- PF/VF- Mailbox Queues]().
+
+## Mailbox descriptor formats
+
+Both queues use the same descriptor structure for command posting (TX descriptor format) and command completion (RX descriptor format). 
+All descriptors and commands are defined using little endian notation with 32-bit words. Drivers using other conventions should take care to do the proper conversions.
+
+Mailbox commands are
+* Indirect – commands, which in addition to Descriptor info, can carry an additional payload buffer of up to 4KB (pointed by “Data address high/low”).
+
+### Generic Descriptor fields description
+
