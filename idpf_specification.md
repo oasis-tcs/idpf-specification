@@ -92,4 +92,35 @@ Each virtchannel message and the capabilities for which they are used and the fl
     
       The device’s Data-path reads the next TX request Descriptor from this queue and uses its content to read the data to be transmitted from the buffers, and processes them into one or more outgoing packets sent to the destination.
     
-      The device then indicates to the SW that the data has been transmitted by building “TX Completion Descriptors” and placing them in a “TX Completion queue” which is the Device-to-Host  part of the queue-pair used for this vPort. 
+      The device then indicates to the SW that the data has been transmitted by building “TX Completion Descriptors” and placing them in a “TX Completion queue” which is the Device-to-Host  part of the queue-pair used for this vPort.
+
+## Modularization
+
+When configuring device resources, care was taken that data structures group the resources into categories such as
+
+* DMA Resources: Example: queues
+* PCIE Resources: Example: Interrupts, Virtual functions
+* Network resource: Example vPort 
+
+## Composition
+
+The IDPF interface does not make any assumption about how the device is composed, whether it is a complete passthrough Device like an SRIOV interface or a PF interface or a composed device such as an SIOV device. Some parts of the device memory space can be passthrough and parts of the device memory space can be emulated in the backend SW or a completely emulated device.
+
+## Live Migration
+
+The Host interface Specification is designed to support Live migration assisted by the device, although there is no assumption that the driver needs to do anything special for Live Migration of the VM; the design concepts such as abstraction of device resources etc.  keep live migratability in mind.
+
+## Adaptability and Elasticity
+
+IDPF allows for adding or removing any of the offloads and capabilities based on what the device can support or not. Also, the Capability Negotiation Protocol allows for extending capabilities in the future.
+
+IDPF allows for supporting more than one vPort through the same PCIE device interface to provide dedicated resources and control for a Software network interface that can be tied to individual applications, namespaces, containers etc.
+
+## Negotiation
+
+All device capabilities and offloads are negotiable; this allows for running the driver on a huge set of physical, virtual, or emulated devices.
+
+## Profiling
+
+Since the capabilities are negotiated with the device, this allows the Device Control Plane to enforce SLAs by creating templates of capabilities and offloads to expose to the Interface.
+
