@@ -247,3 +247,122 @@ Mailbox commands are
 
 ### Generic Descriptor fields description
 
+| Name | Bytes.Bits | Description | 
+| ---- | ---------- | ----------- |
+| Flags.DD | 0.0 | This flag indicates that  the current descriptor is done and processed by hardware or IDPF.|
+| Flags.CMP| 0.1 | This flag indicates the current descriptor is Completed and processed by hardware or IDPF. This is part of the legacy format and needs to be set together with Flag.DD in cases defined below.|
+| Flags.Reserved | 0.2-1.1 | Reserved for hardware uses.|
+| Flags.RD | 1.2 |This flag can be coupled with Flag.BUF from below to indicate Mailbox TX Hardware that IDPF provides data in an additional buffer (pointed by Data Address low/high below) to be sent to CP in Mailbox command.<br />Not relevant for the RX queue. |
+| Flags.VFC | 1.3 |This flag indicates that command is sent by IDPF running on VF.|
+| Flags.BUF | 1.4 |This flag indicates that a buffer exists for this descriptor, used for RX descriptor advertisement. For TX, it needs to be set together with Flag.RD.|
+| Flags.Reserved | 1.5 – 1.7| Reserved for hardware uses.|
+| Message Infrastructure Type | 2-3| TX Side:<br />0x0801 – “Send to CP” opcode.<br />The driver may use this command to send a mailbox message to its CP.<br />Other opcodes will be rejected and not sent to the destination.<br /><br />RX side: 0x0804– “Send to Peer IDPF Driver” opcode.<br />The driver will receive this opcode inside descriptors coming from CP.|
+| Message Data Length | 4-5 | Attached buffer length in bytes (this field is set to 0 when buffer is not attached). Up to 4KB. Used only when Flag.BUFF and optionally Flag.RD(TX case) are set.|
+| Hardware Return Value | 6-7 | Hardware Return value, which indicates that Descriptor was processed by Hardware successfully. Relevant when Flag.DD and CMP are set for descriptor.|
+| VirtChnl Message Opcode | 8-11.3 | Includes VirtChnl opcode value,. i.e. VIRTCHNL2_OP_GET_CAPS = 500.<br />Opcodes 0x0000 - 0x7FFF are in use.<br />Codes 0x8000-0xFFFF - are reserved.<br />Note: The upper 4 bits in byte 11 are reserved for the VirtChnl descriptor Format.
+| VirtChnl Descriptor Type | 11.4-11.7 | v_dtype, default value is 0 but can be used in future to enhance the VirtChnl descriptor format.<br />Values 1-7 are reserved for future expansion. Values 8-15 are reserved for OEM descriptor formats.|
+| VirtChnl Message Return Value | 12-15 | VirtChnl Command return value sent by CP will be received here. Not relevant for TX.|
+| Message Parameter 0 | 16-19 | Can be used to include message parameter|
+| SW Cookie | 20-21 | Used for cookies to be delivered to the receiver.|
+| VirtChnl Flags | 22-23 | When a Flags capability is negotiated, it can be used to give more direction to CP whether a response is required etc.|
+| Data Address high / Message Parameter 2 | 24-27 | When RD and BUF are set, describe the attached buffer address.<br />Else, used as a third general use as additional parameter.|
+| Data Address low / Message Parameter 3 | 28-31 | When RD and BUF are set, describe the attached buffer address.<br />Else, used as a fourth general use additional parameter.|
+
+### TX descriptor Command Submit format
+
+The table below describes the descriptor structure fields, which are expected to be filled by the driver before incrementing Mailbox TX Queue Tail.
+All fields inside the TX descriptor, which are not provided by the sender, but are expected to be filled by the responder (output fields) should be set to 0 by the sender.
+
+| Name | Bytes.Bits | Description | 
+| ---- | ---------- | ----------- |
+| Flags.DD | 0.0 | Should be set to 0.|
+| Flags.CMP| 0.1 | Should be set to 0.|
+| Flags.Reserved | 0.2-1.1 |Should be set to 0.|
+| Flags.RD | 1.2 | Set by the IDPF when a buffer is attached to this Command. |
+| Flags.VFC | 1.3 |Should be set to 0.|
+| Flags.BUF | 1.4 |Set by the IDPF when a buffer is attached to this Command.|
+| Flags.Reserved | 1.5 – 1.7| Should be set to 0.|
+| Message Infrastructure Type | 2-3| 0x0801 – “Send to CP” opcode.<br />The driver uses this command opcode only to send a mailbox message to its CP.<br />Other opcodes will be rejected and not sent to the destination.|
+| Message Data Length | 4-5 | Attached buffer length in bytes (this field is set to 0 when buffer is not attached). Up to 4KB.|
+| Hardware Return Value | 6-7 |Should be set to 0. |
+| VirtChnl Message Opcode | 8-11.3 | Includes VirtChnl opcode value,. i.e. VIRTCHNL2_OP_GET_CAPS = 500.<br />Opcodes 0x0000 - 0x7FFF are in use.<br />Codes 0x8000-0xFFFF - are reserved.<br />Note: The upper 4 bits in byte 11 are reserved for the VirtChnl descriptor Format.|
+| VirtChnl Descriptor Type | 11.4-11.7 | v_dtype, default value is 0 but can be used in future to enhance the VirtChnl descriptor format.<br />Values 1-7 are reserved for future expansion. Values 8-15 are reserved for OEM descriptor formats.|
+| VirtChnl Message Return Value | 12-15 | Should be set to 0.|
+| Message Parameter 0 | 16-19 | Can be used to include message parameter|
+| SW Cookie | 20-21 | Used for cookies to be delivered to the receiver.|
+| VirtChnl Flags | 22-23 | When a Flags capability is negotiated, it can be used to give more direction to CP whether a response is required etc.|
+| Data Address high / Message Parameter 2 | 24-27 | When RD and BUF are set, describe the attached buffer address.<br />Else, used as a third general use parameter. Copied to the RX packet descriptor of the receiver.|
+| Data Address low / Message Parameter 3 | 28-31 | When RD and BUF are set, describe the attached buffer address.<br />Else, used as a fourth general use parameter Copied to the RX packet descriptor of the receiver.|
+
+### TX descriptor command Completed format
+
+This is the TX descriptor view, after it was processed and sent by the Device, while Flag.DD = 1 indicated this. This is an indication for the sender driver that the current TX descriptor and its buffer are completed by hardware and can be reused for a new command. Command’s response will be then received asynchronously into the RX Mailbox queue.
+
+| Name | Bytes.Bits | Description | 
+| ---- | ---------- | ----------- |
+| Flags.DD | 0.0 | Descriptor done.<br />Should be set to 1 by Device.|
+| Flags.CMP| 0.1 | Complete.<br />Should be set to 1 by Device.|
+| Flags.Reserved | 0.2-1.1 | Should be ignored by Driver.|
+| Flags.RD | 1.2 | Should be ignored by Driver.|
+| Flags.VFC | 1.3 |Should be ignored by Driver.|
+| Flags.BUF | 1.4 |Should be ignored by Driver.|
+| Flags.Reserved | 1.5 – 1.7| Should be ignored by Driver.|
+| Message Infrastructure Type | 2-3 | Preserve the field value in the descriptor.|
+| Message Data Length | 4-5 | Preserve the field value in the descriptor.|
+| Hardware Return Value | 6-7 | Expected to be set to 0 (Success) by Device.|
+| VirtChnl Message Opcode | 8-11.3 | Includes VirtChnl opcode value,. i.e. VIRTCHNL2_OP_GET_CAPS = 500.<br />Opcodes 0x0000 - 0x7FFF are in use.<br />Codes 0x8000-0xFFFF - are reserved.<br />Note: The upper 4 bits in byte 11 are reserved for the VirtChnl descriptor Format.|
+| VirtChnl Descriptor Type | 11.4-11.7 | v_dtype, default value is 0 but can be used in future to enhance the VirtChnl descriptor format.<br />Values 1-7 are reserved for future expansion. Values 8-15 are reserved for OEM descriptor formats.|
+| VirtChnl Message Return Value | 12-15 | Should be set to 0.|
+| Message Parameter 0 | 16-19 | Can be used to include message parameter|
+| SW Cookie | 20-21 | Used for cookies to be delivered to the receiver.|
+| VirtChnl Flags | 22-23 | When a Flags capability is negotiated, it can be used to give more direction to CP whether a response is required etc.|
+| Data Address high / Message Parameter 2 | 24-27 | Preserve the field value in the descriptor.|
+| Data Address low / Message Parameter 3 | 28-31 | Preserve the field value in the descriptor.|
+
+### RX descriptor command Submit format
+
+The driver must advertise empty RX descriptors into Mailbox RX queues,potentially including free 4KB buffers. During free descriptor preparation, the driver will clear any unused fields (including unused Flags) and set data pointers and data length to a mapped DMA pointer, see table below.
+
+| Name | Bytes.Bits | Description | 
+| ---- | ---------- | ----------- |
+| Flags.DD | 0.0 | |
+| Flags.CMP| 0.1 | |
+| Flags.Reserved | 0.2-1.1 | |
+| Flags.RD | 1.2 | |
+| Flags.VFC | 1.3 ||
+| Flags.BUF | 1.4 ||
+| Flags.Reserved | 1.5 – 1.7| |
+| Message Infrastructure Type | 2-3 | |
+| Message Data Length | 4-5 | |
+| Hardware Return Value | 6-7 | |
+| VirtChnl Message Opcode | 8-11.3 | |
+| VirtChnl Descriptor Type | 11.4-11.7 | |
+| VirtChnl Message Return Value | 12-15 | |
+| Message Parameter 0 | 16-19 | |
+| SW Cookie | 20-21 | |
+| VirtChnl Flags | 22-23 | |
+| Data Address high / Message Parameter 2 | 24-27 | |
+| Data Address low / Message Parameter 3 | 28-31 | |
+
+| Name | Bytes.Bits | Description | 
+| ---- | ---------- | ----------- |
+| Flags.DD | 0.0 | |
+| Flags.CMP| 0.1 | |
+| Flags.Reserved | 0.2-1.1 | |
+| Flags.RD | 1.2 | |
+| Flags.VFC | 1.3 ||
+| Flags.BUF | 1.4 ||
+| Flags.Reserved | 1.5 – 1.7| |
+| Message Infrastructure Type | 2-3 | |
+| Message Data Length | 4-5 | |
+| Hardware Return Value | 6-7 | |
+| VirtChnl Message Opcode | 8-11.3 | |
+| VirtChnl Descriptor Type | 11.4-11.7 | |
+| VirtChnl Message Return Value | 12-15 | |
+| Message Parameter 0 | 16-19 | |
+| SW Cookie | 20-21 | |
+| VirtChnl Flags | 22-23 | |
+| Data Address high / Message Parameter 2 | 24-27 | |
+| Data Address low / Message Parameter 3 | 28-31 | |
+
+
