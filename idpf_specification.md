@@ -325,44 +325,150 @@ The driver must advertise empty RX descriptors into Mailbox RX queues,potentiall
 
 | Name | Bytes.Bits | Description | 
 | ---- | ---------- | ----------- |
-| Flags.DD | 0.0 | |
-| Flags.CMP| 0.1 | |
-| Flags.Reserved | 0.2-1.1 | |
-| Flags.RD | 1.2 | |
-| Flags.VFC | 1.3 ||
-| Flags.BUF | 1.4 ||
-| Flags.Reserved | 1.5 – 1.7| |
-| Message Infrastructure Type | 2-3 | |
-| Message Data Length | 4-5 | |
-| Hardware Return Value | 6-7 | |
-| VirtChnl Message Opcode | 8-11.3 | |
-| VirtChnl Descriptor Type | 11.4-11.7 | |
-| VirtChnl Message Return Value | 12-15 | |
-| Message Parameter 0 | 16-19 | |
-| SW Cookie | 20-21 | |
-| VirtChnl Flags | 22-23 | |
-| Data Address high / Message Parameter 2 | 24-27 | |
-| Data Address low / Message Parameter 3 | 28-31 | |
+| Flags.DD | 0.0 | Should be set to 0.|
+| Flags.CMP| 0.1 | Should be set to 0.|
+| Flags.Reserved | 0.2-1.1 | Should be set to 0.|
+| Flags.RD | 1.2 | Should be set to 0.|
+| Flags.VFC | 1.3 |Should be set to 0.|
+| Flags.BUF | 1.4 |Receive queue elements should always have an additional buffer. Should be set to 1.|
+| Flags.Reserved | 1.5 – 1.7| Should be set to 0.|
+| Message Infrastructure Type | 2-3 | Should be set to 0.|
+| Message Data Length | 4-5 | Attached buffer length in bytes (this field is set to 4KB to advertise maximum buffer length)|
+| Hardware Return Value | 6-7 | Should be set to 0.|
+| VirtChnl Message Opcode | 8-11.3 | Should be set to 0.<br />Note: The upper 4 bits in byte 11 are reserved for the VirtChnl descriptor Format.|
+| VirtChnl Descriptor Type | 11.4-11.7 |v_dtype, default value is 0 but can be used in future to enhance the VirtChnl descriptor format.<br />Values 1-7 are reserved for future expansion. Values 8-15 are reserved for OEM descriptor formats.|
+| VirtChnl Message Return Value | 12-15 | Should be set to 0.|
+| Message Parameter 0 | 16-19 | Should be set to 0.|
+| SW Cookie | 20-21 | Used for cookies to be delivered to the receiver.|
+| VirtChnl Flags | 22-23 | 
+When a Flags capability is negotiated, it can be used to give more direction to CP whether a response is required etc.|
+| Data Address high / Message Parameter 2 | 24-27 | As BUF is always set - 4KB buffer address to be pointed.|
+| Data Address low / Message Parameter 3 | 28-31 | As BUF is always set - 4KB buffer address to be pointed.|
+
+### RX descriptor command Completed format
+
+When a mailbox command arrives from the device to Driver RX Mailbox Queue, it will use previously advertised RX descriptors and additional 4KB buffers  and fill it with mailbox command data. This structure defines what fields will be seen by the driver.
 
 | Name | Bytes.Bits | Description | 
 | ---- | ---------- | ----------- |
-| Flags.DD | 0.0 | |
-| Flags.CMP| 0.1 | |
-| Flags.Reserved | 0.2-1.1 | |
-| Flags.RD | 1.2 | |
-| Flags.VFC | 1.3 ||
-| Flags.BUF | 1.4 ||
-| Flags.Reserved | 1.5 – 1.7| |
-| Message Infrastructure Type | 2-3 | |
-| Message Data Length | 4-5 | |
-| Hardware Return Value | 6-7 | |
-| VirtChnl Message Opcode | 8-11.3 | |
-| VirtChnl Descriptor Type | 11.4-11.7 | |
-| VirtChnl Message Return Value | 12-15 | |
-| Message Parameter 0 | 16-19 | |
-| SW Cookie | 20-21 | |
-| VirtChnl Flags | 22-23 | |
-| Data Address high / Message Parameter 2 | 24-27 | |
-| Data Address low / Message Parameter 3 | 28-31 | |
+| Flags.DD | 0.0 | Descriptor done.<br />Should be set to 1 by the device.|
+| Flags.CMP| 0.1 | Complete.<br />Should be set to 1 by the device.|
+| Flags.Reserved | 0.2-1.1 | Should be ignored by Driver.|
+| Flags.RD | 1.2 | Should be ignored by Driver.|
+| Flags.VFC | 1.3 |Should be ignored by Driver.|
+| Flags.BUF | 1.4 |0 - no buffer data is attached to the incoming command.<br />1 - buffer data is attached to the incoming command.|
+| Flags.Reserved | 1.5 – 1.7| Should be ignored by Driver.|
+| Opcode | 2-3 | Should be ignored by Driver.|
+| Message Data Length | 4-5 | Attached buffer length in bytes (this field is set to 0 when buffer is not attached). Up to 4KB|
+| Hardware Return Value | 6-7 | Should be ignored by Driver.|
+| VirtChnl Message Opcode | 8-11.3 | Includes Internal virtChnl opcode value, all 32 bits. i.e. VIRTCHNL_OP_GET_CAPS = 100.<br />Opcodes 0x0000 - 0x7FFF are in use.<br />Codes 0x8000-0xFFFF - are reserved.<br />Note: The upper 4 bits in byte 11 are reserved for the VirtChnl descriptor Format.|
+| VirtChnl Descriptor Type | 11.4-11.7 | v_dtype, default value is 0 but can be used in future to enhance the VirtChnl descriptor format.<br />Values 1-7 are reserved for future expansion.<br />Values 8-15 are reserved for OEM descriptor formats.|
+| VirtChnl Message Return Value | 12-15 | Should be set to 0.|
+| Message Parameter 0 | 16-19 | Can be used to include message parameter|
+| SW Cookie | 20-21 | Used for cookies to be delivered to the receiver.|
+| VirtChnl Flags | 22-23 | When a Flags capability is negotiated, it can be used to give more direction to CP whether a response is required etc.|
+| Data Address high / Message Parameter 2 | 24-27 | When BUF is set, it specifies the attached buffer address (the one was advertised by the driver previously).<br />Else, used as a third general use parameter copied from the TX packet descriptor.|
+| Data Address low / Message Parameter 3 | 28-31 | When BUF is set, it describes the attached buffer address (the one was advertised by the driver previously).<br />Else, used as a fourth general use parameter copied from the TX packet descriptor.|
+
+## Mailbox Flows
+
+### Mailbox Initialization flow
+
+Most of the Mailbox queues initialization is done by default by CP, while the IDPF driver needs to provide rings’ description and enable the queues using MMIO registers access. Here are the configuration to be performed by driver:
+
+1. The driver clears the head and tail register for its TX/RX queues - PF/VF_MBX_ATQT, PF/VF_MBX_ARQT, PF/VF_MBX_ATQH, PF/VF_MBX_ARQH.
+2. The driver programs the base address PF/VF_MBX_ATQBAL/H and PF/VF_MBX_ARQBAL/H (must be 128B aligned)
+3. The driver set the PF/VF_MBX_ARQLEN/PF/VF_MBX_ATQLEN.Length and “Enable” field to 1 to signal that its mailbox is now enabled.
+
+Driver must follow this exact sequence of operations in order to initialize the mailbox queue context.
+After this Driver writes the first message to TX mailbox and waits for 20 msec for response, if no response it tries at least 10 times with a gap of 20 msec before it fails to load the driver.
+
+### Mailbox Queues Disable
+
+The mailbox queues are disabled by the CP ONLY while the driver cannot directly disable its own mailbox queues. 
+
+Any queue disable request (clearing of the PF/VF_MBX_ARQLEN/PF/VF_MBX_ATQLEN.Enable flag ) from the driver can be ignored by Device. 
+
+### Mailbox Queues Operation
+
+As stated above Mailbox queues in both directions operate as “In order Single Queue Model”.
+
+On the TX mailbox queue the IDPF driver moves the Tail pointer of the ring to notify device to transmit new mailbox packet while device informs the driver that packet was transmitted by overriding the descriptor with DD bit set.
+
+On the RX queue IDPF driver moves the Tail pointer of the ring to notify the device that new buffers are available to use in the RX queue while the device notifies the driver that the packet was received into the queue by overriding the descriptor with DD bit set.
+
+Note that the driver must not use the device head pointer to understand the device progress.
+
+There several Mailbox specific operations to be done by IDPF for Mailbox queues, here they are:
+
+TX direction:
+
+* IDPF reads the PF/VF_MBX_ATQLEN.Enable field to check if value is 1 before posting packets/buffers to the TX/RX queue. This in order to verify that the queue is enabled and commands can be posted. If the queue is found disabled, this means that the queue was disabled by CP and IDPF is expected to be under FLR and need to perform Function Level Reset flow as described in chapter below Function Level reset.
+* IDPF fills buffer with Command data, IDPF fills descriptor structure with proper information.
+* IDPF increases Tail (PF/VF_MBX_ATQT) by 1 to send commands to the device.
+* The device transmits the TX packet and overrides the TX descriptor  of the transmitted packet in the descriptor queue.
+* IDPF polls the TX descriptor queue for completed descriptors (or waits for interrupt to be launched).
+* The descriptor that belongs to completed packets are ones with the DD flag set.
+
+RX direction:
+
+* IDPF adds descriptors to the RX queue pointing to empty buffers and then sends the Tail point to notify the device that buffers are available.
+* The device receives the RX packet, writes it to the host memory and then overrides the RX descriptor of the received packet in the descriptor queue.
+* IDPF polls the RX descriptor queue for completed descriptors (or waits for interrupt to be launched).
+* The descriptor that belongs to completed packets are ones with the DD flag set.
+IDPF reads the additional buffer (“Data Address low/high”), which arrives together with the mailbox command.
+* After all command information is fetched from the ring, IDPF advertise new free descriptor to the RX ring, as described in “RX descriptor command submit format” above and move Tail (PF/VF_MBX_ATQT) by 1 to make it available for device.  
+
+# Data Queues
+
+TX and RX queue types are valid in single as well as split queue models. With Split Queue model, 2 additional types are introduced - TX_COMPLETION and RX_BUFFER. In split queue model, RX corresponds to the queue where Device posts completions.
+
+## LAN RX queues
+
+A receive descriptor queue is made of a list of descriptors that point to memory buffers in host memory for storing received packet data of a particular queue.
+
+Each queue is a cyclic ring made of a sequence of receive descriptors in contiguous memory. 
+A packet may be stored in a single receive descriptor or spread across multiple receive descriptors, depending on the size of the buffers associated with the receive descriptor and the size of the received packet.
+
+This section describes the different RX queue modes supported by this specification, describes how SW posts new RX descriptors for Device, and describes how Device indicates to SW that it can reuse the buffers and descriptors for new packets.
+The mode of operation is a per queue configuration. Each queue can be configured to work in a different model:
+
+* In order single queue model. 
+  This option is supported only when VIRTCHNL2_CAP_RXQ_MODEL_SPLIT feature is negotiated. 
+* Out of order split queue model.
+  This option is supported only when VIRTCHNL2_CAP_RXQ_MODEL_SINGLE feature is negotiated. 
+
+The device must negotiate at least one of the features above.
+
+The minimal and maximal buffers sizes that are supported by HW are negotiable HW capabilities.
+The possible values and default values (in the absence of negotiation) of those capabilities are described in the RX packet/buffer sub-section under the HW capabilities section.
+
+Note that the device is not obligated to check the maximal packet length of a packet delivered to driver.
+
+### In order single queue model
+
+In the single queue model, the same descriptor queue is used by SW to post descriptors to Device and used by Device to report completed descriptors to SW.
+
+SW writes the packet descriptors to the queue and updates the QRX_TAIL register to point to the descriptor after the last descriptor written by SW (points to the first descriptor owned by SW).
+Tail pointer should be updated in 8 descriptors granularity. 
+
+After Device writes the packet to the data buffers (pointed by the fetched descriptors) it reports a completion of a received packet by overriding the packet descriptors in ring with the write format descriptor (as described in LAN Receive Descriptor Write Back Formats).
+
+In this model, completions are reported “in order” - according to the packet placement order in the queue.
+
+The diagram below illustrates the descriptors’ Device/SW ownership based on the Tail pointer:
+
+* TAIL pointer represents the following descriptor after last descriptor written to the ring by SW.
+* HEAD pointer represents the following descriptor after last descriptor written by Device.
+* White descriptors (owned by Device) are waiting to be processed by Device or currently processed by Device.
+* Blue descriptors (owned by SW) were already processed by Device and can be reused again by SW.
+* Zero descriptor are owned by Device when TAIL == HEAD
+* The SW should never set the TAIL to a value above the HEAD minus 1.
+
+![Descriptor](Diagrams/descriptor.PNG)
+
+![Device Receive Descriptor](Diagrams/device_receive_desc.png)
+
+
 
 
