@@ -1367,9 +1367,7 @@ Descriptor fields layout:
 <th>RXDID</th>
 <th>6b</th>
 <th><p>RXDID</p>
-<p>Setting of this field is described at <a
-href="https://wiki.ith.intel.com/display/NIC20/LAN+Receive+Descriptors?src=sidebar">LAN
-Receive Descriptors</a>.</p></th>
+<p>Setting of this field is described at LAN Receive Descriptors.</p></th>
 </tr>
 <tr class="header">
 <th>0</th>
@@ -3374,35 +3372,19 @@ them.</span>
 
 ### MSI-X mode 
 
-> MSI-X enables multiple interrupts for the PFs/VFs.
->
-> MSI-X is exposed in the [MSI-X
-> capability](https://wiki.ith.intel.com/display/NIC20/PCIe+Endpoint+Configuration+Space#PCIeEndpointConfigurationSpace-MSI-Xcapability) structure
-> in the PCI configuration space of all PFs and VFs. The number of
-> supported MSI-X vectors is defined by the "table size" parameters in
-> the MSI-X capability structure in the PCI configuration space of the
-> PFs and the VFs. The "table size" parameters are loaded from the NVM
-> for each PF and for each of its VFs following FLR.
->
-> MSI-X is enabled by the OS using the "MSI-X Enable" flag in the "MSI-X
-> Capability" structure in the PCI configuration space per PF or VF.
-> Also, masking a vector can be done by the OS using the relevant "Mask"
-> bit per MSI-X vector in the "MSI-X Table Structure".
+MSI-X enables multiple interrupts for the PFs/VFs.
+
+MSI-X is exposed in the MSI-X capability structure in the PCI configuration space of all PFs and VFs. The number of supported MSI-X vectors is defined by the "table size" parameters in the MSI-X capability structure in the PCI configuration space of the PFs and the VFs. The "table size" parameters are loaded from the NVM for each PF and for each of its VFs following FLR.
+
+MSI-X is enabled by the OS using the "MSI-X Enable" flag in the "MSI-X Capability" structure in the PCI configuration space per PF or VF. Also, masking a vector can be done by the OS using the relevant "Mask" bit per MSI-X vector in the "MSI-X Table Structure".
 
 ### Pending Bit Array (PBA)
 
-> On top of the interrupt signaling, the PCIe function also supports the
-> standard PBA structure in the MSI-X BAR. The PBA is relevant only when
-> MSI-X is enabled. It is described as part of the "MSI-X Capability"
-> structure for the PFs and the VFs. 
->
-> A bit in the PBA is set to 1 when an interrupt is triggered internally
-> and is cleared when the interrupt message is sent.
->
-> For a given function, a write to the PF_PBA_CLEAR or VF_PBA_CLEAR
-> register with the function related vector number in the VECTOR field
-> will clear the matching PBA bit. In order to avoid races, the PBA
-> register should be read again before the interrupt is re-enabled.
+On top of the interrupt signaling, the PCIe function also supports the standard PBA structure in the MSI-X BAR. The PBA is relevant only when MSI-X is enabled. It is described as part of the "MSI-X Capability" structure for the PFs and the VFs. 
+
+A bit in the PBA is set to 1 when an interrupt is triggered internally and is cleared when the interrupt message is sent.
+
+For a given function, a write to the PF_PBA_CLEAR or VF_PBA_CLEAR register with the function related vector number in the VECTOR field will clear the matching PBA bit. In order to avoid races, the PBA register should be read again before the interrupt is re-enabled.
 
 ## Interrupt Enable Procedure 
 
@@ -3410,12 +3392,8 @@ Interrupt enablement by the driver is done via the INTENA flag in the
 VF/PFINT_DYN_CTL_N registers. (VF/PFINT_DYN_CTL_N is per vector control
 register while N represents the function vector index.).
 
-- Upon interrupt assertion, the INTENA flag is automatically cleared by
-  > HW. This prevents new interrupts from being issued until the
-  > interrupt is enabled once again by SW.
-
-- Software enables the interrupt by setting the INTENA flag and clearing
-  > NO_INT_MODE flag in the relevant VF/PFINT_DYN_CTL_N register.
+- Upon interrupt assertion, the INTENA flag is automatically cleared by HW. This prevents new interrupts from being issued until the interrupt is enabled once again by SW.
+- Software enables the interrupt by setting the INTENA flag and clearing NO_INT_MODE flag in the relevant VF/PFINT_DYN_CTL_N register.
 
 Setting or clearing *INTENA*, not as part of an interrupt handling
 routine, might lead to race conditions and therefore it is expected that
@@ -3431,82 +3409,44 @@ trigger an interrupt.
 
 ### Transmit Queues 
 
-> Each transmit queue is a potential interrupt cause client. The
-> following events of the queue are considered as transmit events that
-> can trigger an interrupt:
+Each transmit queue is a potential interrupt cause client. The following events of the queue are considered as transmit events that can trigger an interrupt:
 
-- In case a packet generates a completion, when packet completion is
-  > written the completion queue (split queue model) or when packet
-  > descriptor is written to the descriptor queue (single queue model).
+- In case a packet generates a completion, when packet completion is written the completion queue (split queue model) or when packet descriptor is written to the descriptor queue (single queue model).
+- In case a packet did not generate a completion (in order queue model, sparse RS bit setting), when packet processing is completed by the device.
 
-- In case a packet did not generate a completion (in order queue model,
-  > sparse RS bit setting), when packet processing is completed by the
-  > device.
+When an interrupt is issued, SW should assume that the descriptor/completion of the latest packet processed by the device for that queue was written to the descriptor/completion queue regardless of if the packet generated a completion or not. (Before an interrupt is issued, the device writes the descriptor/completion of the latest packet processed for the queue).
 
-> When an interrupt is issued, SW should assume that the
-> descriptor/completion of the latest packet processed by the device for
-> that queue was written to the descriptor/completion queue regardless
-> of if the packet generated a completion or not. (Before an interrupt
-> is issued, the device writes the descriptor/completion of the latest
-> packet processed for the queue).
->
-> Transmit queue ‘n’ can be enabled for interrupts by the IDPF using
-> configuration flows described below. The TX queues can be mapped to
-> any interrupt vector within the function space and mapped to any of
-> its ITRs.
+Transmit queue ‘n’ can be enabled for interrupts by the IDPF using configuration flows described below. The TX queues can be mapped to any interrupt vector within the function space and mapped to any of its ITRs.
 
 ### Receive Queues 
 
-> Each receive queue is a potential interrupt cause client. The
-> following events of the queue are considered as a receive event that
-> can trigger an interrupt :
+Each receive queue is a potential interrupt cause client. The following events of the queue are considered as a receive event that can trigger an interrupt :
 
-- When packet descriptors are written the completion queue (split queue
-  > model) or to the RX descriptor queue (single queue model).
+- When packet descriptors are written the completion queue (split queue model) or to the RX descriptor queue (single queue model).
 
-> When an interrupt is issued , SW should assume that the
-> descriptor/completion of all packets processed by the device for that
-> queue were written to the completion queue.
->
-> Receive queue ‘n’ can be enabled for interrupts by the IDPF using
-> configuration flows described below. The queues can be mapped to any
-> interrupt vector within the function space and mapped to any of its
-> ITRs.
+When an interrupt is issued , SW should assume that the descriptor/completion of all packets processed by the device for that queue were written to the completion queue.
+
+Receive queue ‘n’ can be enabled for interrupts by the IDPF using configuration flows described below. The queues can be mapped to any interrupt vector within the function space and mapped to any of its ITRs.
 
 ### Receive buffer queues 
 
-> Each receive buffer queue in “split queue model” is a potential
-> interrupt cause client. The following events of the queue are
-> considered as a receive event that can trigger an interrupt:
+Each receive buffer queue in “split queue model” is a potential interrupt cause client. The following events of the queue are considered as a receive event that can trigger an interrupt:
 
-- Head WB reporting (as described in “Out of order split queue model”
-  > section) is triggered if packet descriptors are fetched from host
-  > memory and the notification stride is crossed.
+- Head WB reporting (as described in “Out of order split queue model” section) is triggered if packet descriptors are fetched from host memory and the notification stride is crossed.
 
-> When interrupt is issued, SW should assume that the latest head WB
-> value for that queue is updated.
->
-> Receive buffer queue ‘n’ can be enabled for interrupts by the IDPF
-> using configuration flows described below. The queues are mapped to
-> any interrupt vector within the function space and mapped to any of
-> its ITRs.  
->   
-> Issuing interrupt for receive buffer queues Head WB reporting is
-> supported only when VIRTCHNL2_RX_SPLITQ_INTR_ON_HEAD_WB feature is
-> negotiated.
+When interrupt is issued, SW should assume that the latest head WB value for that queue is updated.
+
+Receive buffer queue ‘n’ can be enabled for interrupts by the IDPF using configuration flows described below. The queues are mapped to any interrupt vector within the function space and mapped to any of its ITRs.  
+
+Issuing interrupt for receive buffer queues Head WB reporting is supported only when VIRTCHNL2_RX_SPLITQ_INTR_ON_HEAD_WB feature is negotiated.
 
 ### Mailbox queues
 
-> The software driver supports Mailbox queues.
->
-> A completion of a VirtChnl command on the transmit mailbox queue or
-> receiving a VirtChnl command on the mailbox receive queue is
-> considered an interrupt cause for the queue pair that might trigger an
-> interrupt (depending on if it was configured to do so in the relevant
-> mailbox queue).
->
-> Note that the device support for interrupt and interrupt flows are the
-> same for RX/TX mailbox queues and for regular RX/TX queues.
+The software driver supports Mailbox queues.
+
+A completion of a VirtChnl command on the transmit mailbox queue or receiving a VirtChnl command on the mailbox receive queue is considered an interrupt cause for the queue pair that might trigger an interrupt (depending on if it was configured to do so in the relevant mailbox queue).
+
+Note that the device support for interrupt and interrupt flows are the same for RX/TX mailbox queues and for regular RX/TX queues.
 
 ## Interrupt throttling 
 
@@ -3516,8 +3456,7 @@ between two consecutive interrupts.
 IDPF supports up to 3 ITR timers per vector, while the ITR intervals per
 vector can be programmed in the following ways :
 
-- When vector is initialized, programming is done through the per vector
-  > GLINT_ITR\[0,1\] per vector registers.
+- When vector is initialized, programming is done through the per vector GLINT_ITR\[0,1\] per vector registers.
 
 The number of ITR timers per vector can be 2 or 3 as defined by the
 itr_idx_map HW capability.  
@@ -9324,16 +9263,6 @@ hardware.
 \#define VIRTCHNL2_MEV_TS_DEVICE 1
 
 \#endif /\* NOT_FOR_UPSTREAM \*/
-
-\#ifndef EXTERNAL_RELEASE
-
-/\* HLV CP/HMA returns device type as 0
-
-\* INTEL CP/HMA returns device type as 1
-
-\*/
-
-\#endif
 
 /\* VIRTCHNL2_TXQ_SCHED_MODE
 
