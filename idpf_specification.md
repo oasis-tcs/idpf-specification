@@ -467,8 +467,6 @@ The diagram below illustrates the descriptors’ Device/SW ownership based on th
 
 ![Descriptor](Diagrams/descriptor.PNG)
 
-![Device Receive Descriptor](Diagrams/device_receive_desc.png)
-
 ### Out of order split queue model
 
 In the split queue model, "Rx Buffer Queues" are used to pass descriptor
@@ -501,19 +499,10 @@ payload).
 
 RX queue to RX buffer queue/s association details :
 
-- Each Rx Queue is associated to a single Rx Buffer Queue Group and in
-  > the usual case, Rx Buffer Queue Group will feed a set of Rx queues.
-
-- Rx Buffer Queue Group consists of one or two Rx Buffer Queues. On a
-  > given Rx Buffer queue, every buffer (or buffer pair, when header
-  > split is supported for the queue) points to a buffer (or buffer
-  > pair) of the same size.
-
-- When the Rx Buffer Queue Group consists of 2 Rx Buffer Queues, each
-  > one of the queues points to buffers of a distinct size.
-
-- The association between an RX queue and Buffer queue group is defined
-  > in RX queue context.
+- Each Rx Queue is associated to a single Rx Buffer Queue Group and in the usual case, Rx Buffer Queue Group will feed a set of Rx queues.
+- Rx Buffer Queue Group consists of one or two Rx Buffer Queues. On a given Rx Buffer queue, every buffer (or buffer pair, when header split is supported for the queue) points to a buffer (or buffer pair) of the same size.
+- When the Rx Buffer Queue Group consists of 2 Rx Buffer Queues, each one of the queues points to buffers of a distinct size.
+- The association between an RX queue and Buffer queue group is defined in RX queue context.
 
 The number of buffer queues in the group can be 1 or 2 as defined by the
 *num_buf_queues_per_rx* HW capability. The possible values and default
@@ -541,11 +530,8 @@ For example, in case Buffer queue depth is 128 and “buffer notification
 stride” is set to 32, Device:
 
 - Reports 32 after first 32 descriptors are fetched.
-
 - Reports 64 after the following 32 descriptors are fetched.
-
 - Reports 96 after the following 32 descriptors are fetched.
-
 - Reports 0 after the following 32 descriptors are fetched.
 
 The descriptor fetch reporting on buffer stride is support writeback
@@ -586,10 +572,8 @@ flipped every ring wraparound.
 When a packet arrives the device should take two “DMA related” decisions
 in the following order:
 
-- Header split decision: Define the portion of the packet written to the
-  header buffer and the portion of the packet written to the payload
-  buffer.  
-    
+- Header split decision: Define the portion of the packet written to the header buffer and the portion of the packet written to the payload buffer.  
+
   The main inputs to this decision are the configured header buffer size
   and the header split mode as defined in the RX queue context. It is
   assumed that the header buffer size for all Buffer queues in the group
@@ -598,9 +582,7 @@ in the following order:
   The output of this stage is one of the following :
 
   - Post the whole packet to the packet buffer(s).
-
   - Post header to header buffer and payload to the packet buffer(s).
-
   - Post the whole packet to the header buffer.
 
 - Buffer queue decision: Which Buffer queue from the buffer queue group
@@ -634,22 +616,11 @@ contiguously to the queue.
 The diagram below describes the DMA processing of multiple RSC flows
 that are assigned to the same RX queue.
 
-- Phase 1 describes the buffer queue initialization done by SW, as seen
-  > in diagram; each descriptor holds a unique "buffer identifier".
+- Phase 1 describes the buffer queue initialization done by SW, as seen in diagram; each descriptor holds a unique "buffer identifier".
+- Phase 2 describes the buffers assignment the different RSC flows (RSC A and RSC B) after packet reception. In this specific example, packets from the different RSC flows were received in an interleaved manner and therefore their buffer allocation within the queue is interleaved.
+- Phase 3 describes RSC completion reporting. As seen in the diagram, the descriptor completions of an RSC flow are reported contiguously in the completion queue; each completion descriptor holds the unique "buffer identifier" of its associated buffer.
 
-- Phase 2 describes the buffers assignment the different RSC flows (RSC
-  > A and RSC B) after packet reception.  
-  > In this specific example, packets from the different RSC flows were
-  > received in an interleaved manner and therefore their buffer
-  > allocation within the queue is interleaved.
-
-- Phase 3 describes RSC completion reporting.  
-  > As seen in the diagram, the descriptor completions of an RSC flow
-  > are reported contiguously in the completion queue; each completion
-  > descriptor holds the unique "buffer identifier" of its associated
-  > buffer.
-
-<img src="media/image3.png" style="width:6.5in;height:5.48611in" />
+![Device Receive Descriptor](Diagrams/device_receive_desc.png)
 
 Device receive descriptors form the control path that connects the
 software driver with the Ethernet Controller on the receive side.
@@ -762,7 +733,6 @@ When queue is configured to single queue model, the descriptor type
 The Base RXDID values are 0 and 1:
 
 - When RXDID value is 0, write descriptor format is "Write Base 16B".
-
 - When RXDID value is 1, write descriptor format is "Write Base 32B".
 
 Any other RXDID value indicates that the write descriptor format is
@@ -781,23 +751,10 @@ Descriptor length is 16B.
 Descriptor fields layout:
 
 - **Packet Buffer Address (64b)**  
-  > The physical address of the packet buffer defined in byte units. The
-  > packet buffer size is defined in the receive queue context. 
+  The physical address of the packet buffer defined in byte units. The packet buffer size is defined in the receive queue context. 
 
 - **Header Buffer Address (64b)**  
-  > The physical address of the header buffer defined in byte units. The
-  > header address should be set by the software to an even number (word
-  > aligned address). The Header Buffer Address is meaningful only for
-  > Header Split queues and Split Always queues as defined by the DTYPE
-  > (descriptor type) field in the receive queue context. If a received
-  > packet spans across multiple buffers, only the first descriptor's
-  > header buffer is used. The header buffer size is defined in the
-  > receive queue context.  
-  > The header buffer address is an even number to keep bit0 of the
-  > address set to zero (regardless of header split enablement). This
-  > bit is used as a place holder to the Descriptor Done ('DD')
-  > indication to the software reported on the as part of the descriptor
-  > write back format.
+  The physical address of the header buffer defined in byte units. The header address should be set by the software to an even number (word aligned address). The Header Buffer Address is meaningful only for Header Split queues and Split Always queues as defined by the DTYPE (descriptor type) field in the receive queue context. If a received packet spans across multiple buffers, only the first descriptor's header buffer is used. The header buffer size is defined in the receive queue context. The header buffer address is an even number to keep bit0 of the address set to zero (regardless of header split enablement). This bit is used as a place holder to the Descriptor Done ('DD') indication to the software reported on the as part of the descriptor write back format.
 
 #### 32B RX descriptors read format for single Q model
 
@@ -822,13 +779,8 @@ Descriptor fields layout:
 
 <img src="media/image27.png" style="width:6.5in;height:1.15278in" />
 
-- **Buffer identifier (16): **The unique buffer identifier used by SW to
-  > associate the packet buffer addressed by this descriptor with the
-  > completion queue descriptor.
-
-- **Packet Buffer Address (64b)**: The physical address of the packet
-  > buffer defined in byte units. The packet buffer size is defined in
-  > the negotiated receive queue context. 
+- **Buffer identifier (16): **The unique buffer identifier used by SW to associate the packet buffer addressed by this descriptor with the completion queue descriptor.
+- **Packet Buffer Address (64b)**: The physical address of the packet buffer defined in byte units. The packet buffer size is defined in the negotiated receive queue context. 
 
 #### 32B RX descriptors read format for split Q model
 
@@ -841,15 +793,11 @@ Descriptor length is 32B.
 Descriptor fields layout:
 
 - **Buffer identifier (16)**  
-  > The unique buffer identifier used by SW to associate the header
-  > buffer and packet buffer addressed by this descriptor with the
-  > completion queue descriptor.
-
+  The unique buffer identifier used by SW to associate the header buffer and packet buffer addressed by this descriptor with the completion queue descriptor.
 - **Packet Buffer Address (64)**  
-  > Identical to the definition described above.
-
+  Identical to the definition described above.
 - **Header Buffer Address (64)**  
-  > Identical to the definition described above.
+  Identical to the definition described above.
 
 ### RX descriptor write formats
 
@@ -862,28 +810,19 @@ descriptors:
 
 1.  The following fields are valid in all descriptors of a packet:
 
-- DD flag (Done)
-
-- EOP flag (End of Packet)
-
-- PKTL field (Packet content length)
-
-- Generation flag (Valid only when the queue is configured to work in
-  > "split queue model").
-
-- Buffer ID (Valid only when the queue is configured to work in "split
-  > queue model").
-
-- RXDID.
+  - DD flag (Done)
+  - EOP flag (End of Packet)
+  - PKTL field (Packet content length)
+  - Generation flag (Valid only when the queue is configured to work in "split queue model").
+  - Buffer ID (Valid only when the queue is configured to work in "split queue model").
+  - RXDID.
 
 2.  The following fields are valid only in the first descriptor of a
     packet:
 
-- HDRL (Packet content length in the header buffer)
-
-- SPH (Header is identified for header split functionality)
-
-- HBO (Header Buffer overflow)
+  - HDRL (Packet content length in the header buffer)
+  - SPH (Header is identified for header split functionality)
+  - HBO (Header Buffer overflow)
 
 3.  All other fields are valid only in the last descriptor of a packet.
 
@@ -2371,16 +2310,8 @@ to the packet descriptors placement order in the TX queue.
 
 As in the “In order , single queue model” , also in this model:
 
-- "TX Queues" are used to pass buffers from SW to Device while "Tx
-  > Completion Queues" are used to pass descriptor completions from
-  > Device to SW (also called PCE- packet completion element).
-
-- Single Device supports an asymmetric ratio of Tx queues to TX
-  > Completion queues.  
-  > Each TX queue is associated to a single TX completion Queue and in
-  > the usual case, TX completion Queue will be fed by a set of Tx
-  > queues. The association between a TX queue and the completion queue
-  > is defined in the TX queue context.
+- "TX Queues" are used to pass buffers from SW to Device while "Tx Completion Queues" are used to pass descriptor completions from Device to SW (also called PCE- packet completion element).
+- Single Device supports an asymmetric ratio of Tx queues to TX Completion queues. Each TX queue is associated to a single TX completion Queue and in the usual case, TX completion Queue will be fed by a set of Tx queues. The association between a TX queue and the completion queue is defined in the TX queue context.
 
 In contrast to the “In order , single queue model” where PCE can be
 written to the completion queue once in a few packets (controlled RS bit
@@ -2404,11 +2335,8 @@ descriptor.
   
 The following rules apply to RE bit setting :
 
-- SW must keep a minimal gap of IECM_TX_SPLITQ_RE_MIN_GAP descriptors
-  between 2 descriptors that have their RE flag set.
-
-- The RE flag can be set only on the last Transmit Data Descriptor of a
-  packet (single sent packet or TSO).
+- SW must keep a minimal gap of IECM_TX_SPLITQ_RE_MIN_GAP descriptors between 2 descriptors that have their RE flag set.
+- The RE flag can be set only on the last Transmit Data Descriptor of a packet (single sent packet or TSO).
 
 Note that the descriptor fetch completion functionality
 enables software to reuse the descriptor queue slots before data was
@@ -2461,10 +2389,7 @@ completed packet.
 There are two basic types of descriptors: Data and Context.
 
 - Data descriptors point to packet buffers at host memory.
-
-- Context descriptors and data descriptors hold offload parameters (such
-  > as TSO, checksum offload, etc.) and metadata passed to downstream
-  > blocks.
+- Context descriptors and data descriptors hold offload parameters (such as TSO, checksum offload, etc.) and metadata passed to downstream blocks.
 
 All TX descriptors have a DTYPE field that represents the descriptor
 type.  
@@ -2520,8 +2445,6 @@ Single Queue and free for the other queue models.
 | 23-28     | Free                                                                          |
 | 29-30     | Reserved for OEM                                                              |
 | 31        | Free (Except for In-order Single Queue where DTYPE is reserved for OEM)       |
-
-#### 
 
 #### Base TX Data Descriptor - DTYPE = 0x0
 
@@ -2660,9 +2583,8 @@ TSO message.</th>
 <th>RS</th>
 <th><p>Report Status. When set, the hardware reports the DMA completion
 of the transmit descriptor and its data buffer.</p>
-<p>Completion is reported using the <a
-href="https://wiki.ith.intel.com/display/NIC20/LAN+Transmit+Descriptors?focusedCommentId=1464500331#LANTransmitDescriptors-TXWriteBackDescriptorFormat-DTYPE=0x0F">TX WriteBack
-Descriptor</a> .</p>
+<p>Completion is reported using the TX WriteBack
+Descriptor.</p>
 <p>Notes:</p>
 <ul>
 <li><blockquote>
@@ -2712,13 +2634,10 @@ software</p></li>
 </ul>
 <p>For an IPV4 TSO message, this field must be set to “11”</p>
 <p>This field is used in Base mode.</p>
-<p>See general comment regarding checksum calculation at<u> </u><a
-href="https://wiki.ith.intel.com/display/NIC20/LAN+Transmit+Descriptors#LANTransmitDescriptors-TXPacketsRulesSummary"><u>TX</u></a>
-<a
-href="https://wiki.ith.intel.com/display/NIC20/LAN+Transmit+Descriptors#LANTransmitDescriptors-TXPacketsRulesSummary"><u>Packets</u></a>
-<a
-href="https://wiki.ith.intel.com/display/NIC20/LAN+Transmit+Descriptors#LANTransmitDescriptors-TXPacketsRulesSummary"><u>Rules
-Summary</u></a>.</p></th>
+<p>See general comment regarding checksum calculation at<u> TX</u></a>
+<u>Packets</u>
+<u>Rules
+Summary</u>.</p></th>
 </tr>
 <tr class="odd">
 <th> 7</th>
@@ -2739,11 +2658,9 @@ checksum and when set to SCTP, the hardware inserts the SCTP CRC.</p>
 <p>Notes:</p>
 <p>Requesting TCP or UDP offload for a packet which was padded by
 Software, will result in wrong Csum calculation.</p>
-<p>See general comment regarding checksum calculation at<u> </u><a
-href="https://wiki.ith.intel.com/display/NIC20/LAN+Transmit+Descriptors#LANTransmitDescriptors-TXPacketsRulesSummary"><u>TX</u></a>
-<a
-href="https://wiki.ith.intel.com/display/NIC20/LAN+Transmit+Descriptors#LANTransmitDescriptors-TXPacketsRulesSummary"><u>Packets</u>
-<u>Rules Summary</u></a>.</p></th>
+<p>See general comment regarding checksum calculation at<u> </u><u>TX</u>
+<u>Packets</u>
+<u>Rules Summary</u>.</p></th>
 </tr>
 <tr class="odd">
 <th>10:11</th>
@@ -2918,15 +2835,11 @@ TSO message.</th>
 <tr class="header">
 <th>CS_EN</th>
 <th>1b</th>
-<th><p>Checksum offloads enable for all L3/L4 headers, see<u> <a
-href="https://wiki.ith.intel.com/display/NIC20/TX+Offloads#TXOffloads-ChecksumOffload">Checksum</a></u>
-<a
-href="https://wiki.ith.intel.com/display/NIC20/TX+Offloads#TXOffloads-ChecksumOffload"><u>Offload</u></a>.</p>
-<p>See general comment regarding checksum calculation at<u> </u><a
-href="https://wiki.ith.intel.com/display/NIC20/LAN+Transmit+Descriptors#LANTransmitDescriptors-TXPacketsRulesSummary"><u>TX</u></a>
-<a
-href="https://wiki.ith.intel.com/display/NIC20/LAN+Transmit+Descriptors#LANTransmitDescriptors-TXPacketsRulesSummary"><u>Packets</u>
-<u>Rules Summary</u></a>.</p></th>
+<th><p>Checksum offloads enable for all L3/L4 headers, see<u> Checksum</u>
+<u>Offload</u>.</p>
+<p>See general comment regarding checksum calculation at<u> </u><u>TX</u>
+<u>Packets</u>
+<u>Rules Summary</u>.</p></th>
 </tr>
 <tr class="odd">
 <th>RE</th>
@@ -3058,9 +2971,8 @@ larger than zero.</th>
 Maximum Segment Size of the packet’s payload in the TSO (excluding the
 L2, L3 and L4 headers). In case of tunneling, the MSS relates to the
 inner payload. The MSS should not be set to a lower value than
-MIN_LSO_MSS. It also must follow the rule declared in Table <a
-href="https://wiki.ith.intel.com/display/NIC20/Handling+Malicious+Drivers+on+Data+Queues">Handling
-Malicious Drivers on Data Queues</a>.</th>
+MIN_LSO_MSS. It also must follow the rule declared in Table Handling
+Malicious Drivers on Data Queues.</th>
 </tr>
 </thead>
 <tbody>
@@ -3130,9 +3042,8 @@ larger than</p>
 Maximum Segment Size of the packet’s payload in the TSO (excluding the
 L2, L3 and L4 headers). In case of tunneling, the MSS relates to the
 inner payload. The MSS should not be set to a lower value than
-MIN_LSO_MSS. It also must follow the rule declared in Table <a
-href="https://wiki.ith.intel.com/display/NIC20/Handling+Malicious+Drivers+on+Data+Queues">Handling
-Malicious Drivers on Data Queues</a>.</th>
+MIN_LSO_MSS. It also must follow the rule declared in Table Handling
+Malicious Drivers on Data Queues.</th>
 </tr>
 <tr class="header">
 <th>L2TAG2</th>
@@ -3239,125 +3150,41 @@ checksum when the DUMMY flag is set.</p>
 The packet and descriptors building rules are specified below. Any
 violation of those rules might be detected as malicious driver behavior.
 
-- Device executes L3/L4 checksum for packet checksums according to
-  > feature negotiation.  
-  > When negotiated, Device calculates checksum for the relevant layer
-  > without SW activation (through descriptor.)  
-  > The only exception is of the inner L4 checksum calculation that is
-  > executed when one of the conditions below is true
+- Device executes L3/L4 checksum for packet checksums according to feature negotiation. When negotiated, Device calculates checksum for the relevant layer without SW activation (through descriptor.) The only exception is of the inner L4 checksum calculation that is executed when one of the conditions below is true
 
-  1.  Base mode data descriptor - when L4T is set to UDP ,TCP or SCTP or
-      > when IIPT is set to to "IPv4 packet with IP checksum offload "
-
+  1.  Base mode data descriptor - when L4T is set to UDP ,TCP or SCTP or when IIPT is set to to "IPv4 packet with IP checksum offload "
   2.  CS_EN is set to 1.
 
-> Note that for for case \#a and \#b the most inner header checksum is
-> calculated using the offsets as parsed by the Device parser.  
-> The *max_tx_hdr_generic_offloads* negotiated capability defines the
-> maximal header length supported by the device for non-generic
-> checksum/CRC offloads.
-
-- The total size of a single packet in host memory must be at least
-  > **IECM_TX_MIN_LEN** bytes and up to the *max_mtu*.  
-  > This rule applies for single packet send as well as for an LSO
-  > segment.
-
-- The header length of an LSO packet should be at least
-  > *min_lso_header_len*.
-
-- Optionally, Packet can carry a context descriptor(s). In that case,
-  > all context descriptors of a packet must be placed before the data
-  > descriptors of the packet. 
-
-  1.  Up to *max_ctxt_desc_per_sso_packet* context descriptors are
-      > allowed to be added to one SSO (Single Send Offload) message and
-      > up to *max_ctxt_desc_per_lso_segment* context descriptors are
-      > allowed to be added to one LSO (Large Send Offload) message.
-
-- A single transmit packet must contain at least one data descriptor
-  > and may span up to *max_sg_bufs_per_tx_pkt* buffers.  
-  > The maximal length of a data buffer is defined by *tx_max_desc_data*
-  > negotiated parameter.
-
-- TSO Max payload size is *max_lso_payload_len* (as implied in TLEN
-  > field in the context descriptor), TSO MSS minimal value is refined
-  > by *min_mss_for_lso.* The maximal MSS value is set so that the total
-  > segment length (header and payload) do not exceed *max_mtu.*
-
-- Each segment within the TSO obeys the previous rule of spanning on up
-  > to *max_sg_bufs_per_tx_pkt* data buffers.
-
-  1.  The limitation refers to any buffer or buffer part of the segment
-      > so in case one data buffer holds data for multiple segments the
-      > data buffer is counted in each one of those segments.
-
-  2.  The limitation refers to both header buffers and payload buffers.
-      > The header buffers are counted in each one of the segments.
-
-  3.  In case a single buffer holds a mixture of packet header and
-      > packet payload, for that limitation, that buffer is treated as 2
-      > buffers.
-
-- If a packet or TSO spans on single or multiple transmit data
-  > descriptors:
-
+  Note that for for case \#a and \#b the most inner header checksum is calculated using the offsets as parsed by the Device parser. The *max_tx_hdr_generic_offloads* negotiated capability defines the maximal header length supported by the device for non-generic checksum/CRC offloads.
+- The total size of a single packet in host memory must be at least **IECM_TX_MIN_LEN** bytes and up to the *max_mtu*. This rule applies for single packet send as well as for an LSO segment.
+- The header length of an LSO packet should be at least *min_lso_header_len*.
+- Optionally, Packet can carry a context descriptor(s). In that case, all context descriptors of a packet must be placed before the data descriptors of the packet. 
+  1.  Up to *max_ctxt_desc_per_sso_packet* context descriptors are allowed to be added to one SSO (Single Send Offload) message and up to *max_ctxt_desc_per_lso_segment* context descriptors are allowed to be added to one LSO (Large Send Offload) message.
+- A single transmit packet must contain at least one data descriptor and may span up to *max_sg_bufs_per_tx_pkt* buffers. The maximal length of a data buffer is defined by *tx_max_desc_data* negotiated parameter.
+- TSO Max payload size is *max_lso_payload_len* (as implied in TLEN field in the context descriptor), TSO MSS minimal value is refined by *min_mss_for_lso.* The maximal MSS value is set so that the total segment length (header and payload) do not exceed *max_mtu.*
+- Each segment within the TSO obeys the previous rule of spanning on up to *max_sg_bufs_per_tx_pkt* data buffers.
+  1.  The limitation refers to any buffer or buffer part of the segment so in case one data buffer holds data for multiple segments the data buffer is counted in each one of those segments.
+  2.  The limitation refers to both header buffers and payload buffers. The header buffers are counted in each one of the segments.
+  3.  In case a single buffer holds a mixture of packet header and packet payload, for that limitation, that buffer is treated as 2 buffers.
+- If a packet or TSO spans on single or multiple transmit data descriptors:
   1.  All data descriptors in a packet must use the same DTYPE.
-
-  2.  When the queue operates in “in order , single queue model” or “out
-      > of order , split queue model” the data descriptors of the packet
-      > must be anything but DTYPEs 12. When the queue operates in "out
-      > of order ,split queue model" the data descriptors of the packet
-      > must be DTYPE 12.
-
+  2.  When the queue operates in “in order , single queue model” or “out of order , split queue model” the data descriptors of the packet must be anything but DTYPEs 12. When the queue operates in "out of order ,split queue model" the data descriptors of the packet must be DTYPE 12.
   3.  The fields in all the data descriptors must be valid.
-
-  4.  All data descriptor fields but the Packet buffer address, TX
-      > buffer Size, and flags EOP, RS, and RE must carry the same
-      > values.
-
-  5.  EOP must be set at the last data descriptor of a message and only
-      > there.
-
-  6.  RS and RE flags may be set only at the last data descriptor of a
-      > message.
-
-  7.  In case if the same field is present in more than 1 descriptor,
-      > the value of the field should be the same in all descriptors.
-
-  8.  Any context-type information in all descriptors associated with a
-      > particular TX message are set consistently.
-
-  9.  The TSO message header should not span on more than
-      > *max_hdr_buf_per_lso* buffers. (Max *max_hdr_buf_per_lso*
-      > Descriptors).
-
-- SW must keep a minimal gap of IECM_TX_RS_MIN_GAP descriptors between 2
-  > descriptors that have their RS flag set(when set to zero , SW does
-  > not keep a gap).
-
-- SW must keep a minimal gap of IECM_TX_SPLITQ_RE_MIN_GAP descriptors
-  > between 2 descriptors that have their RE flag set(when set to zero ,
-  > SW does not keep a gap).
-
-- RE flag can be set only for queues that operate in “out of order
-  > ,split queue” model.
-
+  4.  All data descriptor fields but the Packet buffer address, TX buffer Size, and flags EOP, RS, and RE must carry the same values.
+  5.  EOP must be set at the last data descriptor of a message and only there.
+  6.  RS and RE flags may be set only at the last data descriptor of a message.
+  7.  In case if the same field is present in more than 1 descriptor, the value of the field should be the same in all descriptors.
+  8.  Any context-type information in all descriptors associated with a particular TX message are set consistently.
+  9.  The TSO message header should not span on more than *max_hdr_buf_per_lso* buffers. (Max *max_hdr_buf_per_lso* Descriptors).
+- SW must keep a minimal gap of IECM_TX_RS_MIN_GAP descriptors between 2 descriptors that have their RS flag set(when set to zero , SW does not keep a gap).
+- SW must keep a minimal gap of IECM_TX_SPLITQ_RE_MIN_GAP descriptors between 2 descriptors that have their RE flag set(when set to zero , SW does not keep a gap).
+- RE flag can be set only for queues that operate in “out of order ,split queue” model.
 - When using TSO message SW must follow the Descriptors order:
-
   1.  Single TSO context descriptor with the TSO bit set. 
-
-  2.  The rest of the Non-TSO context descriptors or TSO context
-      > descriptors that have their TSO bit set to 0.
-
+  2.  The rest of the Non-TSO context descriptors or TSO context descriptors that have their TSO bit set to 0.
   3.  One or more TX data descriptors.
-
-> Note: A TSO context descriptor is one that has MSS, Tlen and Headerlen
-> fields or a Base mode TX context descriptor of Dtype 0x1.
-
-- For a TSO packet, either its data descriptors or its first context
-  > descriptor must describe the packet header length.  
-  > The *max_tx_hdr_len_seg* negotiated capability defines the Maximal
-  > header length supported by the device for segmentation.
+  Note: A TSO context descriptor is one that has MSS, Tlen and Headerlen fields or a Base mode TX context descriptor of Dtype 0x1.
+- For a TSO packet, either its data descriptors or its first context descriptor must describe the packet header length. The *max_tx_hdr_len_seg* negotiated capability defines the Maximal header length supported by the device for segmentation.
 
 #### Tx Descriptor write formats 
 
