@@ -2125,46 +2125,20 @@ format.</p></th>
 The differences in the usage of flex descriptor formats between the
 single queue and split queue models are as follows :
 
-- The split status field is valid only for the "split queue model" (In
-  > the single queue model this field is irrelevant and ignored by
-  > software.
-
-- RSC is enabled only for "split queue model" queue and therefore RSC
-  > related fields (RSC flag and RscSegLen) are valid only for this
-  > queue model.
-
-- Field FlexiMD.0/BufferID in the first 16B of the descriptor holds
-  > the FlexiMD.0 field when "single queue model" and holds BufferID
-  > when “split queue model”.
+- The split status field is valid only for the "split queue model" (In the single queue model this field is irrelevant and ignored by software.
+- RSC is enabled only for "split queue model" queue and therefore RSC related fields (RSC flag and RscSegLen) are valid only for this queue model.
+- Field FlexiMD.0/BufferID in the first 16B of the descriptor holds the FlexiMD.0 field when "single queue model" and holds BufferID when “split queue model”.
 
 Regardless of queue model, the following fields in the descriptor can
 hold different values depending on the negotiated queue context : 
 
-1.  Depending on negotiated queue context, the
-    > "Hash\[23:16\]/MirrorID/FlexiFlags1" field in the first 16B of the
-    > descriptor holds the MirrorID field or the Hash\[23:16\] or
-    > the FlexiFlags1 field.
-
-2.  Depending on negotiated queue context ,the
-    > “FlexiMD.1/Raw_CS/L2TAG1/RSCPayLen” field in the first 16B of the
-    > descriptor holds one of the following values :
-
-    1.  Holds the RSCPayLen for an RSC packet or the Raw csum for a non
-        > RSC packet.
-
-    2.  Holds the L2TAG1 field in case the tag is present in the RX
-        > descriptor (L2TAG1P flag is set) or holds the FlexiMD.1 field.
-
+1.  Depending on negotiated queue context, the "Hash\[23:16\]/MirrorID/FlexiFlags1" field in the first 16B of the descriptor holds the MirrorID field or the Hash\[23:16\] or the FlexiFlags1 field.
+2.  Depending on negotiated queue context ,the “FlexiMD.1/Raw_CS/L2TAG1/RSCPayLen” field in the first 16B of the descriptor holds one of the following values :
+    1.  Holds the RSCPayLen for an RSC packet or the Raw csum for a non RSC packet.
+    2.  Holds the L2TAG1 field in case the tag is present in the RX descriptor (L2TAG1P flag is set) or holds the FlexiMD.1 field.
     3.  Always holds the FlexiMD.1 field.
-
-> Field "L2TAG1/FlexMD4" in the second 16B of the descriptor holds
-> L2TAG1 if L2TAG1P is set and the “FlexiMD.1/Raw_CS/L2TAG1/RSCPayLen”
-> field in the first 16B of the descriptor does not hold L2TAG1, Else,
-> field holds FlexMD4.
-
-3.  Depending on negotiated queue context the "Hash\[15:0\]/FlexMD2"
-    > field in the first 16B of the descriptor holds
-    > the Hash\[15:0\] field or the FlexMD2.
+  Field "L2TAG1/FlexMD4" in the second 16B of the descriptor holds L2TAG1 if L2TAG1P is set and the “FlexiMD.1/Raw_CS/L2TAG1/RSCPayLen” field in the first 16B of the descriptor does not hold L2TAG1, Else, field holds FlexMD4.
+3.  Depending on negotiated queue context the "Hash\[15:0\]/FlexMD2" field in the first 16B of the descriptor holds the Hash\[15:0\] field or the FlexMD2.
 
 Field "L2TAG2/FlexMD2" in the second 16B of the descriptor holds L2TAG2
 if L2TAG2P is set,  
@@ -2189,17 +2163,9 @@ and descriptors for new packets.
 The mode of operation is a per queue configuration. each queue can be
 configured to work in a different model:
 
-- In order , single queue model.  
-  > This option is supported only when
-  > VIRTCHNL2_TXQ_MODEL_IN_ORDER_SINGLE feature is negotiated.
-
-- In order , split queue model.  
-  > This option is supported only when
-  > VIRTCHNL2_TXQ_MODEL_IN_ORDER_SPLIT feature is negotiated.
-
-- Out of order , split queue model.  
-  > This option is supported only when
-  > VIRTCHNL2_TXQ_MODEL_OUT_OF_ORDER_SPLIT feature is negotiated.
+- In order , single queue model. This option is supported only when VIRTCHNL2_TXQ_MODEL_IN_ORDER_SINGLE feature is negotiated.
+- In order , split queue model. This option is supported only when VIRTCHNL2_TXQ_MODEL_IN_ORDER_SPLIT feature is negotiated.
+- Out of order , split queue model. This option is supported only when VIRTCHNL2_TXQ_MODEL_OUT_OF_ORDER_SPLIT feature is negotiated.
 
 The device must negotiate at least
 VIRTCHNL2_TXQ_MODEL_OUT_OF_ORDER_SPLIT or
@@ -2231,11 +2197,8 @@ which descriptor Device should report completion to SW.
 
 The following rules apply to RS bit setting :
 
-- SW must keep a minimal gap of IECM_TX_RS_MIN_GAP descriptors between 2
-  > descriptors that have their RS flag set.
-
-- The RS flag can be set only on the last Transmit Data Descriptor of a
-  > packet (single sent packet or TSO).
+- SW must keep a minimal gap of IECM_TX_RS_MIN_GAP descriptors between 2 descriptors that have their RS flag set.
+- The RS flag can be set only on the last Transmit Data Descriptor of a packet (single sent packet or TSO).
 
 In addition to reporting completions for descriptors marked as such by
 SW (RS bit setting), occasionally (based on a periodic timer), Device
@@ -2250,23 +2213,16 @@ the Tail pointer:
 
 - TAIL pointer represents the Descriptor following the last descriptor
   written to the ring by SW.
-
 - HEAD pointer represents the Descriptor following the last descriptor
   written by Device.
-
 - White descriptors (owned by Device) are waiting to be processed by
   Device or currently processed by Device.
-
 - Blue descriptors (owned by SW) were already processed by Device and
   can be reused again by SW.
-
 - Zero descriptor are owned by Device when TAIL == HEAD
-
 - The SW should never set the TAIL to a value above the HEAD minus 1.
 
 <img src="media/image26.png" style="width:4.42364in;height:2.43229in" />
-
-## 
 
 ### In order , split queue model
 
@@ -3353,22 +3309,18 @@ them.</span>
 
 ### Supported Interrupt modes 
 
-> The device supports the following interrupt modes:
+The device supports the following interrupt modes:
 
 - MSI - supports one Message-Signaled Interrupt (MSI) per PF.
-
 - MSI-X - supports up to 2k vectors.
 
-> In each PF, only one of the two modes is enabled.
+In each PF, only one of the two modes is enabled.
 
 ### MSI mode 
 
-> MSI is exposed in the MSI capability structure of the PCI
-> configuration space of each PF. MSI is enabled by the OS using the
-> "MSI Enable" flag of the "MSI Capability" structure in the PCI
-> configuration space per PF.
->
-> There is no support for MSI in VFs.
+MSI is exposed in the MSI capability structure of the PCI configuration space of each PF. MSI is enabled by the OS using the "MSI Enable" flag of the "MSI Capability" structure in the PCI configuration space per PF.
+
+There is no support for MSI in VFs.
 
 ### MSI-X mode 
 
@@ -3475,21 +3427,13 @@ HW is allowed to issue an interrupt when all the following conditions
 are fulfilled:
 
 - Interrupt is enabled.
-
-- Interrupt has at least one ITR that has expired and has a pending
-  > cause (either ITR has expired after cause was issued or cause was
-  > issued after the ITR has expired).
+- Interrupt has at least one ITR that has expired and has a pending cause (either ITR has expired after cause was issued or cause was issued after the ITR has expired).
 
 As an example, assume a vector has only 1 active ITR :
 
-- If an interrupt cause that is associated with the ITR happened before
-  > the ITR had expired or happened when interrupt was disabled (i.e.
-  > INTENA is zero), the interrupt assertion is delayed until both ITR
-  > expires and the interrupt is enabled.
+- If an interrupt cause that is associated with the ITR happened before the ITR had expired or happened when interrupt was disabled (i.e. INTENA is zero), the interrupt assertion is delayed until both ITR expires and the interrupt is enabled.
 
-- If an interrupt cause associated with this ITR happens after the ITR
-  > has expired when interrupt was enabled, the ITR is armed, and
-  > interrupt will be asserted the moment the cause happens.
+- If an interrupt cause associated with this ITR happens after the ITR has expired when interrupt was enabled, the ITR is armed, and interrupt will be asserted the moment the cause happens.
 
 Note :
 
@@ -3498,7 +3442,7 @@ rates for different cause clients assigned to the same vector.
 
 In case both cause clients are active , the interrupt throttling rate is
 done according to the ITR with the higher rate but in case only one
-cause client~~s~~ is active at a certain time<u>,</u> the throttling
+cause client~~s~~ is active at a certain time, the throttling
 rate is done according to its associated ITR rate.
 
 ## Enable/disable interrupts for a vector 
@@ -3506,12 +3450,8 @@ rate is done according to its associated ITR rate.
 Device supports the per vector NO_INT_MODE mode. When vector is in this
 mode :
 
-- Interrupts are not issued from the device for causes associated with
-  > this vector.
-
-- Interrupt throttling mechanisms operate as if interrupt is enabled
-  > (i.e. interrupts are not disabled automatically when interrupt is
-  > issued).  
+- Interrupts are not issued from the device for causes associated with this vector.
+- Interrupt throttling mechanisms operate as if interrupt is enabled (i.e. interrupts are not disabled automatically when interrupt is issued).  
 
 This mode is required when software works in polling mode where it does
 not expect any interrupt to be issued by the device but expects the
@@ -3522,20 +3462,8 @@ The interrupt mechanism supports dynamic switching of a vector between
 interrupt enabled and NO_INT_MODE on a per vector basis as described
 below :
 
-1.  A switch from interrupt-enabled mode to NO_INT_MODE can be done by
-    > software only when the INTENA flag is cleared, that is, the
-    > interrupt is disabled for processing as described in “interrupt
-    > enable procedure(ADD LINK)” section. .  
-    > The switch is done by writing the GLINT_DYN_CTL register with
-    > INTENA flag cleared and NO_INT_MODE flag set.
-
-<!-- -->
-
-2.  A switch from NO_INT_MODE to interrupt enabled mode can occur at any
-    > time.  
-    > The switch is done by software enabling the vector (setting the
-    > INTENA flag and clearing the NO_INT_MODE flag in the relevant
-    > GLINT_DYN_CTL register).
+1.  A switch from interrupt-enabled mode to NO_INT_MODE can be done by software only when the INTENA flag is cleared, that is, the interrupt is disabled for processing as described in “interrupt enable procedure(ADD LINK)” section. The switch is done by writing the GLINT_DYN_CTL register with INTENA flag cleared and NO_INT_MODE flag set.
+2.  A switch from NO_INT_MODE to interrupt enabled mode can occur at any time. The switch is done by software enabling the vector (setting the INTENA flag and clearing the NO_INT_MODE flag in the relevant GLINT_DYN_CTL register).
 
 Based on the written above , those are the following transitions between
 the different interrupt modes (enabled , disabled and NO_INT_MODE):
@@ -3647,55 +3575,25 @@ register.
 
 To enforce a rate change , software should :
 
-1.  Set the GLINT_DYN_CTL.ITR_INDX field to the relevant ITR.  
-    > When GLINT_DYN_CTL.ITR_INDX is set to 0x3 the rate programming
-    > update is disabled.
-
-<!-- -->
-
+1.  Set the GLINT_DYN_CTL.ITR_INDX field to the relevant ITR. When GLINT_DYN_CTL.ITR_INDX is set to 0x3 the rate programming update is disabled.
 2.  Set the GLINT_DYN_CTL.INTERVAL to the desired interval.
 
 Based on negotiation, the rate change can be done b<u>y</u> using the
 following options :
 
-- Piggybacked to an interrupt enablement operation done using
-  > GLINT_DYN_CTL (i.e. when setting the INTENA flag).
-
-<!-- -->
-
-- This option is supported only when
-  > VIRTCHNL2_CAP_INTR_ADAPT_WITH_INTENA feature is negotiated.
-
-<!-- -->
-
-- SW can use this option only when operation occurs when interrupt is
-  > disabled (and not when interrupt is in NO_INT_MODE).
-
+- Piggybacked to an interrupt enablement operation done using GLINT_DYN_CTL (i.e. when setting the INTENA flag).
+- This option is supported only when VIRTCHNL2_CAP_INTR_ADAPT_WITH_INTENA feature is negotiated.
+- SW can use this option only when operation occurs when interrupt is disabled (and not when interrupt is in NO_INT_MODE).
 - When using this option SW must clear the GLINT.INTENA_MSK flag.
-
-<!-- -->
-
-- As an individual operation using GLINT_DYN_CTL without interrupt
-  > enablement. (i.e. without setting the INTENA flag).
-
-<!-- -->
-
+- As an individual operation using GLINT_DYN_CTL without interrupt enablement. (i.e. without setting the INTENA flag).
 - This option is supported without negotiation.
-
-- SW must not use this option when the interrupt is in NO_INT_MODE.
-  > ~~and only when it does not change the interrupt state.~~
-
-<!-- -->
-
+- SW must not use this option when the interrupt is in NO_INT_MODE. ~~and only when it does not change the interrupt state.~~
 - When using this option SW must set the GLINT.INTENA_MSK flag.
 
 Additionally :
 
 - The intervals cannot be read through in the GLINT_DYN_CTL registers.
-
-- By default ,changing the ITR interval through this interface value
-  > causes the timer to expire which triggers an immediate interrupt in
-  > case there are pending causes.
+- By default ,changing the ITR interval through this interface value causes the timer to expire which triggers an immediate interrupt in case there are pending causes.
 
 ## Miscellaneous SW operations
 
@@ -3709,46 +3607,20 @@ A SW cause is submitted using the GLINT_DYN_CTL register.
 In the GLINT_DYN_CTL register software should :
 
 1.  Set SWINT_TRIG to 1 . This flag is used to trigger the SW cause.
-
-<!-- -->
-
 2.  Set SW_ITR_INDX_ENA to 1.
-
-<!-- -->
-
 3.  Set SW_ITR_INDX to the associated ITR.
 
 Based on negotiation, the SW interrupt can be done be using the
 following options:
 
-- Piggybacked to an interrupt enablement operation using GLINT_DYN_CTL
-  > (i.e. when setting the INTENA flag).
-
-<!-- -->
-
-- This option is supported only when
-  > VIRTCHNL2_CAP_INTR_SW_INTR_WITH_INTENA feature is negotiated.
-
-- SW can use this option only when operation occurs when interrupt is
-  > disabled ~~and not~~ or when interrupt is in NO_INT_MODE.
-
-<!-- -->
-
-- When using this option SW must clear the GLINT.INTENA_MSK flag.
-
-<!-- -->
-
+- Piggybacked to an interrupt enablement operation using GLINT_DYN_CTL (i.e. when setting the INTENA flag).
+  - This option is supported only when VIRTCHNL2_CAP_INTR_SW_INTR_WITH_INTENA feature is negotiated.
+  - SW can use this option only when operation occurs when interrupt is disabled ~~and not~~ or when interrupt is in NO_INT_MODE.
+  - When using this option SW must clear the GLINT.INTENA_MSK flag.
 - As an individual operation using GLINT_DYN_CTL.
-
-<!-- -->
-
-- This option is supported only when VIRTCHNL2_CAP_INTR_SW_INTR_INDV
-  > feature is negotiated.
-
-- SW must not use this option when the interrupt is in NO_INT_MODE.
-  > ~~and only when it does not change the interrupt state.~~
-
-- When using this option SW must set the GLINT.INTENA_MSK flag.
+  - This option is supported only when VIRTCHNL2_CAP_INTR_SW_INTR_INDV feature is negotiated.
+  - SW must not use this option when the interrupt is in NO_INT_MODE.~~and only when it does not change the interrupt state.~~
+  - When using this option SW must set the GLINT.INTENA_MSK flag.
 
 When neither VIRTCHNL2_CAP_INTR_SW_INTR_INDV nor
 VIRTCHNL2_CAP_INTR_SW_INTR_WITH_INTENA are negotiated, dynamic rate
@@ -3778,58 +3650,18 @@ Buffer queue pair as well as one per RX Completion queue.
  Software pre-allocation, initialization and runtime configurations flow
 is as follow:
 
-1.   IDPF to discover its MSI-X related capabilities and resources by
-    > sending “VIRTCHNL_OP_GET_CAPS”, Opcode 100 command. Following this
-    > command, CP will reply back with following MSI-X related
-    > information:
-
-    1.  ** *mailbox_dyn_ctl*** – address of GLINT_DYN_CTL register to be
-        > used for runtime interrupt functionality configuration for
-        > vector mapped for Mailbox Queue Pair.
-
-    2.  ***mailbox_vector_id*** – index of the vector mapped by CP to be
-        > used for Mailbox Queue Pair.
-
-    3.  ***num_allocated_vectors*** – number of MSI-X vectors allocated
-        > and guaranteed for the function by CP, not including already
-        > provided Mailbox one.
-
-    4.  **  *itr_idx_map*** – map of possible ITRs to be used.
-
-2.   IDPF to allocate and map vectors to itself by using
-    > “VIRTCHNL_OP_ALLOC_VECTORS” opcode 120. Important to mention, that
-    > IPDF is promised to have at least number of vectors, as provided
-    > by capabilities command, but it can also try to opportunistically
-    > allocate additional ones on “first come-first served '' basis
-    > using this virtchnl command. Following this allocation command, CP
-    > will reply to IPDF with all relevant information regarding
-    > allocated vectors, registers information etc. Returned vectors are
-    > returned and single or multiple sequential chunks of vectors, each
-    > one of them contains information as below (for most updated info
-    > refer to virtchnl header file):
-
-    1.  * **start_vector_id, start_evv_id, num_vectors** – provide
-        > indexes of allocated vectors.*
-
-    2.  * **dynctl_reg_start, dynctl_reg_spacing** – provide addresses
-        > of GLINT_DYN_CTL registers to be used for runtime
-        > configuration of the allocated vectors.*
-
-    3.  ***itrn_reg_start, itrn_reg_spacing** – provide addresses of
-        > GLINT_ITR_x registers to be used for runtime throttling
-        > configuration of the allocated vectors.*
-
-3.   IDPF to map TX and RX queues to already allocated vectors by using
-    > “VIRTCHNL_OP_MAP_QUEUE_VECTOR” opcode 111 by providing TX and RX
-    > queues and vector information. Command structure is organized in
-    > queue map chunks, each one of them defined as follows:
-
-    1.  ***queue_id, queue_type –*** provide Queue information.
-
-    2.  *** vector_id, itr_idx –*** vector information to map specified
-        > queue to.
-
- 
+1. IDPF to discover its MSI-X related capabilities and resources by sending “VIRTCHNL_OP_GET_CAPS”, Opcode 100 command. Following this command, CP will reply back with following MSI-X related information:
+  1.  ***mailbox_dyn_ctl*** – address of GLINT_DYN_CTL register to be used for runtime interrupt functionality configuration for vector mapped for Mailbox Queue Pair.
+  2.  ***mailbox_vector_id*** – index of the vector mapped by CP to be used for Mailbox Queue Pair.
+  3.  ***num_allocated_vectors*** – number of MSI-X vectors allocated and guaranteed for the function by CP, not including already provided Mailbox one.
+  4.  ***itr_idx_map*** – map of possible ITRs to be used.
+2.   IDPF to allocate and map vectors to itself by usin “VIRTCHNL_OP_ALLOC_VECTORS” opcode 120. Important to mention, that IPDF is promised to have at least number of vectors, as provided by capabilities command, but it can also try to opportunistically allocate additional ones on “first come-first served '' basis using this virtchnl command. Following this allocation command, CP will reply to IPDF with all relevant information regarding allocated vectors, registers information etc. Returned vectors are returned and single or multiple sequential chunks of vectors, each one of them contains information as below (for most updated info refer to virtchnl header file):
+  1. ***start_vector_id, start_evv_id, num_vectors*** – provide indexes of allocated vectors.*
+  2. ***dynctl_reg_start, dynctl_reg_spacing*** – provide addresses of GLINT_DYN_CTL registers to be used for runtime configuration of the allocated vectors.*
+  3. ***itrn_reg_start, itrn_reg_spacing*** – provide addresses of GLINT_ITR_x registers to be used for runtime throttling configuration of the allocated vectors.
+3. IDPF to map TX and RX queues to already allocated vectors by using “VIRTCHNL_OP_MAP_QUEUE_VECTOR” opcode 111 by providing TX and RX queues and vector information. Command structure is organized in queue map chunks, each one of them defined as follows:
+  1. ***queue_id, queue_type –*** provide Queue information.
+  2. *** vector_id, itr_idx –*** vector information to map specified queue to.
 
 After IPDF completed its vectors’ allocation and mapping activities and
 got all its register information for runtime vector manipulation, it can
@@ -3855,46 +3687,25 @@ negotiation.
 
 ## Interrupt Initialization and Mailbox Initialization.
 
-> At Initialization time, the SW sets up a mailbox queue pair by
-> programming the mailbox queues registers such as Base Address, Length,
-> Head and Tail pointers. Once these are programmed, the driver must
-> enable the Mailbox queue as part of the length (xF_AxQLEN) registers.
->
-> As part of this spec the device and the driver use Descriptor
-> writeback (similar to the in-order, single-queue model described
-> above) for mailbox queue completion.
->
-> The first message that is posted on the mailbox queue using
-> virtchannel commands is
->
-> VIRTCHNL_OP_GET_VERSION ().
->
-> A response to this message indicates the readiness of the CP to start
-> communication on the sideband channel. The driver shall try to
-> establish communication with the CP for at least 10 seconds before
-> failing to load.
->
-> The second message the driver posts is the Capability Negotiation
-> (VIRTCHNL_OP_GET_CAPS), the driver posts the requested capabilities
-> and resources to reserve, and the CP in return sends which of the
-> requested capabilities and resources can be supported. The CP reserves
-> the resources before sending the response.
+At Initialization time, the SW sets up a mailbox queue pair by programming the mailbox queues registers such as Base Address, Length, Head and Tail pointers. Once these are programmed, the driver must enable the Mailbox queue as part of the length (xF_AxQLEN) registers.
+
+As part of this spec the device and the driver use Descriptor writeback (similar to the in-order, single-queue model described above) for mailbox queue completion.
+
+The first message that is posted on the mailbox queue using virtchannel commands is VIRTCHNL_OP_GET_VERSION ().
+
+A response to this message indicates the readiness of the CP to start communication on the sideband channel. The driver shall try to establish communication with the CP for at least 10 seconds before failing to load.
+
+The second message the driver posts is the Capability Negotiation (VIRTCHNL_OP_GET_CAPS), the driver posts the requested capabilities and resources to reserve, and the CP in return sends which of the requested capabilities and resources can be supported. The CP reserves the resources before sending the response.
 
 ##  VIRTCHNL_OP_VERSION
 
-> The purpose of this command is to negotiate version info for the
-> virtual channel API (Application Programming Interface).
->
-> Driver posts its version number and CP responds with its version
-> number in the same format, along with a return code.
->
-> If there is a major version mismatch, then the driver falls to to the
-> lowest common ,major version which is version 2.0 as the CP is assumed
-> to always support
->
-> If there is a minor version mismatch, then the driver can operate but
-> should add a warning to the system log. CP will not respond with an
-> error even in case of versions mismatch.
+The purpose of this command is to negotiate version info for the virtual channel API (Application Programming Interface).
+
+Driver posts its version number and CP responds with its version number in the same format, along with a return code.
+
+If there is a major version mismatch, then the driver falls to to the lowest common ,major version which is version 2.0 as the CP is assumed to always support
+
+If there is a minor version mismatch, then the driver can operate but should add a warning to the system log. CP will not respond with an error even in case of versions mismatch.
 
 <table>
 <colgroup>
@@ -3943,11 +3754,11 @@ control queue descriptor (see References).</p></th>
 
 #### VPORT Enable General Flow
 
-> <img src="media/image5.png" style="width:6.05208in;height:8.17708in" />
->
-> Flow continues in the next page
->
-> <img src="media/image11.png" style="width:6.66667in;height:2.29167in" />
+<img src="media/image5.png" style="width:6.05208in;height:8.17708in" />
+
+Flow continues in the next page
+
+<img src="media/image11.png" style="width:6.66667in;height:2.29167in" />
 
 #### 
 
@@ -4622,68 +4433,38 @@ VIRTCHNL2_CAP_PTP = BIT(13),</p>
 
 ## Receive Descriptor Formats (RXDID) enumeration
 
-> As described in the ‘RX Descriptors Format’ section, the format of a
-> descriptor is defined by 6-bit RXDID field of the receive descriptor.
-> To enumerate all RXDIDs supported by the Device, the driver posts a
-> message with VIRTCHNL_OP_GET_SUPPORTED_RXDIDS opcode.
->
-> In reply to this message CP PF will return a 64 bits mask of the
-> supported RXDIDs where set bits represent valid RXDID values.
->
-> The capability and negotiation protocol does not provide an
-> enumeration of the receive descriptors format structures and relies on
-> the format provided by the device’s package.
+As described in the ‘RX Descriptors Format’ section, the format of a descriptor is defined by 6-bit RXDID field of the receive descriptor. To enumerate all RXDIDs supported by the Device, the driver posts a message with VIRTCHNL_OP_GET_SUPPORTED_RXDIDS opcode.
+
+In reply to this message CP PF will return a 64 bits mask of the supported RXDIDs where set bits represent valid RXDID values.
+
+The capability and negotiation protocol does not provide an enumeration of the receive descriptors format structures and relies on the format provided by the device’s package.
 
 ## Packet Types negotiation 
 
-> Depending on RX descriptor format, the packet type (PTYPE) field can
-> be 10 or 8 bits in size. The parse graph programmed to hardware
-> defines the relationship between packets and PTYPEs (packet type).
->
-> After receive descriptor type is negotiated and size of the PTYPE
-> field of the receive descriptor is known, the driver can discover
-> values of PTYPEs reported by the Device.
->
-> To discover PTYPE values software may use one of the following
-> methods:
+Depending on RX descriptor format, the packet type (PTYPE) field can be 10 or 8 bits in size. The parse graph programmed to hardware defines the relationship between packets and PTYPEs (packet type).
 
-- Basic PTYPE mapping mode used to create a simple mapping table for all
-  > PTYPEs supported by Device using well-known Protocol IDs
+After receive descriptor type is negotiated and size of the PTYPE field of the receive descriptor is known, the driver can discover values of PTYPEs reported by the Device.
 
-- Advanced PTYPE discovery mode used to discover advanced information
-  > for specific packets of interest to an application.
+To discover PTYPE values software may use one of the following methods:
+
+- Basic PTYPE mapping mode used to create a simple mapping table for all PTYPEs supported by Device using well-known Protocol IDs
+- Advanced PTYPE discovery mode used to discover advanced information for specific packets of interest to an application.
 
 ### Basic PTYPE Mapping
 
-> Software uses basic PTYPE negotiation mode for simple Device to SW
-> PTYPE value mapping.
->
-> In this mode, SW request the list of PTYPEs supported by Device and
-> then creates a mapping table from the 10/8b Device PTYPE value
-> reported in the RX descriptor to an internal representation required
-> by software. For example, like the DPDK (Data Plane Developer Kit) 32b
-> rte_mbuf::packet_type.
->
-> The driver posts a get_ptype_info(start_ptype_id, num_ptypes) message
-> using VIRTCHNL_OP_GET_PTYPE_INFO opcode requesting the CP PF to
-> provide information for the given number of PTYPEs starting from the
-> specified PTYPE ID.
->
-> For get_ptype_info(start_ptype_id, num_ptypes) message
-> ‘start_ptype_id’ and ‘num_ptypes’ must use 10 bits range even if
-> selected RXDID supports only 8-bit PTYPEs. In case if the driver uses
-> different RXDID for different queues, and PTYPE field size are mixed,
-> the driver can maintain two PTYPE mapping tables: one for 10 bits
-> PTYPEs and one for 8 bits PTYPEs.
->
-> The CP PF replies with information for existing PTYPEs only. Depending
-> on the number of PTYPEs requested, it may take CP PF multiple replies
-> to provide all information needed.
->
-> This information contains a variable number of bytes per PTYPE in the
-> following format:
->
-> *Table 1 CP PF PTYPE reply format*
+Software uses basic PTYPE negotiation mode for simple Device to SW PTYPE value mapping.
+
+In this mode, SW request the list of PTYPEs supported by Device and then creates a mapping table from the 10/8b Device PTYPE value reported in the RX descriptor to an internal representation required by software. For example, like the DPDK (Data Plane Developer Kit) 32b rte_mbuf::packet_type.
+
+The driver posts a get_ptype_info(start_ptype_id, num_ptypes) message using VIRTCHNL_OP_GET_PTYPE_INFO opcode requesting the CP PF to provide information for the given number of PTYPEs starting from the specified PTYPE ID.
+
+For get_ptype_info(start_ptype_id, num_ptypes) message ‘start_ptype_id’ and ‘num_ptypes’ must use 10 bits range even if selected RXDID supports only 8-bit PTYPEs. In case if the driver uses different RXDID for different queues, and PTYPE field size are mixed, the driver can maintain two PTYPE mapping tables: one for 10 bits PTYPEs and one for 8 bits PTYPEs.
+
+The CP PF replies with information for existing PTYPEs only. Depending on the number of PTYPEs requested, it may take CP PF multiple replies to provide all information needed.
+
+This information contains a variable number of bytes per PTYPE in the following format:
+
+*Table 1 CP PF PTYPE reply format*
 
 <table>
 <colgroup>
