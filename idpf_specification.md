@@ -4517,12 +4517,9 @@ spec</th>
 </tbody>
 </table>
 
-> For example, for PTYPE \[26\] CP PF could reply with the following
-> buffer:
->
->  
->
-> *Table 2 CP PF PTYPE information reply example*
+For example, for PTYPE \[26\] CP PF could reply with the following buffer:
+
+*Table 2 CP PF PTYPE information reply example*
 
 <table>
 <colgroup>
@@ -5036,9 +5033,9 @@ num_chunks
 
 struct virtchnl2_add_queue_groups {
 
-> /\* IN, vport_id to add queue group to, same as allocated by
->
-> \* CreateVport.
+/\* IN, vport_id to add queue group to, same as allocated by
+
+\* CreateVport.
 
 \* NA for mailbox and other types not assigned to vport
 
@@ -5092,48 +5089,40 @@ struct virtchnl2_queue_group_id qg_ids\[1\];
 
 - Events (WIP)
 
-> Events are asynchronous messages that are sent from the NIC to the
-> driver. The NIC may choose to send these events anytime once the
-> mailbox is operational.
->
-> Following are the events that the driver is interested in:
->
-> **VIRTCHNL2_EVENT_LINK_CHANGE - Sent when the link is up or down**
->
-> **VIRTCHNL2_EVENT_START_RESET_ADI - Sent when the ADI is reset has
-> been initiated**
->
-> **VIRTCHNL2_EVENT_FINISH_RESET_ADI - Sent when the ADI reset was
-> completed**
+Events are asynchronous messages that are sent from the NIC to the driver. The NIC may choose to send these events anytime once the mailbox is operational.
 
-- The ADIs dont have physical function but their config space is
-  > emulated by the PF driver. These events are used by the PF driver to
-  > bring up the ADIs out of their reset
+Following are the events that the driver is interested in:
 
-> **VIRTCHNL2_EVENT_UPDATE_STATS (TBD) - Sent when there is an update to
-> be raised immediately**
+**VIRTCHNL2_EVENT_LINK_CHANGE - Sent when the link is up or down**
 
-struct virtchnl2_event {
+**VIRTCHNL2_EVENT_START_RESET_ADI - Sent when the ADI is reset has been initiated**
 
-> /\* see VIRTCHNL2_EVENT_CODES definitions \*/
->
-> \_\_le32 event;
->
-> /\* link_speed provided in Mbps \*/
->
-> \_\_le32 link_speed;
->
-> \_\_le32 vport_id;
->
-> u8 link_status;
->
-> u8 pad\[1\];
->
-> /\* CP sends reset notification to PF with corresponding ADI ID \*/
->
-> \_\_le16 adi_id;
->
-> };
+**VIRTCHNL2_EVENT_FINISH_RESET_ADI - Sent when the ADI reset was completed**
+
+- The ADIs dont have physical function but their config space is emulated by the PF driver. These events are used by the PF driver to bring up the ADIs out of their reset
+
+**VIRTCHNL2_EVENT_UPDATE_STATS (TBD) - Sent when there is an update to be raised immediately**
+
+    struct virtchnl2_event {
+        /\* see VIRTCHNL2_EVENT_CODES definitions \*/
+        
+        \_\_le32 event;
+
+        /\* link_speed provided in Mbps \*/
+
+        \_\_le32 link_speed;
+
+        \_\_le32 vport_id;
+
+        u8 link_status;
+
+        u8 pad\[1\];
+
+        /\* CP sends reset notification to PF with corresponding ADI ID \*/
+
+        \_\_le16 adi_id;
+
+    };
 
 # Function Level reset
 
@@ -5145,72 +5134,30 @@ graceful XLR, triggered by the IDPF during unload process, there can be
 additional XLR triggers happening asynchronously by device itself or by
 O/S. Potential XLR sources can be:
 
-1.  FLR/VFLR (PF/VF Level Reset) bit setting in the Physical/Virtual
-    > function configuration space.
-
-2.  Function BME (Bus Master Enable) bit in the Physical/Virtual
-    > function configuration space is cleared.
-
+1.  FLR/VFLR (PF/VF Level Reset) bit setting in the Physical/Virtual function configuration space.
+2.  Function BME (Bus Master Enable) bit in the Physical/Virtual function configuration space is cleared.
 3.  VF Only: VFE bit is cleared in the PF configuration space.
-
-4.  Graceful trigger by IDPF driver during unload or reload process - PF
-    > by setting PFGEN_CTRL.PFSWR or VF by sending
-    > “VIRTCHNL_OP_RESET_VF” mailbox command.
-
+4.  Graceful trigger by IDPF driver during unload or reload process - PF by setting PFGEN_CTRL.PFSWR or VF by sending “VIRTCHNL_OP_RESET_VF” mailbox command.
 5.  Function D state changes to D3.
-
 6.  High Level Device or PCIE Level Resets, i.e. PeRST.
 
 ## Graceful VFR
 
-> This flow is triggered by the driver itself as part of driver
-> load/unload or other failure use cases, which require return to driver
-> default configuration. The flow to be executed is:
+This flow is triggered by the driver itself as part of driver load/unload or other failure use cases, which require return to driver default configuration. The flow to be executed is:
 
-- Before Triggering XLR, the state of device visible to IDPF driver in
-  > PF/VFGEN_RSTAT register to is expected to be “PF/VFR_ACTIVE” state
-  > (10b).
-
-- The IDPF triggers XFR: PF setting PFGEN_CTRL.PFSWR (XLR is triggered
-  > immediately) or VF sending the “VIRTCHNL_OP_RESET_VF” command, which
-  > is executed by Host Management after delay.
-
-- Following this, HW will automatically clear PF/VFGEN_RSTAT register to
-  > “PF/VFR_INPROGRESS” state (00b), while the driver will start polling
-  > the PF/VFGEN_RSTAT register to get back into “PF/VFR_COMPLETED”
-  > state (01b), meaning that hardware PF/VF device is initialized to
-  > its default state.
-
-- After it happens the PF/VF XIO is ready for re-initialization. As part
-  > of the initialization and execution of the first command in the
-  > initialization sequence “GetVersion” virtChnl command, Host
-  > Management will set PF/VFGEN_RSTAT register back to “PF/VFR_ACTIVE”
-  > state (10b).
+- Before Triggering XLR, the state of device visible to IDPF driver in PF/VFGEN_RSTAT register to is expected to be “PF/VFR_ACTIVE” state (10b).
+- The IDPF triggers XFR: PF setting PFGEN_CTRL.PFSWR (XLR is triggered immediately) or VF sending the “VIRTCHNL_OP_RESET_VF” command, which is executed by Host Management after delay.
+- Following this, HW will automatically clear PF/VFGEN_RSTAT register to “PF/VFR_INPROGRESS” state (00b), while the driver will start polling the PF/VFGEN_RSTAT register to get back into “PF/VFR_COMPLETED” state (01b), meaning that hardware PF/VF device is initialized to its default state.
+- After it happens the PF/VF XIO is ready for re-initialization. As part of the initialization and execution of the first command in the initialization sequence “GetVersion” virtChnl command, Host Management will set PF/VFGEN_RSTAT register back to “PF/VFR_ACTIVE” state (10b).
 
 ## Asynchronous VFR
 
-> In this case, XLR happens asynchronously to the driver, usually
-> triggered by Device, OS or any other source described above. In this
-> case the driver is expected to detect XLR condition and start polling
-> till function is back to normal working state and then to start
-> re-initialization process.
->
-> Expected driver flow in this case is:
+In this case, XLR happens asynchronously to the driver, usually triggered by Device, OS or any other source described above. In this case the driver is expected to detect XLR condition and start polling till function is back to normal working state and then to start re-initialization process.
 
-- When the driver detects “TX timeout” on its data TX queues or it
-  > detects that its Mailbox TX Queue “enable” bit in
-  > PF/<span class="mark">VF_ATQLEN. ATQENABLE</span> is cleared, the
-  > driver is expected to assume XLR and check if its PF/VFGEN_RSTAT
-  > register is not in “PFR/VFR_ACTIVE” state (10b).
+Expected driver flow in this case is:
 
-<!-- -->
-
-- Following XLR detection, the driver is expected to avoid sending new
-  > data or control transactions to the device, poll for PF/VFGEN_RSTAT
-  > register to get back into “PFR/VFR_COMPLETED” state and then to
-  > re-initialize itself.
-
->  
+- When the driver detects “TX timeout” on its data TX queues or it detects that its Mailbox TX Queue “enable” bit in PF/<span class="mark">VF_ATQLEN. ATQENABLE</span> is cleared, the driver is expected to assume XLR and check if its PF/VFGEN_RSTAT register is not in “PFR/VFR_ACTIVE” state (10b).
+- Following XLR detection, the driver is expected to avoid sending new data or control transactions to the device, poll for PF/VFGEN_RSTAT register to get back into “PFR/VFR_COMPLETED” state and then to re-initialize itself.
 
 ***Note***: Despite the fact that VF located IDPF devices operate
 completely independently and does not require any initialization or
@@ -5221,7 +5168,6 @@ this PF.
 # Standard offloads
 
 - Multiple Default vPorts
-
 - Container Dedicated Queues
 
 All offloads (standard or advanced) are negotiated. This gives a device
@@ -5236,84 +5182,81 @@ to redirect packets to a specific vport.
 
 - Capability and Data structures
 
-\#define VIRTCHNL2_CAP_MACFILTER BIT(2)
+    \#define VIRTCHNL2_CAP_MACFILTER BIT(2)
 
 The opcodes used to add/delete mac filters are
 
-\#define VIRTCHNL2_OP_ADD_MAC_ADDR 535
+    \#define VIRTCHNL2_OP_ADD_MAC_ADDR 535
 
-\#define VIRTCHNL2_OP_DEL_MAC_ADDR 536
+    \#define VIRTCHNL2_OP_DEL_MAC_ADDR 536
 
-/\* VIRTCHNL2_MAC_TYPE
+    /\* VIRTCHNL2_MAC_TYPE
 
-\* VIRTCHNL2_MAC_ADDR_PRIMARY
+    \* VIRTCHNL2_MAC_ADDR_PRIMARY
 
-\* Driver should set @type to VIRTCHNL2_MAC_ADDR_PRIMARY for the
+    \* Driver should set @type to VIRTCHNL2_MAC_ADDR_PRIMARY for the
 
-\* primary/device unicast MAC address filter for
-VIRTCHNL2_OP_ADD_MAC_ADDR
+    \* primary/device unicast MAC address filter for VIRTCHNL2_OP_ADD_MAC_ADDR
 
-\* and VIRTCHNL2_OP_DEL_MAC_ADDR. This allows for the underlying control
+    \* and VIRTCHNL2_OP_DEL_MAC_ADDR. This allows for the underlying control
 
-\* plane function to accurately track the MAC address and for
-VM/function
+    \* plane function to accurately track the MAC address and for VM/function
 
-\* reset.
+    \* reset.
 
-\*
+    \*
 
-\* VIRTCHNL2_MAC_ADDR_EXTRA
+    \* VIRTCHNL2_MAC_ADDR_EXTRA
 
-\* Driver should set @type to VIRTCHNL2_MAC_ADDR_EXTRA for any extra
+    \* Driver should set @type to VIRTCHNL2_MAC_ADDR_EXTRA for any extra
 
-\* unicast and/or multicast filters that are being added/deleted via
+    \* unicast and/or multicast filters that are being added/deleted via
 
-\* VIRTCHNL2_OP_ADD_MAC_ADDR/VIRTCHNL2_OP_DEL_MAC_ADDR respectively.
+    \* VIRTCHNL2_OP_ADD_MAC_ADDR/VIRTCHNL2_OP_DEL_MAC_ADDR respectively.
 
-\*/
+    \*/
 
-\#define VIRTCHNL2_MAC_ADDR_PRIMARY 1
+    \#define VIRTCHNL2_MAC_ADDR_PRIMARY 1
 
-\#define VIRTCHNL2_MAC_ADDR_EXTRA 2
+    \#define VIRTCHNL2_MAC_ADDR_EXTRA 2
 
-/\* structure to specify each MAC address \*/
+    /\* structure to specify each MAC address \*/
 
-struct virtchnl2_mac_addr {
+    struct virtchnl2_mac_addr {
 
-u8 addr\[ETH_ALEN\];
+        u8 addr\[ETH_ALEN\];
 
-/\* see VIRTCHNL2_MAC_TYPE definitions \*/
+        /\* see VIRTCHNL2_MAC_TYPE definitions \*/
 
-u8 type;
+        u8 type;
 
-u8 pad;
+        u8 pad;
 
-};
+    };
 
-/\* VIRTCHNL2_OP_ADD_MAC_ADDR
+    /\* VIRTCHNL2_OP_ADD_MAC_ADDR
 
-\* VIRTCHNL2_OP_DEL_MAC_ADDR
+    \* VIRTCHNL2_OP_DEL_MAC_ADDR
 
-\* PF/VF driver uses this structure to send list of MAC addresses to be
+    \* PF/VF driver uses this structure to send list of MAC addresses to be
 
-\* added/deleted to the CP whereas CP performs the action and returns
-the
+    \* added/deleted to the CP whereas CP performs the action and returns the
 
-\* status.
+    \* status.
 
-\*/
+    \*/
 
-struct virtchnl2_mac_addr_list {
+    struct virtchnl2_mac_addr_list {
 
-\_\_le32 vport_id;
+        \_\_le32 vport_id;
 
-\_le16 num_mac_addr;
+        \_le16 num_mac_addr;
 
-u8 pad\[2\];
+        u8 pad\[2\];
 
-struct virtchnl2_mac_addr mac_addr_list\[1\];
+        struct virtchnl2_mac_addr mac_addr_list\[1\];
 
-};
+    };
 
 - Configuration Options
 
