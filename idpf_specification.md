@@ -11234,16 +11234,8 @@ NOT IN SPEC
     - S-IOV - PCIe configuration space is composed by software (hypervisor)
     - *AF_XDP passthrough - uses PASID (Process Address Space ID) but not PCIe configuration space*
     - Emulated - SW backend (mimicking Device behavior) - will need to be created then donated
-
- 
-
-6.  RDMA:
-
-    1.  Is a standard Negotiated feature. The Config Interface as well
-        > as the fast path Interface will be generic irrespective of the
-        > Transport Protocol in use.
-
- 
+  6.  RDMA:
+    1.  Is a standard Negotiated feature. The Config Interface as well as the fast path Interface will be generic irrespective of the Transport Protocol in use.
 
 # Validation Framework
 
@@ -11331,62 +11323,43 @@ Samudrala</u></a></p></th>
 </tbody>
 </table>
 
-> Create vPort Configuration details
->
-> *struct virtchnl_create_vport {*
->
-> */\* see enum virtchnl_vport_type vport \*/*
->
-> *s32 vport_type;*
->
-> */\* see enum virtchnl_queue_model \*/*
->
-> *s32 txq_model;*
->
-> */\* see enum virtchnl_queue_model \*/*
->
-> *s32 rxq_model;*
->
-> *u16 num_tx_q;*
->
-> */\* valid only if txq_model is split Q \*/*
->
-> *u16 num_tx_complq;*
->
-> *u16 num_rx_q;*
->
-> */\* valid only if rxq_model is split Q \*/*
->
-> *u16 num_rx_bufq;*
->
-> *u16 vport_id;*
->
-> *u16 max_mtu;*
->
-> *u8 default_mac_addr\[VIRTCHNL_ETH_LENGTH_OF_ADDRESS\];*
->
-> */\* see enum virtchnl_rss_algorithm \*/*
->
-> *s32 rss_algorithm;*
->
-> *u16 rss_key_size;*
->
-> *u16 rss_lut_size;*
->
-> *u16 qset_handle;*
->
-> *u16 pad2;*
->
-> */\* see enum virtchnl_header_split_caps \*/*
->
-> *s32 rx_split_pos;*
->
-> *u32 ingress_pasid;*
->
-> *u32 egress_pasid;*
->
-> *u32 egress_buf_pasid;*
->
-> *struct virtchnl_queue_reg_chunks chunks;*
->
-> *};*
+Create vPort Configuration details
+
+```C
+struct virtchnl_create_vport 
+{
+  /* see enum virtchnl_vport_type vport */
+  s32 vport_type;
+
+  /* see enum virtchnl_queue_model */
+  s32 txq_model;
+
+  /* see enum virtchnl_queue_model */
+  s32 rxq_model;
+  u16 num_tx_q;
+
+  /* valid only if txq_model is split Q */
+  u16 num_tx_complq;
+  u16 num_rx_q;
+
+  /* valid only if rxq_model is split Q */
+  u16 num_rx_bufq;
+  u16 vport_id;
+  u16 max_mtu;
+  u8 default_mac_addr\[VIRTCHNL_ETH_LENGTH_OF_ADDRESS\];
+  
+  /* see enum virtchnl_rss_algorithm */
+  s32 rss_algorithm;
+  u16 rss_key_size;
+  u16 rss_lut_size;
+  u16 qset_handle;
+  u16 pad2;
+
+  /* see enum virtchnl_header_split_caps */
+  s32 rx_split_pos;
+  u32 ingress_pasid;
+  u32 egress_pasid;
+  u32 egress_buf_pasid;
+  struct virtchnl_queue_reg_chunks chunks;*
+};
+```
