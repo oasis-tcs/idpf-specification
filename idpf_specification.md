@@ -5571,30 +5571,13 @@ virtchannel2.h Header file in Appendix.
 
 Runtime flow for TSO
 
-- The application provides a datagram to be transmitted to the protocol
-  > stack.
-
-- The protocol stack divides the datagram into multiple TSO requests
-  > based on the capabilities of the underlying device.
-
-- The protocol stack passes the datagram to the driver with the
-  > appropriate header information.
-
-- The driver builds the descriptor stream necessary to send the datagram
-  > based on the hardware-specific restrictions as listed above and
-  > places that descriptor stream on the appropriate transmit queue.
-
-- The driver updates the doorbell to notify the device that work is
-  > available on the transmit queue.
-
-- After the device has processed the entire TSO request, it will issue a
-  > completion to the driver.
-
-- The driver releases the buffers associated with the headers and the
-  > datagram back to the protocol stack, signaling that the memory can
-  > be reused.
-
-<!-- -->
+- The application provides a datagram to be transmitted to the protocol stack.
+- The protocol stack divides the datagram into multiple TSO requests based on the capabilities of the underlying device.
+- The protocol stack passes the datagram to the driver with the appropriate header information.
+- The driver builds the descriptor stream necessary to send the datagram based on the hardware-specific restrictions as listed above and places that descriptor stream on the appropriate transmit queue.
+- The driver updates the doorbell to notify the device that work is available on the transmit queue.
+- After the device has processed the entire TSO request, it will issue a completion to the driver.
+- The driver releases the buffers associated with the headers and the datagram back to the protocol stack, signaling that the memory can be reused.
 
 - Device and Control Plane Behavioral Model
 
@@ -5607,14 +5590,9 @@ headers for each.
 There are three components to this process, as illustrated in the
 diagram below:
 
-- Segmenting the datagram into one or more segments of at most MSS bytes
-  > in size
-
-- Assembling the datagram segments into packets of at most MTU bytes in
-  > size by adding a header
-
-- Editing the headers to reflect that the packet is part of a larger
-  > message
+- Segmenting the datagram into one or more segments of at most MSS bytes in size
+- Assembling the datagram segments into packets of at most MTU bytes in size by adding a header
+- Editing the headers to reflect that the packet is part of a larger message
 
 Example
 
@@ -5672,16 +5650,7 @@ delivered to the Host.
 
 - Device Interface
 
-> Rx Checksum offload is requested by the driver on a per-queue basis
-> after the Device capabilities are negotiated. If RX checksum is
-> enabled on a given queue, the RX checksum validation or Raw checksum
-> will be delivered with any receive packet to the driver in the receive
-> descriptor. There is a flag in the receive descriptor to indicate
-> whether tag(s) are present.
-
-- 
-
-<!-- -->
+Rx Checksum offload is requested by the driver on a per-queue basis after the Device capabilities are negotiated. If RX checksum is enabled on a given queue, the RX checksum validation or Raw checksum will be delivered with any receive packet to the driver in the receive descriptor. There is a flag in the receive descriptor to indicate whether tag(s) are present.
 
 - Capability and Data structures
 
@@ -5752,33 +5721,18 @@ delivered to the Host.
 
 ## RSS (Receive Side Scaling)
 
-> RSS is enabled on a per vPort basis. The initial set of RX queues
-> requested for a vPort while it is created and granted by the CP can be
-> part of RSS if the feature was negotiated.
->
-> As a result of this feature, the device will calculate a hash on
-> certain fields in the packet depending on the Flow type as programmed
-> by the Device Dataplane definition. This hash is used two ways
+RSS is enabled on a per vPort basis. The initial set of RX queues requested for a vPort while it is created and granted by the CP can be part of RSS if the feature was negotiated.
 
-1.  Deliver the hash value in the RX descriptor along with the packet.
-    > This can be used by the Host OS for further classification needs.
+As a result of this feature, the device will calculate a hash on certain fields in the packet depending on the Flow type as programmed by the Device Dataplane definition. This hash is used two ways
 
-2.  Distribute the RX packets belonging to different flows to different
-    > RX queues based on the distribution programmed by the Device
-    > driver as part of Lookup Table (LUT) programming.
-
-    1.  All packets of a flow get hashed to a single RX queue as per the
-        > Data Plane programming of the device, although a device with
-        > programmable Dataplane can decide to hash them differently.
-
-> The Device driver can learn about the fields on which the hash was
-> performed for a packet and as an advanced feature can negotiate to
-> select the fields in teh packet to perform the hash.
+1.  Deliver the hash value in the RX descriptor along with the packet. This can be used by the Host OS for further classification needs.
+2.  Distribute the RX packets belonging to different flows to different RX queues based on the distribution programmed by the Device driver as part of Lookup Table (LUT) programming.
+  1.  All packets of a flow get hashed to a single RX queue as per the Data Plane programming of the device, although a device with programmable Dataplane can decide to hash them differently.
+  
+  The Device driver can learn about the fields on which the hash was performed for a packet and as an advanced feature can negotiate to select the fields in teh packet to perform the hash.
 
 - Device Interface
-
-  - RSS hash value is delivered in the RX descriptor as described in the
-    > RX Descriptor sections.
+  - RSS hash value is delivered in the RX descriptor as described in the RX Descriptor sections.
 
 - Capability and Data structures
 
@@ -5901,43 +5855,26 @@ delivered to the Host.
 
 - Configuration
 
-> RSS can be configured as a standard feature by negotiation with CP as
-> part of device Capability negotiation.
->
-> After the negotiation, during vPort Create the algorithm can be
-> selected or provided by the Device as well as the key size and lut
-> size used.
+RSS can be configured as a standard feature by negotiation with CP as part of device Capability negotiation.
+
+After the negotiation, during vPort Create the algorithm can be selected or provided by the Device as well as the key size and lut size used.
 
 - Driver Configuration and Runtime flow
 
 1.  Driver -\> CP (get_capabilities)
-
 2.  Driver -\> CP (create_vport)
-
 3.  Driver -\> CP (set_key)
-
 4.  Driver -\> CP (get_key)
-
 5.  Driver -\> CP (set_lut)
-
 6.  Driver -\> CP (get_lut)
 
 - Device and Control Plane Behavioral Model
 
-> The Device can expose standard and advanced configuration options for
-> RSS, as part of standard features, the device must expose the ability
-> to choose the Algorithm, set the Key and Lookup table for directing
-> traffic to the Rx queues.
->
-> In terms of advanced features, the Device can expose ways to learn
-> about the flow types and enable/disable RSS on individual flow types.
-> Also the Device can support ways to change the fields on which the
-> hash is performed for a given flow type.
->
-> If the Driver sends a configuration that is malicious such as set the
-> LUT with queues that are not part of the vPort, CP can decide to
-> either fail the request or mark the interface as malicious and
-> initiate an interface level reset.
+The Device can expose standard and advanced configuration options for RSS, as part of standard features, the device must expose the ability to choose the Algorithm, set the Key and Lookup table for directing traffic to the Rx queues.
+
+In terms of advanced features, the Device can expose ways to learn about the flow types and enable/disable RSS on individual flow types. Also the Device can support ways to change the fields on which the hash is performed for a given flow type.
+
+If the Driver sends a configuration that is malicious such as set the LUT with queues that are not part of the vPort, CP can decide to either fail the request or mark the interface as malicious and initiate an interface level reset.
 
 ## Header Split
 
@@ -5956,20 +5893,12 @@ There are several capabilities associated with header split which must
 be learned from the device.
 
 - Header buffer min/max size
-
 - Header buffer granularity
-
 - Header buffer alignment requirement (if any)
-
 - Packet buffer min/max size
-
 - Packet buffer granularity
-
 - Packet buffer alignment requirement (if any)
-
 - Header split modes supported (see details below)
-
-<!-- -->
 
 - Configuration
 
@@ -5996,23 +5925,10 @@ laid out across the associated buffers.
 
 Supported modes are the following:
 
-- Header Split disabled (Single buffer) – the whole packet is always
-  > posted to packet buffer(s)
-
-- Header split enabled W/O supporting "Split large, coalesce
-  > small"<span class="mark">.</span> – if the header is identified and
-  > fits into the header buffer, post header to header buffer and
-  > payload to packet buffer(s), else post the whole packet to the
-  > packet buffer(s)
-
-- Header Split with the support for “Split large, coalesce small” – if
-  > packet length is \<= header buffer size, post the whole packet to
-  > the header buffer, else use header split algorithm above.
-
-> (Note: This option is supported only for non RSC.
->
-> For RSC segments it is always header split regardless of this
-> condition<span class="mark">.)</span>
+- Header Split disabled (Single buffer) – the whole packet is always posted to packet buffer(s)
+- Header split enabled W/O supporting "Split large, coalesce small"<span class="mark">.</span> – if the header is identified and fits into the header buffer, post header to header buffer and payload to packet buffer(s), else post the whole packet to the packet buffer(s)
+- Header Split with the support for “Split large, coalesce small” – if packet length is \<= header buffer size, post the whole packet to the header buffer, else use header split algorithm above.
+  (Note: This option is supported only for non RSC. For RSC segments it is always header split regardless of this condition<span class="mark">.)</span>
 
 - Driver Configuration and Runtime flow
 
@@ -6028,21 +5944,10 @@ requirements, if any.
 When processing a receive queue, the driver must check each receive
 descriptor for the following information:
 
-- SPH – this bit indicates that the packet was split across the header
-  > buffer and packet buffer(s) unless HBO is also set, indicating an
-  > overflow condition
-
-- HBO – this bit indicates that the header length is larger than the
-  > header buffer size. In this situation, the whole packet is posted to
-  > the packet buffer(s)
-
-- HDRL – number of bytes placed in the header buffer; will be the header
-  > length if the packet is split or the packet length if the entire
-  > packet was posted to the header buffer
-
-- PKLT – number of bytes placed in packet buffer; for a packet that
-  > spans multiple buffers, all buffers but the last one is full (Note:
-  > In case of HBO the PKTL will hold the whole packet.)
+- SPH – this bit indicates that the packet was split across the header buffer and packet buffer(s) unless HBO is also set, indicating an overflow condition
+- HBO – this bit indicates that the header length is larger than the header buffer size. In this situation, the whole packet is posted to the packet buffer(s)
+- HDRL – number of bytes placed in the header buffer; will be the header length if the packet is split or the packet length if the entire packet was posted to the header buffer
+- PKLT – number of bytes placed in packet buffer; for a packet that spans multiple buffers, all buffers but the last one is full (Note: In case of HBO the PKTL will hold the whole packet.)
 
 Based on these fields in the receive descriptor, the driver indicates
 the packet up to the OS along with the appropriate software data
@@ -6122,76 +6027,36 @@ size. This may be larger than the interface MTU.
 
 When RSC is enabled, the receive flow in the device is as follows:
 
-- Packet arrives at the device, which searches for an in-use RSC context
-  > associated with the flow.
-
-- If not found, the device pulls the next available buffer from the Rx
-  > Buffer Queue and finds a free RSC context
-
-- The device writes the packet data to the buffer in host memory and
-  > updates its internal RSC context. The packet header is not written
-  > to host memory until the RSC context is closed.
-
-- If there is an in-use RSC context associated with the flow (i.e., for
-  > all subsequent packets after the first to open an RSC context), the
-  > device compares the remaining space in the already-allocated buffer
-  > with the number of bytes of data in the current packet.
-
-  - If needed, the device pulls the next available buffer from the Rx
-    > Buffer Queue and updates the RSC context accordingly.
-
-- The Device appends the packet data to the buffer(s) in host memory and
-  > updates the header for each subsequent packet.
-
+- Packet arrives at the device, which searches for an in-use RSC context associated with the flow.
+- If not found, the device pulls the next available buffer from the Rx Buffer Queue and finds a free RSC context
+- The device writes the packet data to the buffer in host memory and updates its internal RSC context. The packet header is not written to host memory until the RSC context is closed.
+- If there is an in-use RSC context associated with the flow (i.e., for all subsequent packets after the first to open an RSC context), the device compares the remaining space in the already-allocated buffer with the number of bytes of data in the current packet.
+  - If needed, the device pulls the next available buffer from the Rx Buffer Queue and updates the RSC context accordingly.
+- The Device appends the packet data to the buffer(s) in host memory and updates the header for each subsequent packet.
 - At some point, it will be time to close the context.
-
-- The device writes the packet header to host memory (to the header
-  > buffer associated with the first packet buffer) and completes all
-  > buffers associated with the RSC context consecutively on the receive
-  > queue. Note that the buffers may or may not have been consecutive on
-  > the Rx Buffer Queue.
+- The device writes the packet header to host memory (to the header buffer associated with the first packet buffer) and completes all buffers associated with the RSC context consecutively on the receive queue. Note that the buffers may or may not have been consecutive on the Rx Buffer Queue.
 
 ## Double Completion (WIP)
 
 - Device Interface
-
 - Capability and Data structures
-
 - Configuration
-
 - Driver Configuration and Runtime flow
-
 - Device and Control Plane Behavioral Model
 
 **Host SW support for LSO miss completions**
 
-- When there is a miss for a TX packet rule lookup in the Device and the
-  > Device sends the packet to be handled by Special SW on Embedded
-  > Cores , Device will send two completions for SW (per completion
-  > queue context configuration) :
-
-  - First completion is reported as a “miss” completion. This completion
-    > is sent for the original packet that is missed.
-
-  - Second completion is reported as a “reinject” completion. This
-    > completion is sent for the reinjected packet.
+- When there is a miss for a TX packet rule lookup in the Device and the Device sends the packet to be handled by Special SW on Embedded Cores , Device will send two completions for SW (per completion queue context configuration) :
+  - First completion is reported as a “miss” completion. This completion is sent for the original packet that is missed.
+  - Second completion is reported as a “reinject” completion. This completion is sent for the reinjected packet.
 
 In both cases the timestamp reported in the TX completion represents the
 time upon which completion is sent to host SW.
 
-- Host SW should deallocate the original packet buffers when it gets the
-  > first completion and should send a completion to the congestion
-  > control SW (with the completion timestamp) when it gets the second
-  > completion. Host SW activates a timer between the first and second
-  > completion . Host SW reports the completion to congestion control SW
-  > if timer expires before second completion was sent from HW.
-
-  - SW cannot release the packet buffer Context ( In case of Linux, it's
-    > teh SKB) until both are done.
-
-> Here are the few cases that a driver might see in terms of the order
-> of completion, and the flow it needs to implement to support the
-> double completion feature.
+- Host SW should deallocate the original packet buffers when it gets the first completion and should send a completion to the congestion control SW (with the completion timestamp) when it gets the second completion. Host SW activates a timer between the first and second completion . Host SW reports the completion to congestion control SW if timer expires before second completion was sent from HW.
+  - SW cannot release the packet buffer Context ( In case of Linux, it's the SKB) until both are done.
+  
+  Here are the few cases that a driver might see in terms of the order of completion, and the flow it needs to implement to support the double completion feature.
 
 <table>
 <colgroup>
@@ -6303,36 +6168,22 @@ packet actually is scheduled by the device.
 
 ## Flow Steering (WIP)
 
-> This feature enables flow steering to a queue or queue group or form
-> dropping certain flows using exact match or wild card match filters on
-> the device. It can be used for implementing tenant ACLs as well as
-> long as the CP supports this feature for a given Driver interface.
+This feature enables flow steering to a queue or queue group or form dropping certain flows using exact match or wild card match filters on the device. It can be used for implementing tenant ACLs as well as long as the CP supports this feature for a given Driver interface.
 
 - Device Interface
 
-> The Driver negotiates with the device the capability to
-> add/delete/query flow steering filter rules over the mailbox. The
-> response from the device can be negotiated as well using virtchannel
-> flags
+The Driver negotiates with the device the capability to add/delete/query flow steering filter rules over the mailbox. The response from the device can be negotiated as well using virtchannel flags
 
-- All responses: success or failure. This is the default setting for all
-  > virtchannel requests from the driver to CP.
+- All responses: success or failure. This is the default setting for all virtchannel requests from the driver to CP.
+- Just failure response. This needs to be enabled by setting an appropriate virtchannel flag in the virtchannel Descriptor.
+- Fence. This needs to be enabled by setting an appropriate virtchannel flag in the virtchannel Descriptor. Upon setting this flag on a request from the driver to the CP, CP responds to this particular request after the CP checks all other previous requests from the Interface on this mailbox where completed successfully or otherwise.
 
-- Just failure response. This needs to be enabled by setting an
-  > appropriate virtchannel flag in the virtchannel Descriptor.
-
-- Fence. This needs to be enabled by setting an appropriate virtchannel
-  > flag in the virtchannel Descriptor. Upon setting this flag on a
-  > request from the driver to the CP, CP responds to this particular
-  > request after the CP checks all other previous requests from the
-  > Interface on this mailbox where completed successfully or otherwise.
-
-  - Capability and Data structures
+- Capability and Data structures
 
 > \#define VIRTCHNL2_CAP_FLOW_RULES BIT(16)
 >
-> If the device supports flow steering it responds with the capability
-> supported in get_capability flow.
+
+If the device supports flow steering it responds with the capability supported in get_capability flow.
 
 <table>
 <colgroup>
@@ -6569,17 +6420,11 @@ the match key using proto_hdr format. */</p></th>
 
 - Configuration
 
-> Device, if it can support flow Steering, will allocate certain flow
-> Steering table resources to be used by the SW as requested by the
-> driver. A get_flow_steering_capability data structure will be defined
-> to learn about the device's detailed capability. The number of rules
-> supported, match kind etc.
+Device, if it can support flow Steering, will allocate certain flow Steering table resources to be used by the SW as requested by the driver. A get_flow_steering_capability data structure will be defined to learn about the device's detailed capability. The number of rules supported, match kind etc.
 
 - Driver Configuration and Runtime flow
 
-> A driver can add flow_rules after the device is initialized. A device
-> can fail a rule add for various reasons. A response is asynchronously
-> provided by the device.
+A driver can add flow_rules after the device is initialized. A device can fail a rule add for various reasons. A response is asynchronously provided by the device.
 
 - Device and Control Plane Behavioral Model
 
@@ -6589,23 +6434,11 @@ TBD
 
 - Device Interface
 
-> The Driver negotiates with the device the capability to add/delete
-> Security Context (SA) rules over the mailbox. The response from the
-> device can be negotiated as well using virtchannel flags
+The Driver negotiates with the device the capability to add/delete Security Context (SA) rules over the mailbox. The response from the device can be negotiated as well using virtchannel flags
 
-- All responses: success or failure. This is the default setting for all
-  > virtchannel requests from the driver to CP.
-
-- Just failure response. This needs to be enabled by setting an
-  > appropriate virtchannel flag in the virtchannel Descriptor.
-
-- Fence. This needs to be enabled by setting an appropriate virtchannel
-  > flag in the virtchannel Descriptor. Upon setting this flag on a
-  > request from the driver to the CP, CP responds to this particular
-  > request after the CP checks all other previous requests from the
-  > Interface on this mailbox where completed successfully or otherwise.
-
-<!-- -->
+- All responses: success or failure. This is the default setting for all virtchannel requests from the driver to CP.
+- Just failure response. This needs to be enabled by setting an appropriate virtchannel flag in the virtchannel Descriptor.
+- Fence. This needs to be enabled by setting an appropriate virtchannel flag in the virtchannel Descriptor. Upon setting this flag on a request from the driver to the CP, CP responds to this particular request after the CP checks all other previous requests from the Interface on this mailbox where completed successfully or otherwise.
 
 - Capability and Data structures (WIP)
 
@@ -6614,8 +6447,6 @@ TBD
 - Driver Configuration and Runtime flow (WIP)
 
 - Device and Control Plane Behavioral Model (WIP)
-
-## 
 
 ## RDMA Capability
 
@@ -6631,23 +6462,27 @@ reserving MSIX resources, binding them to queues etc. RDMA driver uses
 the IDPFdriver mailbox and virtchannel for initial configuration
 exchange with the CP.
 
-<span class="mark">VIRTCHNL2_OP_CONFIG_RDMA_IRQ_MAP</span>
+```C
+VIRTCHNL2_OP_CONFIG_RDMA_IRQ_MAP
 
-<span class="mark">VIRTCHNL2_OP_RELEASE_RDMA_IRQ_MAP</span>
+VIRTCHNL2_OP_RELEASE_RDMA_IRQ_MAP
 
-|                                     |                                                                              |                                             |
-|-------------------------------------|------------------------------------------------------------------------------|---------------------------------------------|
-| struct virtchnl2_rdma_qv_info {     |                                                                              |                                             |
-|                                     | \_\_le32 v_idx; /\* msix_vector \*/                                          |                                             |
-|                                     | \_\_le16 ceq_idx; /\* set to VIRTCHNL2_RDMA_INVALID_QUEUE_IDX if invalid \*/ |                                             |
-|                                     | \_\_le16 aeq_idx; /\* set to VIRTCHNL2_RDMA_INVALID_QUEUE_IDX if invalid \*/ |                                             |
-|                                     | u8 itr_idx;                                                                  |                                             |
-|                                     | };                                                                           |                                             |
-|                                     |                                                                              |                                             |
-| struct virtchnl2_rdma_qvlist_info { |                                                                              |                                             |
-|                                     |                                                                              | \_\_le32 num_vectors;                       |
-|                                     |                                                                              | struct virtchnl2_rdma_qv_info qv_info\[1\]; |
-|                                     |                                                                              | };                                          |
+struct virtchnl2_rdma_qv_info 
+{
+  __le32 v_idx; /* msix_vector */
+  __le16 ceq_idx; /* set to
+  VIRTCHNL2_RDMA_INVALID_QUEUE_IDX if invalid */
+  __le16 aeq_idx; /* set to
+  VIRTCHNL2_RDMA_INVALID_QUEUE_IDX if invalid */
+  u8 itr_idx;
+};
+
+struct virtchnl2_rdma_qvlist_inf
+{
+  __le32 num_vectors;
+  struct virtchnl2_rdma_qv_info qv_info[1];
+};
+```
 
 RDMA driver associates MSIX vector with just the CEQs and AEQs
 
@@ -6660,99 +6495,60 @@ a standard capability to a PF or a VF device
 ## PTP (WIP)
 
 - Device Interface
-
-> Device provides an Interface for synchronizing the system clock with
-> device clock. The interface is mainly to read the device clock. There
-> is no additional interface for software to control or write to the
-> device clock. Device clock sync with external/GrandMaster is taken
-> care of by the device itself. VFs will not have the access to device
-> clock. If a VF is attached to VM, VM will rely on Hypervisor/Qemu API
-> to sync VMs system clock with Host system clock.
+  
+  Device provides an Interface for synchronizing the system clock with device clock. The interface is mainly to read the device clock. There is no additional interface for software to control or write to the device clock. Device clock sync with external/GrandMaster is taken care of by the device itself. VFs will not have the access to device clock. If a VF is attached to VM, VM will rely on Hypervisor/Qemu API to sync VMs system clock with Host system clock.
 
 - Capability and Data structures
-
-> The response from VIRTCHNL2_OP_GET_CAPS rrom CP will have the
-> VIRTCHNL2_CAP_PTP information. Driver will use this info to either
-> register the PTP interfaces to driver ro control the requests from the
-> user/stack.
+  
+  The response from VIRTCHNL2_OP_GET_CAPS rrom CP will have the VIRTCHNL2_CAP_PTP information. Driver will use this info to either register the PTP interfaces to driver ro control the requests from the user/stack.
 
 - Configuration
 
 > <img src="media/image12.png" style="width:5.66146in;height:4.5737in" />
 
 - Driver Configuration and Runtime flow
-
-> On driver initialization/load if the PTP capability is supported by
-> device, driver will register the PTP object along with two read
-> callbacks. *Gettime64* for reading the device clock and
-> *Getcrosststamp* for PTM(Precision Time Measurement). The device
-> registers to read the device clock are SHTIME, SHTIME_L and SHTIME_H.
-> ART_L and ART_H are used for PTM.
+  
+  On driver initialization/load if the PTP capability is supported by device, driver will register the PTP object along with two read callbacks. *Gettime64* for reading the device clock and *Getcrosststamp* for PTM(Precision Time Measurement). The device registers to read the device clock are SHTIME, SHTIME_L and SHTIME_H. ART_L and ART_H are used for PTM.
 
 ## OEM Capabilities (WIP)
 
-> This spec allows the OEMs to add new capabilities and export them to
-> the IDPF compatible driver.
+This spec allows the OEMs to add new capabilities and export them to the IDPF compatible driver.
 
 - Device Interface
-
-> The driver learns and negotiates the OEM specific capabilities from
-> the device. Based on the current device and the node policy, certain
-> capabilities will be made available to the driver.
+  
+  The driver learns and negotiates the OEM specific capabilities from the device. Based on the current device and the node policy, certain capabilities will be made available to the driver.
 
 - Capability and Data structures
 
-> The response from <span class="mark">VIRTCHNL2_OP_GET_CAPS will have
-> the</span> VIRTCHNL2_DEVICE_TYPE, oem_cp_major_version, and
-> oem_cp_minor_version to indicate what device and the CP SW the driver
-> is talking to.
->
-> Driver will use the VIRTCHNL2_OP_GET_OEM_CAPS message to learn about
-> the special capabilities that are available.
->
-> struct virtchnl2_oem_caps {
->
-> /\* See VIRTCHNL2_OEM_CAPS definitions \*/
->
-> /\* Add 64 bit OEM_version here \*/
->
-> \_\_le64 oem_caps;
->
-> };
->
-> \#define VIRTCHNL2_CAP_OEM_P2P BIT(0) /\* port-to-port \*/
+  The response from <span class="mark">VIRTCHNL2_OP_GET_CAPS will have the</span> VIRTCHNL2_DEVICE_TYPE, oem_cp_major_version, and oem_cp_minor_version to indicate what device and the CP SW the driver is talking to.
+  
+  Driver will use the VIRTCHNL2_OP_GET_OEM_CAPS message to learn about the special capabilities that are available.
+
+  ```C
+  struct virtchnl2_oem_caps {
+    /* See VIRTCHNL2_OEM_CAPS definitions */
+    /* Add 64 bit OEM_version here */
+    __le64 oem_caps;
+  };
+
+  #define VIRTCHNL2_CAP_OEM_P2P BIT(0) /* port-to-port */
+  ```
 
 - Configuration
 
-- Driver Configuration and Runtime flow
+- Driver Configuration and Runtime flow Examples of OEM Capability:
+  1.  Port-to-port configuration
+  **port-to-port:** Upon learning the port-to-port availability and the device type, the driver may request HMA to add device specific sequence that may request additional queue groups that are necessary for the device to setup the port-to-port functionality.
+  2.  Live MIgration, device state retrieval (WIP)
 
-> Examples of OEM Capability:
+- Device and Control Plane Behavioral Model
 
-1.  Port-to-port configuration
-
-> **port-to-port:** Upon learning the port-to-port availability and the
-> device type, the driver may request HMA to add device specific
-> sequence that may request additional queue groups that are necessary
-> for the device to setup the port-to-port functionality.
-
-2.  Live MIgration, device state retrieval (WIP)
-
-    - Device and Control Plane Behavioral Model
-
-    - Examples of OEM Capability:
-
-<!-- -->
-
-1.  port-to-port:
-
-> The VIRTCHNL2_OP_ADD_QUEUE_GROUPS processing on the CP will
-> automatically reserve enough RSS LUT instances for the incoming
-> packets to be spread across the port-to-port queues. When the
-> port-to-port offload is no longer needed, the driver may free up the
-> associated NIC resources using the VIRTCHNL2_OP_DEL_QUEUE_GROUPS
-> command.
-
-2.  Live MIgration, device state state retrieval (WIP)
+- Examples of OEM Capability:
+  1.  port-to-port:
+  
+    The VIRTCHNL2_OP_ADD_QUEUE_GROUPS processing on the CP will automatically reserve enough RSS LUT instances for the incoming packets to be spread across the port-to-port queues. When the port-to-port offload is no longer needed, the driver may free up the associated NIC resources using the VIRTCHNL2_OP_DEL_QUEUE_GROUPS command.
+  
+  2.  Live MIgration, device state state retrieval (WIP)
 
 ## Application Targeted Routing (ATR)
 
@@ -6761,23 +6557,11 @@ a standard capability to a PF or a VF device
 ATR High-Level Flow
 
 - An application transmits data from a particular core (i.e., Core A)
-
-- An exact-match filter is programmed in the device by either hardware
-  > or software
-
-- Subsequent incoming frames from the same flow are directed to a
-  > receive queue associated with Core A
-
-- If the application moves to a different core (i.e., Core B), the
-  > exact-match filter is updated (by either hardware or software) when
-  > another packet is transmitted by the application
-
-- Subsequent incoming frames are directed to a receive queue associated
-  > with Core B
-
+- An exact-match filter is programmed in the device by either hardware or software
+- Subsequent incoming frames from the same flow are directed to a receive queue associated with Core A
+- If the application moves to a different core (i.e., Core B), the exact-match filter is updated (by either hardware or software) when another packet is transmitted by the application
+- Subsequent incoming frames are directed to a receive queue associated with Core B
 - If the connection is closed, the filter is removed
-
-<!-- -->
 
 - Capability and Data structures
 
@@ -6785,18 +6569,9 @@ Devices may have one or more options to add exact-match filters to the
 table. The mechanism should be communicated at configuration time. Some
 options include:
 
-- Driver adds the filter via TX Queue command (i.e., prepending an
-  > additional descriptor)
-
-- Driver adds the filter to an “ATR queue” via a single bit in the data
-  > descriptor (in this case, the associated RX queue would need to be
-  > configured in the TX queue context)
-
-- Driver enables Device sampling on each “ATR Queue” (in this case, the
-  > driver sets a sampling rate, or the device adds filters on a best
-  > effort basis)
-
-<!-- -->
+- Driver adds the filter via TX Queue command (i.e., prepending an additional descriptor)
+- Driver adds the filter to an “ATR queue” via a single bit in the data descriptor (in this case, the associated RX queue would need to be configured in the TX queue context)
+- Driver enables Device sampling on each “ATR Queue” (in this case, the driver sets a sampling rate, or the device adds filters on a best effort basis)
 
 - Configuration
 
@@ -6838,44 +6613,25 @@ and creates all its SR-IOV VF resources, which then will be run by their
 own IDPF VF drivers. Here is the description of SR-IOV VF software
 enablement flow to be performed by IDPF PF driver:
 
-> 1\. IDPF PF driver discovers device capabilities using
-> “VIRTCHNL_OP_GET_CAPS” opcode 100 virtChnl command. In order to be
-> able to enable and configure SR-IOV, device capability is expected to
-> contain VIRTCHNL_CAP_SRIOV = BIT(1) in “other_caps” field. If this bit
-> is set, the maximum number of VFs, which can be available and enabled
-> by PF is defined by “max_sriov_vfs”.
->
-> 2\. **Optional step** - After device capabilities are discovered by
-> the IDPF driver, it can proceed and enable its VFs and back them up
-> with the resources. For this purpose, the PF driver will send
-> "VIRTCHNL_OP_SET_SRIOV_VFS” opcode 118 VirtChnl command to create a
-> specified number of VFs. Following this command, CP will create
-> default mailbox Queue Pairs, MSIx vectors etc. for each one of the VFs
-> in order to provide them the ability to load their drivers and start
-> their own device configuration.
->
-> 3\. After these PF driver initialization steps, IDPF driver can be
-> loaded on enabled VFs and start its own initialization flow, using its
-> assigned Mailbox queue pairs. See more details in [<u>Driver
-> Initialization</u>](#8cwea2t0qd3s).
+1. IDPF PF driver discovers device capabilities using “VIRTCHNL_OP_GET_CAPS” opcode 100 virtChnl command. In order to be able to enable and configure SR-IOV, device capability is expected to contain VIRTCHNL_CAP_SRIOV = BIT(1) in “other_caps” field. If this bit is set, the maximum number of VFs, which can be available and enabled by PF is defined by “max_sriov_vfs”.
+2. **Optional step** - After device capabilities are discovered by the IDPF driver, it can proceed and enable its VFs and back them up with the resources. For this purpose, the PF driver will send "VIRTCHNL_OP_SET_SRIOV_VFS” opcode 118 VirtChnl command to create a specified number of VFs. Following this command, CP will create default mailbox Queue Pairs, MSIx vectors etc. for each one of the VFs in order to provide them the ability to load their drivers and start their own device configuration.
+3. After these PF driver initialization steps, IDPF driver can be loaded on enabled VFs and start its own initialization flow, using its assigned Mailbox queue pairs. See more details in [<u>Driver Initialization</u>](#8cwea2t0qd3s).
 
 ## S-IOV (WIP)
 
-> S-IOV is an advanced virtualization capability provided by the device
-> to some of its functions ( for now only PF), it is a much lighter
-> weight virtualization as compared to SR-IOV and does provide a huge
-> fan out.
+S-IOV is an advanced virtualization capability provided by the device to some of its functions ( for now only PF), it is a much lighter weight virtualization as compared to SR-IOV and does provide a huge fan out.
 
 - Device Interface
 
 - Capability and Data structures
 
-> \#define VIRTCHNL2_OP_CREATE_ADI 532
->
-> \#define VIRTCHNL2_OP_DESTROY_ADI 533
->
-> If the device supports flow steering it responds with teh capability
-> support
+  ```C
+  #define VIRTCHNL2_OP_CREATE_ADI 532
+  
+  #define VIRTCHNL2_OP_DESTROY_ADI 533
+  ```
+
+If the device supports flow steering it responds with teh capability support
 
 - Configuration
 
@@ -6896,16 +6652,13 @@ makes modification to the packet or the wire side CRC.
 
 ##  Protocols IDs for PTYPE negotiation
 
-> Well-known protocols identifications for PTYPE negotiation. Sequential
-> order is used to provide cache efficient lookups.
->
-> Mandatory Protocol IDs must be supported by all IDPF compliant devices
-> to provide minimal required information about supported PTYPEs.
->
-> User specific or private protocols can be mapped to range 32768-65534
-> guaranteed to be used for well-known protocols.
->
-> *Table 5 SW facing Protocols IDs for PTYPE negotiation*
+Well-known protocols identifications for PTYPE negotiation. Sequential order is used to provide cache efficient lookups.
+
+Mandatory Protocol IDs must be supported by all IDPF compliant devices to provide minimal required information about supported PTYPEs.
+
+User specific or private protocols can be mapped to range 32768-65534 guaranteed to be used for well-known protocols.
+
+*Table 5 SW facing Protocols IDs for PTYPE negotiation*
 
 <table>
 <colgroup>
@@ -7585,8 +7338,7 @@ Transmit queue tail pointer.
 
 ## Interrupt Dynamic Control N - INT_DYN_CTLN\[n\] (dynctln_reg_start + dynctln_reg_spacing\*n , n = 0…num_vectors)
 
-> Note that num_vectors may be larger than the default number of
-> vectors.
+Note that num_vectors may be larger than the default number of vectors.
 
 <table>
 <colgroup>
@@ -7715,8 +7467,7 @@ impact the device setting. This bit is auto-cleared by hardware.</th>
 
 ## VF Interrupt Throttling N - INT_ITRN\[n,m\] (0x00002800 + 0x4\*n + 0x40\*m, n=0...16, m=0...2,RW)
 
-- PF Interrupt Throttling N - INT_ITRN\[n,m\] (0x08900004 + 0x1000\*n +
-  > 0x4\*m for n:0..7167, m=0...2,RW)
+- PF Interrupt Throttling N - INT_ITRN\[n,m\] (0x08900004 + 0x1000\*n + 0x4\*m for n:0..7167, m=0...2,RW)
 
 - Interrupt Throttling N - INT_ITRN\[n,m\] ( itrn_reg_start +
   0x4\*n+itrn_reg_spacing\*m, n=0..num_vectors, m=0..2; RW)
@@ -7732,12 +7483,11 @@ impact the device setting. This bit is auto-cleared by hardware.</th>
 
 ## VF Transmit Queue Tail - QTX_TAIL\[n\] (0x00000000 + 0x4\*n, n=0...255; RW)
 
-- PF Transmit Queue Tail - QTX_TAIL\[n\] (0x05000000 + 0x1000\*n,
-  > n=0...12287; RW)
+- PF Transmit Queue Tail - QTX_TAIL\[n\] (0x05000000 + 0x1000\*n, n=0...12287; RW)
 
 ## Transmit Queue Tail - QTX_TAIL\[n\] (qtail_reg_start + 0x4\*qtail_reg_spacing, n=0...num_queues; RW) // for q type = VIRTCHNL2_QUEUE_TYPE_TX
 
-> Note that num_queues may be larger than the default number of queues.
+Note that num_queues may be larger than the default number of queues.
 
 | **Field** | **Bit(s)** | **Init.** | **Description**                                                                                                                                                                                                          |
 |-----------|------------|-----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -7748,8 +7498,7 @@ impact the device setting. This bit is auto-cleared by hardware.</th>
 
 ## VF Receive Queue Tail - QRX_TAIL\[n\] (0x00002000 + 0x4\*n, n=0...255; RW)
 
-- PF Receive Queue Tail - QRX_TAIL\[n\] (0x00000000 + 0x1000\*n,
-  > n=0...12287; RW)
+- PF Receive Queue Tail - QRX_TAIL\[n\] (0x00000000 + 0x1000\*n, n=0...12287; RW)
 
 ## Receive Queue Tail - QRX_TAIL\[n\] (qtail_reg_start + 0x4\*qtail_reg_spacing, n=0...num_queues; RW) // for q type = VIRTCHNL2_QUEUE_TYPE_RX
 
@@ -10946,7 +10695,7 @@ BIT(VIRTCHNL2_RXDID_21_COMMS_AUX_TCP)
 
 \#define VIRTCHNL2_RX_FLEX_DESC_ADV_RXDID_M \\
 
-> IDPF_M(0xFUL, VIRTCHNL2_RX_FLEX_DESC_ADV_RXDID_S)
+    IDPF_M(0xFUL, VIRTCHNL2_RX_FLEX_DESC_ADV_RXDID_S)
 
 \#define VIRTCHNL2_RX_FLEX_DESC_ADV_PTYPE_S 0
 
@@ -11418,159 +11167,73 @@ NOT IN SPEC
 
 # Design Considerations (not part of the Spec)
 
-1.  Any Hard-coded magic numbers will not be present in the Host
-    > Interface.
-
- 
-
-> For example:
-
-- TX queues register offsets
-
-- RX queues register offsets
-
-- Interrupt register offsets
-
-- Parsing depth
-
-- Assumptions about offloads which are always enabled
-
-- Assumptions about protocols
-
-- Assumptions about PTYPES
-
-- Assumptions about descriptor format
-
-- Assumptions about queue model
-
-- Assumptions about mailbox QP
-
-- Number of data queues
-
-- Queue-to-interrupt mapping
-
-- Timeout values
-
-- Failure criteria
-
-- Max Payload size
-
- 
-
+1.  Any Hard-coded magic numbers will not be present in the Host Interface.
+  For example:
+  - TX queues register offsets
+  - RX queues register offsets
+  - Interrupt register offsets
+  - Parsing depth
+  - Assumptions about offloads which are always enabled
+  - Assumptions about protocols
+  - Assumptions about PTYPES
+  - Assumptions about descriptor format
+  - Assumptions about queue model
+  - Assumptions about mailbox QP
+  - Number of data queues
+  - Queue-to-interrupt mapping
+  - Timeout values
+  - Failure criteria
+  - Max Payload size
 2.  Common Software modules for IDPF:
-
-- Mailbox needs to be present in both
-
-  - Configuration request/response
-
-  - Event processing
-
-- Data Path (TX and RX) needs to be present in both
-
-- OS-specific features, i.e., XDP, AF_XDP, ADq
-
-- Only a PF should have SR-IOV (or S-IOV) spawning capabilities
-
-<!-- -->
-
-- RDMA communication module
-
- 
-
+  - Mailbox needs to be present in both
+    - Configuration request/response
+    - Event processing
+  - Data Path (TX and RX) needs to be present in both
+  - OS-specific features, i.e., XDP, AF_XDP, ADq
+  - Only a PF should have SR-IOV (or S-IOV) spawning capabilities
+  - RDMA communication module
 3.  Data structure organization
+  - Recommendation: should reflect the underlying Device modules - do not combine resources associated with different Device modules into a single large SW data structure
+    - i.e., a queue is a DMA resource, an interrupt is a PCIe resource - bind them using a separate opcode
+  - Some Device resources are not directly programmable by the driver (i.e., VSI) - in this case, the SW representation should be Device-agnostic (abstracted) so that there is no need to make any changes if/when Device changes
 
-- Recommendation: should reflect the underlying Device modules - do not
-  > combine resources associated with different Device modules into a
-  > single large SW data structure
-
-  - i.e., a queue is a DMA resource, an interrupt is a PCIe resource -
-    > bind them using a separate opcode
-
-- Some Device resources are not directly programmable by the driver
-  > (i.e., VSI) - in this case, the SW representation should be
-  > Device-agnostic (abstracted) so that there is no need to make any
-  > changes if/when Device changes
-
-  - i.e., VSI for ADq (should be an abstract "target") since the
-    > structure may change.
-
-4.  Control Plane Agent:
-
+  - i.e., VSI for ADq (should be an abstract "target") since the structure may change.
+  4.  Control Plane Agent:
     - Can be running in Host Hypervisor SW
-
     - Or could be running in SW in an embedded core.
+    
+    Control Plane Agent determines the profiles for the host Interface.
+    Example:
+    
+    **Tenant hosting VF Interface:**
+    - Large scale (order of thousands)
+    - Device ID determined by hypervisor
+    - Requires quick bring-up due to large scale (minimize chattiness on the mailbox)
 
-    <!-- -->
-
-    - Control Plane Agent determines the profiles for the host
-      > Interface.
-
-> Example:
->
-> **Tenant hosting VF Interface:**
-
-- Large scale (order of thousands)
-
-- Device ID determined by hypervisor
-
-- Requires quick bring-up due to large scale (minimize chattiness on the
-  > mailbox)
-
-- One-time resource allocation (up-front)
-
-  - T-shirt sizing concept (VM SLA)
-
-  - Few knobs available (i.e., change MAC address, add VLAN)
-
-- Minimal run-time configuration changes, i.e., RSS table balancing,
-  > flow rules
-
-- Untrusted software
-
-- Live Migration is necessary
-
-  - PCIe configuration space must be composed
-
-  - Will allow for combination of Device backend and SW backend
-
-  - Composed MMIO (Memory Mapped IO) space
-
-  - Hypervisor will be able to provide dirty page tracking and on-demand
-    > paging in the backend (though device capabilities, platform
-    > capabilities, or SW capabilities)
-
->  
->
-> **Comms/Cloud/Enterprise (NFV (Network Function Virtualization)
-> appliance) Interface:**
-
-- Smaller scale (order of dozens)
-
-- Device ID fixed from Device/NVM or from Hypervisor
-
-- Mailbox communication can be more granular/chatty
-
-- Different trust levels
-
-- Several types of resources/capabilities
-
-- Renegotiation of resources/capabilities
-
-- Live Migration is not supported (and not needed)
-
-- Exposes more than standard offloads
-
-5.  VF Interface is SR-IOV vs S-IOV vs. emulated
-
-- SR-IOV - PCIe configuration space comes from the device
-
-- S-IOV - PCIe configuration space is composed by software (hypervisor)
-
-- *AF_XDP passthrough - uses PASID (Process Address Space ID) but not
-  > PCIe configuration space*
-
-- Emulated - SW backend (mimicking Device behavior) - will need to be
-  > created then donated
+    - One-time resource allocation (up-front)
+      - T-shirt sizing concept (VM SLA)
+      - Few knobs available (i.e., change MAC address, add VLAN)
+    - Minimal run-time configuration changes, i.e., RSS table balancing, flow rules
+    - Untrusted software
+    - Live Migration is necessary
+      - PCIe configuration space must be composed
+      - Will allow for combination of Device backend and SW backend
+      - Composed MMIO (Memory Mapped IO) space
+      - Hypervisor will be able to provide dirty page tracking and on-demand paging in the backend (though device capabilities, platform capabilities, or SW capabilities)
+    **Comms/Cloud/Enterprise (NFV (Network Function Virtualization) appliance) Interface:**
+    - Smaller scale (order of dozens)
+    - Device ID fixed from Device/NVM or from Hypervisor
+    - Mailbox communication can be more granular/chatty
+    - Different trust levels
+    - Several types of resources/capabilities
+    - Renegotiation of resources/capabilities
+    - Live Migration is not supported (and not needed)
+    - Exposes more than standard offloads
+  5.  VF Interface is SR-IOV vs S-IOV vs. emulated
+    - SR-IOV - PCIe configuration space comes from the device
+    - S-IOV - PCIe configuration space is composed by software (hypervisor)
+    - *AF_XDP passthrough - uses PASID (Process Address Space ID) but not PCIe configuration space*
+    - Emulated - SW backend (mimicking Device behavior) - will need to be created then donated
 
  
 
