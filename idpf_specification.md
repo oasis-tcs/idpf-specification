@@ -1873,13 +1873,7 @@ format.</p></th>
 <p>For IP (Internet Protocol) packets, this flag indicates that
 detectable L3 or L4 integrity check was processed by the hardware
 according to the negotiated capabilities.</p>
-<table>
-<colgroup>
-<col style="width: 100%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th><p>If L3L4P is set to zero or one of the flags below are set to 1 ,
+<p>If L3L4P is set to zero or one of the flags below are set to 1 ,
 SW should not assume Device calculated checksums for any of the headers
 in the packet and should recalculate the checksums and SW should treat
 the "Xusm reports" field as invalid :</p>
@@ -1896,12 +1890,8 @@ the "Xusm reports" field as invalid :</p>
 <li><blockquote>
 <p>One of the bits in the XSUM Reports field</p>
 </blockquote></li>
-</ul></th>
-</tr>
-</thead>
-<tbody>
-</tbody>
-</table></th>
+</ul>
+</th>
 </tr>
 <tr class="odd">
 <th>7:4</th>
