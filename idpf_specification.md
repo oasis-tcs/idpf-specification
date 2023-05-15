@@ -11201,15 +11201,12 @@ NOT IN SPEC
   4.  Control Plane Agent:
     - Can be running in Host Hypervisor SW
     - Or could be running in SW in an embedded core.
-    
     Control Plane Agent determines the profiles for the host Interface.
     Example:
-    
     **Tenant hosting VF Interface:**
     - Large scale (order of thousands)
     - Device ID determined by hypervisor
     - Requires quick bring-up due to large scale (minimize chattiness on the mailbox)
-
     - One-time resource allocation (up-front)
       - T-shirt sizing concept (VM SLA)
       - Few knobs available (i.e., change MAC address, add VLAN)
