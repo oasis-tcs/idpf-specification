@@ -4,7 +4,7 @@
 
 This GitHub repository [idpf-specification](https://github.com/oasis-tcs/idpf-specification) was created at the request of the [OASIS Infrastructure Data-Plane Function (IDPF) TC](https://www.oasis-open.org/committees/idpf/) as a [TC Github](https://www.oasis-open.org/policies-guidelines/github-repositories-for-oasis-tc-members-chartered-work/) to support development of the chartered work of the Technical Committee.
 
-This TC Github is governed by the OASIS TC Process and related policies. Contributors to this repository are expected to be Members of the OASIS IDPF TC, for any substantive change requests. Anyone wishing to contribute to this GitHub project and <a href="https://www.oasis-open.org/join/participation-instructions">participate</a> in the TC's technical activity is invited to join as an OASIS TC Member.  Public feedback is also accepted, subject to the terms of the <a href="https://www.oasis-open.org/policies-guidelines/ipr#appendixa">OASIS Feedback License</a>.
+This TC Github is governed by the OASIS TC Process and related policies. Contributors to this repository are expected to be Members of the OASIS IDPF TC. Anyone wishing to contribute to this GitHub project and <a href="https://www.oasis-open.org/join/participation-instructions">participate</a> in the TC's technical activity is invited to join as an OASIS TC Member.  Public feedback is also accepted, subject to the terms of the <a href="https://www.oasis-open.org/policies-guidelines/ipr#appendixa">OASIS Feedback License</a>.
 
 ## Statement of Purpose
 
@@ -29,12 +29,9 @@ Michael S Tsirkin, mst@redhat.com, mstsirkin, Redhat
 
 ### Licensing
 
-Please see the <a
-href="https://github.com/oasis-tcs/idpf-specification/blob/master/LICENSE.md">LICENSE</a> file for description of the license terms and OASIS policies applicable to the TC's work in this GitHub project. Content in this repository is intended to be part of the IDPF TC's
-permanent record of activity, visible and freely available for
-all to use, subject to applicable OASIS policies, as presented in
-the repository <a
-href="https://github.com/oasis-tcs/idpf-specification/blob/master/LICENSE.md">LICENSE</a> file.
+Please see the <a href="https://github.com/oasis-tcs/idpf-specification/blob/master/LICENSE.md">LICENSE</a> file for description of the terms and OASIS policies applicable to the TC's work in this GitHub project. Content in this repository is intended to be part of the IDPF TC's
+permanent record of activity, visible and freely available for all to use, subject to applicable OASIS policies, as presented in
+the repository <a href="https://github.com/oasis-tcs/idpf-specification/blob/master/LICENSE.md">LICENSE</a> file.
 
 ## Feedback
 
