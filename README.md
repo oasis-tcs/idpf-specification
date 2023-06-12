@@ -1,12 +1,10 @@
 # README
 
-## OASIS TC Open Repository: idpf-specification
+## OASIS TC Repository: idpf-specification
 
-This GitHub public repository [idpf-specification](https://github.com/oasis-tcs/idpf-specification) was created at the request of the [OASIS Infrastructure Data-Plane Function (IDPF) TC](https://www.oasis-open.org/committees/idpf/) as an [OASIS TC Open Repository](https://www.oasis-open.org/resources/open-repositories/) to support development of open source resources related to Technical Committee work.
+This GitHub repository [idpf-specification](https://github.com/oasis-tcs/idpf-specification) was created at the request of the [OASIS Infrastructure Data-Plane Function (IDPF) TC](https://www.oasis-open.org/committees/idpf/) as a [TC Github](https://www.oasis-open.org/policies-guidelines/github-repositories-for-oasis-tc-members-chartered-work/) to support development of the chartered work of the Technical Committee.
 
-While this TC Open Repository remains associated with the sponsor TC, its development priorities, leadership, intellectual property terms, participation rules, and other matters of governance are separate and distinct from the OASIS TC Process and related policies.
-
-Contributors to this repository are expected to be Members of the OASIS IDPF TC, for any substantive change requests. Anyone wishing to contribute to this GitHub project and <a href="https://www.oasis-open.org/join/participation-instructions">participate</a> in the TC's technical activity is invited to join as an OASIS TC Member.  Public feedback is also accepted, subject to the terms of the <a href="https://www.oasis-open.org/policies-guidelines/ipr#appendixa">OASIS Feedback License</a>.
+This TC Github is governed by the OASIS TC Process and related policies. Contributors to this repository are expected to be Members of the OASIS IDPF TC, for any substantive change requests. Anyone wishing to contribute to this GitHub project and <a href="https://www.oasis-open.org/join/participation-instructions">participate</a> in the TC's technical activity is invited to join as an OASIS TC Member.  Public feedback is also accepted, subject to the terms of the <a href="https://www.oasis-open.org/policies-guidelines/ipr#appendixa">OASIS Feedback License</a>.
 
 ## Statement of Purpose
 
