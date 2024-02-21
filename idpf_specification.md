@@ -104,7 +104,7 @@ When configuring device resources, care was taken that data structures group the
 
 ## Composition
 
-The IDPF interface does not make any assumption about how the device is composed, whether it is a complete passthrough Device like an SRIOV interface or a PF interface or a composed device such as an SIOV device. Some parts of the device memory space can be passthrough and parts of the device memory space can be emulated in the backend SW or a completely emulated device.
+The IDPF interface does not make any assumption about how the device is composed, whether it is a complete passthrough Device like an SR-IOV interface or a PF interface or a composed device such as an SIOV device. Some parts of the device memory space can be passthrough and parts of the device memory space can be emulated in the backend SW or a completely emulated device.
 
 ## Live Migration
 
@@ -9932,7 +9932,7 @@ VIRTCHNL2_CHECK_STRUCT_LEN(16, virtchnl2_rss_hash);
 
 /\* VIRTCHNL2_OP_SET_SRIOV_VFS
 
-\* This message is used to set number of SRIOV VFs to be created. The
+\* This message is used to set number of SR-IOV VFs to be created. The
 actual
 
 \* allocation of resources for the VFs in terms of vport, queues and
@@ -9940,7 +9940,7 @@ interrupts
 
 \* is done by CP. When this call completes, the APF driver calls
 
-\* pci_enable_sriov to let the OS instantiate the SRIOV PCIE devices.
+\* pci_enable_sriov to let the OS instantiate the SR-IOV PCIE devices.
 
 \* The number of VFs set to 0 will destroy all the VFs of this function.
 
@@ -11151,7 +11151,7 @@ NOT IN SPEC
 
 - Virtual function Device
 
-  - SRIOV
+  - SR-IOV
 
   - SIOV
 
