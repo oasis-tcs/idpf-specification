@@ -629,7 +629,7 @@ The flow chart below describes the RX buffer queue association decision
 for a RSC segment.  
 For an RSC segment, the first buffer queue is always used.
 
-<img src="media/image2.png" style="width:6.5in;height:4.72222in" />
+![RSC RX buffer Queue association](Diagrams/rsc_flowchart.png)
 
 ### RX descriptor formats
 
@@ -742,7 +742,7 @@ This is the read descriptor used when a queue operates in “In order,
 single queue model.”  
 Descriptor length is 16B.
 
-<img src="media/image23.png" style="width:6.5in;height:1.18056in" />
+![16B RX Descriptor Read format for Single Queue Model](Diagrams/rx_desc_read_single_q.png)
 
 Descriptor fields layout:
 
@@ -760,7 +760,7 @@ Descriptor length is 32B.
 
 Descriptor fields layout:
 
-<img src="media/image18.png" style="width:6.5in;height:1.70833in" />
+![32B RX Descriptor Read format for Single Queue Model](Diagrams/rx_desc_read_single_q_32.png)
 
 The fields in the first 16 Bytes are Identical to the 16 Byte
 descriptors described above.
@@ -773,7 +773,7 @@ Descriptor length is 16B.
 
 Descriptor fields layout:
 
-<img src="media/image27.png" style="width:6.5in;height:1.15278in" />
+![16B RX Descriptor Read format for Split Queue Model](Diagrams/rx_desc_read_split_q_16B.png)
 
 - **Buffer identifier (16): **The unique buffer identifier used by SW to associate the packet buffer addressed by this descriptor with the completion queue descriptor.
 - **Packet Buffer Address (64b)**: The physical address of the packet buffer defined in byte units. The packet buffer size is defined in the negotiated receive queue context. 
@@ -784,7 +784,7 @@ This is the read descriptor used when queue operates in “Out of order,
 split queue model.”  
 Descriptor length is 32B.
 
-<img src="media/image19.png" style="width:6.5in;height:1.70833in" />
+![32B RX Descriptor Read format for Split Queue Model](Diagrams/rx_desc_read_split_q_32B.png)
 
 Descriptor fields layout:
 
