@@ -832,7 +832,7 @@ This is the write descriptor used when the queue operates in “In order,
 single queue model.”  
 Descriptor length is 16B.
 
-<img src="media/image10.png" style="width:6.5in;height:1.18056in" />
+![16B RX Descriptor Write Back format Base](Diagrams/16B_rx_desc_wb_base.png)
 
 Descriptor fields layout:
 
@@ -1220,7 +1220,7 @@ This is the write descriptor used when the queue operates in “In order,
 single queue model.”  
 Descriptor length is 32B.
 
-<img src="media/image13.png" style="width:6.5in;height:1.76389in" />
+![32B RX Descriptor Write Back format Base](Diagrams/32B_rx_desc_wb_base.png)
 
 Descriptor fields layout:
 
@@ -1340,7 +1340,7 @@ model" and for "Out of order, split queue model".
 
 #### 16B RX descriptors write format Flex
 
-<img src="media/image9.png" style="width:7.22396in;height:1.39356in" />
+![16B RX Descriptor Write Back format flex](Diagrams/16B_rx_desc_wb_flex.png)
 
 Descriptor fields layout:
 
@@ -1561,7 +1561,7 @@ length of the first RSC segment.</p></th>
 
 #### 32B RX descriptors write format Flex
 
-<img src="media/image24.png" style="width:6.77604in;height:1.84375in" />
+![32B RX Descriptor Write Back format flex](Diagrams/32B_rx_desc_wb_flex.png)
 
 Descriptor fields layout:
 
@@ -2208,7 +2208,7 @@ the Tail pointer:
 - Zero descriptor are owned by Device when TAIL == HEAD
 - The SW should never set the TAIL to a value above the HEAD minus 1.
 
-<img src="media/image26.png" style="width:4.42364in;height:2.43229in" />
+![Descriptors Device/SW ownership](Diagrams/descriptor_Device_SW_ownership.png)
 
 ### In order , split queue model
 
@@ -2342,7 +2342,7 @@ All context descriptors except for context descriptor of DTYPE 0x1 share
 the same 16b structure of CMD_DTYPE that includes the five-bit DTYPE
 field (encoding the descriptor type) and the rest of the CMD fields.
 
-<img src="media/image17.png" style="width:5.44472in;height:1.5348in" />
+![Tx Descriptor CMD_DTYPE](Diagrams/116B_tx_desc_dtype_fields.png)
 
 The table below describes the different descriptor types encoding and
 the queue models on which they are supported.
@@ -2392,7 +2392,7 @@ This is the basic data descriptor used for “in order” queues. (When the
 queue operates in “In order, single queue model” or in “In order , split
 queue model”).
 
-<img src="media/image6.png" style="width:6.5in;height:1.31944in" />
+![Base Tx Descriptor DTYPE = 0x0](Diagrams/base_tx_desc_dtype0.png)
 
 Descriptor fields layout:
 
@@ -2616,7 +2616,7 @@ Software, will result in wrong Csum calculation.</p>
 
 This is the basic context descriptor used for all queue models.
 
-<img src="media/image4.png" style="width:6.5in;height:1.40278in" />
+![Base Tx Context Descriptor DTYPE = 0x1](Diagrams/base_tx_context_desc.png)
 
 Descriptor fields layout:
 
@@ -2725,7 +2725,7 @@ set.</p>
 This is the data descriptor used when a queue operates in “Out of order,
 split queue model.”  
   
-<img src="media/image8.png" style="width:6.5in;height:1.375in" />
+![Tx Data Descriptor DTYPE = 0x0C](Diagrams/tx_data_desc_dtype0xc.png)
 
 Descriptor fields layout:
 
@@ -2809,7 +2809,7 @@ between 2 descriptors with RE bit set.</p></th>
 This is the context descriptor with flex bytes and L2TAG1.  
 This descriptor is used for all queue models.
 
-<img src="media/image25.png" style="width:6.875in;height:1.48611in" />
+![Tx General Context Descriptor DTYPE = 0x04](Diagrams/tx_general_cntxt_desc_dtype0x04.png)
 
 Descriptor fields layout:
 
@@ -2856,7 +2856,7 @@ COMMAND field layout”).</p></th>
 This is the context descriptor with flex bytes and TSO.  
 This descriptor is used for all queue models.
 
-<img src="media/image20.png" style="width:6.5in;height:1.375in" />
+![Tx TSO Context Descriptor DTYPE = 0x05](Diagrams/tx_tso_context_desc_dtype0x05.png)
 
 Descriptor fields layout:
 
@@ -2926,7 +2926,7 @@ Malicious Drivers on Data Queues.</th>
 This is the context descriptor with L2TAG2 and TSO.  
 This descriptor is used for all queue models.
 
-<img src="media/image28.png" style="width:6.33854in;height:1.37573in" />
+![Tx TSO Context Descriptor DTYPE = 0x08](Diagrams/tx_tso_context_desc_dtype0x08.png)
 
 Descriptor fields layout:
 
@@ -3138,7 +3138,7 @@ In these descriptors, the only significant fields are the 4-bit DTYPE
 read descriptor.  
 Device may write any value to the Other Descriptors fields.
 
-<img src="media/image1.png" style="width:6.5in;height:1.375in" />
+![Tx Descriptor WriteBack DTYPE = 0x0F](Diagrams/tx_desc_wb_dtype0x0f.png)
 
 #### TX completion descriptor format  
 
@@ -3736,21 +3736,21 @@ control queue descriptor (see References).</p></th>
 
 #### Driver Negotiation General Flow
 
-<img src="media/image21.png" style="width:5.79167in;height:2.98958in" />
+![Driver Negotiation General Flow](Diagrams/driver_negotiation_general_flow.png)
 
 #### VPORT Enable General Flow
 
-<img src="media/image5.png" style="width:6.05208in;height:8.17708in" />
+![Vport Enable General Flow](Diagrams/vport_enable_general_flow.png)
 
 Flow continues in the next page
 
-<img src="media/image11.png" style="width:6.66667in;height:2.29167in" />
+![Vport Enable General Flow -cntd](Diagrams/vport_enable_general_flow2.png)
 
 #### 
 
 #### Teardown a VPORT General Flow
 
-<img src="media/image14.png" style="width:6.61458in;height:3.375in" />
+![Vport Teardown General Flow](Diagrams/vport_destroy_flow.png)
 
 ## Virtchannel APIs (Application Programming Interfaces)
 
@@ -4415,7 +4415,7 @@ VIRTCHNL2_CAP_PTP = BIT(13),</p>
 
 ## Negotiation Protocol 
 
-<img src="media/image30.png" style="width:3.91667in;height:2.55208in" />
+![Negotiate Capabilities](Diagrams/negotiate_cap.png)
 
 ## Receive Descriptor Formats (RXDID) enumeration
 
@@ -4911,7 +4911,7 @@ For example, for PTYPE \[26\] CP PF could reply with the following buffer:
 ## vPort Initialization and Teardown
 
 VPORT Final state Machine
-(FSM):<img src="media/image22.png" style="width:2.06891in;height:3.00521in" />
+(FSM):![Vport FSM](Diagrams/vport_fsm.png)
 
 - OP_CREATE_VPORT command must allocate at least one RX and one TX
   > queue, which will be associated with Queue Group \#0.
@@ -4935,7 +4935,7 @@ VPORT Final state Machine
 WIP: vport_flags, vport_type usage and in-general vport Datastructure
 IN/OUT params table.
 
-## <img src="media/image7.png" style="width:2.53646in;height:3.36933in" />
+![Data queue FSM](Diagrams/dataqueue_fsm.png)
 
 ## Queue Initialization and teardown
 
@@ -5390,9 +5390,7 @@ The tag(s) are inserted between the outermost Source MAC Address and
 EtherType of the header as shown in the diagram below. Each tag is 32
 bits and consists of a TPID value followed by a TCI value.
 
-Diagram from HAS (for one or two tags):
-
-<img src="media/image29.png" style="width:6.5in;height:3.62083in" />
+![Two tag Insertion](Diagrams/two_tag_insert.png)
 
 ## Tx Checksum
 
@@ -5582,7 +5580,7 @@ diagram below:
 
 Example
 
-<img src="media/image31.png" style="width:6.5in;height:2.16667in" />
+![TSO](Diagrams/tso.png)
 
 ## L2 Tag Strip Offload (WIP)
 
@@ -6490,7 +6488,6 @@ a standard capability to a PF or a VF device
 
 - Configuration
 
-> <img src="media/image12.png" style="width:5.66146in;height:4.5737in" />
 
 - Driver Configuration and Runtime flow
   
