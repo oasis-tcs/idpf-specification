@@ -157,7 +157,7 @@ Other capabilities like ATS, VPD, serial number and others are optional and may 
 
 ### Registers
 
-Fixed: Mailbox registers. See register Register Section
+Fixed: Mailbox registers, Control and status Registers. . See register Register Section
 
 Flexible: Queue and Interrupt registers. See Register section.
 
@@ -430,14 +430,14 @@ This section describes the different RX queue modes supported by this specificat
 The mode of operation is a per queue configuration. Each queue can be configured to work in a different model:
 
 * In order single queue model. 
-  This option is supported only when VIRTCHNL2_CAP_RXQ_MODEL_SPLIT feature is negotiated. 
-* Out of order split queue model.
   This option is supported only when VIRTCHNL2_CAP_RXQ_MODEL_SINGLE feature is negotiated. 
+* Out of order split queue model.
+  This option is supported only when VIRTCHNL2_CAP_RXQ_MODEL_SPLIT feature is negotiated. 
 
 The device must negotiate at least one of the features above.
 
-The minimal and maximal buffers sizes that are supported by HW are negotiable HW capabilities.
-The possible values and default values (in the absence of negotiation) of those capabilities are described in the RX packet/buffer sub-section under the HW capabilities section.
+The minimal and maximal buffers sizes that are supported by Device are negotiable Device capabilities.
+The possible values and default values (in the absence of negotiation) of those capabilities are described in the RX packet/buffer sub-section under the Device capabilities section.
 
 Note that the device is not obligated to check the maximal packet length of a packet delivered to driver.
 
@@ -822,9 +822,6 @@ descriptors:
 
 3.  All other fields are valid only in the last descriptor of a packet.
 
-<span class="mark">Note: In case packet is decapsulated, status/error
-flags in descriptor might represent outer headers that were removed from
-packet and not posted to SW</span>
 
 #### 16B RX descriptors write format Base
 
@@ -2357,7 +2354,7 @@ Standardization.
 
 Note:
 
-6 in Spec, 13 Free , 3 WIP, 10 “Reserved for OEM”.  
+6 are already defined in Current Spec, 13 Free for future , 3 WIP, 10 “Reserved for OEM”.  
 2 DTYPEs out of the 13 free DTYPs are “reserved for OEM” for In-order
 Single Queue and free for the other queue models.
 
@@ -3573,7 +3570,7 @@ following options :
 - When using this option SW must clear the GLINT.INTENA_MSK flag.
 - As an individual operation using GLINT_DYN_CTL without interrupt enablement. (i.e. without setting the INTENA flag).
 - This option is supported without negotiation.
-- SW must not use this option when the interrupt is in NO_INT_MODE. ~~and only when it does not change the interrupt state.~~
+- SW must not use this option when the interrupt is in NO_INT_MODE.
 - When using this option SW must set the GLINT.INTENA_MSK flag.
 
 Additionally :
@@ -3601,11 +3598,11 @@ following options:
 
 - Piggybacked to an interrupt enablement operation using GLINT_DYN_CTL (i.e. when setting the INTENA flag).
   - This option is supported only when VIRTCHNL2_CAP_INTR_SW_INTR_WITH_INTENA feature is negotiated.
-  - SW can use this option only when operation occurs when interrupt is disabled ~~and not~~ or when interrupt is in NO_INT_MODE.
+  - SW can use this option only when operation occurs when interrupt is disabled or when interrupt is in NO_INT_MODE.
   - When using this option SW must clear the GLINT.INTENA_MSK flag.
 - As an individual operation using GLINT_DYN_CTL.
   - This option is supported only when VIRTCHNL2_CAP_INTR_SW_INTR_INDV feature is negotiated.
-  - SW must not use this option when the interrupt is in NO_INT_MODE.~~and only when it does not change the interrupt state.~~
+  - SW must not use this option when the interrupt is in NO_INT_MODE.
   - When using this option SW must set the GLINT.INTENA_MSK flag.
 
 When neither VIRTCHNL2_CAP_INTR_SW_INTR_INDV nor
