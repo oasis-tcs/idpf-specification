@@ -52,9 +52,9 @@ Abstracted SW Elements:
   These Descriptor queues are often used in pairs, with one queue used in the Host-to-Device direction, and the other in Device-To-Host direction.
 * **Descriptor Queue**: A descriptor Queue is a Memory region whose length is some multiple of the size of the relevant Descriptors it is meant to hold. (As noted above, Descriptors are data-structures containing pointers to Data-buffers + additional flags and meta-data used in processing that data).
 
-  A Descriptor queue is an in-memory ring-queue shared between the SW and the Device’s HW. It starts at a memory location pointed at by the relevant BASE pointer, and uses two additional pointers, called HEAD and TAIL to coordinate usage (see Figure 2).<br/>HW “owns” the Queue entries from HEAD to TAIL-1. It will next process the descriptor pointed to by “head” and will process items from the queue going forward until it processes the item at location TAIL-1; When HW is done with the 1st descriptor in the range it “owns”, it advances HEAD thus moving that Descriptor into the “for SW processing” part of the Queue.
+  A Descriptor queue is an in-memory ring-queue shared between the SW and the Device. It starts at a memory location pointed at by the relevant BASE pointer, and uses two additional pointers, called HEAD and TAIL to coordinate usage (see Figure 2).<br/>Device “owns” the Queue entries from HEAD to TAIL-1. It will next process the descriptor pointed to by “head” and will process items from the queue going forward until it processes the item at location TAIL-1; When Device is done with the 1st descriptor in the range it “owns”, it advances HEAD thus moving that Descriptor into the “for SW processing” part of the Queue.
   
-  SW “owns” the descriptors outside the range the HW owns. When SW adds a Descriptor to the Queue it will place it where TAIL points, and then advance TAIL to the next location, thus making the just-added descriptor part of the range available for HW processing. When TAIL reaches the maximum length of the queue it wraps around. 
+  SW “owns” the descriptors outside the range the Device owns. When SW adds a Descriptor to the Queue it will place it where TAIL points, and then advance TAIL to the next location, thus making the just-added descriptor part of the range available for Device processing. When TAIL reaches the maximum length of the queue it wraps around. 
 
 ![Figure 2: Descriptor Queue Overview](Diagrams/descriptor_queue_overview.svg)
 
@@ -501,7 +501,7 @@ RX queue to RX buffer queue/s association details :
 - The association between an RX queue and Buffer queue group is defined in RX queue context.
 
 The number of buffer queues in the group can be 1 or 2 as defined by the
-*num_buf_queues_per_rx* HW capability. The possible values and default
+*num_buf_queues_per_rx* Device capability. The possible values and default
 value (in the absence of negotiation) are described in the [<u>Device
 capabilities
 section.</u>](#device-capabilities-default-values-assumed-by-the-idpf-driver)
@@ -2229,7 +2229,7 @@ associated with the same completion queue.
 
 In this model, SW posts descriptors to Device through the TX queue in
 the same manner it does for the “single queue model” and as in the
-“single queue model", SW sets the RS bit to indicate HW on which
+“single queue model", SW sets the RS bit to indicate to Device on which
 descriptors it should report a completion to SW.  
 Similarly to the “single queue model” , In addition to reporting
 completions for descriptors marked as such by SW (RS bit setting),
@@ -3000,7 +3000,7 @@ device. Offload is enabled when the IL2TAG2 flag is set.</th>
 
 #### 
 
-##### TX Context Descriptor COMMAND field layout
+### TX Context Descriptor COMMAND field layout
 
 This table describes the TX descriptor command field layout that is used
 by all TX context descriptors except for the context descriptor of DTYPE
@@ -3082,7 +3082,7 @@ checksum when the DUMMY flag is set.</p>
 </tbody>
 </table>
 
-#### TX packet and descriptors building rules Summary
+### TX packet and descriptors building rules Summary
 
 The packet and descriptors building rules are specified below. Any
 violation of those rules might be detected as malicious driver behavior.
@@ -3123,7 +3123,7 @@ violation of those rules might be detected as malicious driver behavior.
   Note: A TSO context descriptor is one that has MSS, Tlen and Headerlen fields or a Base mode TX context descriptor of Dtype 0x1.
 - For a TSO packet, either its data descriptors or its first context descriptor must describe the packet header length. The *max_tx_hdr_len_seg* negotiated capability defines the Maximal header length supported by the device for segmentation.
 
-#### Tx Descriptor write formats 
+### Tx Descriptor write formats 
 
 #### TX Writeback Descriptor Format - DTYPE = 0x0F
 
@@ -3137,7 +3137,7 @@ Device may write any value to the Other Descriptors fields.
 
 ![Tx Descriptor WriteBack DTYPE = 0x0F](Diagrams/tx_desc_wb_dtype0x0f.png)
 
-#### TX completion descriptor format  
+### TX completion descriptor format  
 
 The text below describes the TX completion element written to the
 completion queue when a queue operates in “Out of order, split queue” or
@@ -3290,7 +3290,7 @@ them.</span>
 
 # Interrupts
 
-### Supported Interrupt modes 
+## Supported Interrupt modes 
 
 The device supports the following interrupt modes:
 
@@ -3313,7 +3313,7 @@ MSI-X is exposed in the MSI-X capability structure in the PCI configuration 
 
 MSI-X is enabled by the OS using the "MSI-X Enable" flag in the "MSI-X Capability" structure in the PCI configuration space per PF or VF. Also, masking a vector can be done by the OS using the relevant "Mask" bit per MSI-X vector in the "MSI-X Table Structure".
 
-### Pending Bit Array (PBA)
+## Pending Bit Array (PBA)
 
 On top of the interrupt signaling, the PCIe function also supports the standard PBA structure in the MSI-X BAR. The PBA is relevant only when MSI-X is enabled. It is described as part of the "MSI-X Capability" structure for the PFs and the VFs. 
 
@@ -3327,7 +3327,7 @@ Interrupt enablement by the driver is done via the INTENA flag in the
 VF/PFINT_DYN_CTL_N registers. (VF/PFINT_DYN_CTL_N is per vector control
 register while N represents the function vector index.).
 
-- Upon interrupt assertion, the INTENA flag is automatically cleared by HW. This prevents new interrupts from being issued until the interrupt is enabled once again by SW.
+- Upon interrupt assertion, the INTENA flag is automatically cleared by Device. This prevents new interrupts from being issued until the interrupt is enabled once again by SW.
 - Software enables the interrupt by setting the INTENA flag and clearing NO_INT_MODE flag in the relevant VF/PFINT_DYN_CTL_N register.
 
 Setting or clearing *INTENA*, not as part of an interrupt handling
@@ -3394,19 +3394,19 @@ vector can be programmed in the following ways :
 - When vector is initialized, programming is done through the per vector GLINT_ITR\[0,1\] per vector registers.
 
 The number of ITR timers per vector can be 2 or 3 as defined by the
-itr_idx_map HW capability.  
+itr_idx_map Device capability.  
 The possible values and default value (in the absence of negotiation)
-are described in the HW capabilities section.
+are described in the device capabilities section.
 
 Each one of the interrupt causes is mapped to a specific vector and to a
 specific ITR of the vector.
 
 The ITR interval can be 0.5us,1us , 2us or 4us as defined by the
-itr_intvl_gran HW capability.  
+itr_intvl_gran Device capability.  
 The possible values and default value (in the absence of negotiation)
-are described in the HW capabilities section.
+are described in the Device capabilities section.
 
-HW is allowed to issue an interrupt when all the following conditions
+Device is allowed to issue an interrupt when all the following conditions
 are fulfilled:
 
 - Interrupt is enabled.
@@ -4205,7 +4205,7 @@ Return values are as following:
 | VIRTCHNL2_STATUS_OK         | Command success                                                              | 0              |
 | VIRTCHNL2_STATUS_ERR_EPERM  | Operation not permitted, used in case of command is not permitted for sender | 1              |
 | VIRTCHNL2_STATUS_ERR_ESRCH  | Bad opcode - VirtChnl interface problem                                      | 3              |
-| VIRTCHNL2_STATUS_ERR_EIO    | I/O error - HW access error.                                                 | 5              |
+| VIRTCHNL2_STATUS_ERR_EIO    | I/O error - Device access error.                                                 | 5              |
 | VIRTCHNL2_STATUS_ERR_ENXIO  | No such resource - referenced resource is not allocated                      | 6              |
 | VIRTCHNL2_STATUS_ERR_EACCES | Permission denied - Resource is not permitted to caller                      | 13             |
 | VIRTCHNL2_STATUS_ERR_EBUSY  | Device or resource busy - In case shared resource is in use by others        | 16             |
@@ -4970,7 +4970,7 @@ Data Queues Final State Machine (FSM):
 
 A vport’s queues can be split into multiple queue groups to provide
 dedicated/isolated resources to multiple applications sharing a vport.
-Each queue group can be associated with an application using HW receive
+Each queue group can be associated with an application using Device receive
 filters and SW based transmit filters. RSS can be enabled and configured
 per RX queue group to load balance incoming packets across queues in a
 queue group. From TX queue perspective, Queues can be grouped to be
@@ -4981,19 +4981,24 @@ between different Queue groups.
 Queue Group capability is not on by default and the capability is
 negotiated by the driver as part of the GET_CAPS request.
 
+```C
 \#define VIRTCHNL2_CAP_ADQ BIT(6)
+```
 
 The following 2 virtchnl messages are used to add and delete queue
 groups.
 
+```C
 \#define VIRTCHNL2_OP_ADD_QUEUE_GROUPS 538
 
 \#define VIRTCHNL2_OP_DEL_QUEUE_GROUPS 539
+```
 
 By default all the queues of a vport belong to a single queue group 0.
 Additional queue groups can be added to the vport using ADD_QUEUE_GROUPS
 message.
 
+```C
 /\* VIRTCHNL2_OP_ADD_QUEUE_GROUPS
 
 \* Driver sends this message to request additional transmit/receive
@@ -5069,6 +5074,7 @@ u8 pad\[2\];
 struct virtchnl2_queue_group_id qg_ids\[1\];
 
 };
+```
 
 - Events (WIP)
 
@@ -5086,6 +5092,7 @@ Following are the events that the driver is interested in:
 
 **VIRTCHNL2_EVENT_UPDATE_STATS (TBD) - Sent when there is an update to be raised immediately**
 
+```C
     struct virtchnl2_event {
         /\* see VIRTCHNL2_EVENT_CODES definitions \*/
         
@@ -5106,8 +5113,8 @@ Following are the events that the driver is interested in:
         \_\_le16 adi_id;
 
     };
-
-# Function Level reset
+```
+## Function Level reset
 
 When the driver is unloading, it triggers Function Level Reset (FLR/XLR)
 according to the type of the function it is working on (Physical
@@ -5124,16 +5131,16 @@ O/S. Potential XLR sources can be:
 5.  Function D state changes to D3.
 6.  High Level Device or PCIE Level Resets, i.e. PeRST.
 
-## Graceful VFR
+### Graceful VFR
 
 This flow is triggered by the driver itself as part of driver load/unload or other failure use cases, which require return to driver default configuration. The flow to be executed is:
 
 - Before Triggering XLR, the state of device visible to IDPF driver in PF/VFGEN_RSTAT register to is expected to be “PF/VFR_ACTIVE” state (10b).
 - The IDPF triggers XFR: PF setting PFGEN_CTRL.PFSWR (XLR is triggered immediately) or VF sending the “VIRTCHNL_OP_RESET_VF” command, which is executed by Host Management after delay.
-- Following this, HW will automatically clear PF/VFGEN_RSTAT register to “PF/VFR_INPROGRESS” state (00b), while the driver will start polling the PF/VFGEN_RSTAT register to get back into “PF/VFR_COMPLETED” state (01b), meaning that hardware PF/VF device is initialized to its default state.
+- Following this, Device will automatically clear PF/VFGEN_RSTAT register to “PF/VFR_INPROGRESS” state (00b), while the driver will start polling the PF/VFGEN_RSTAT register to get back into “PF/VFR_COMPLETED” state (01b), meaning that hardware PF/VF device is initialized to its default state.
 - After it happens the PF/VF XIO is ready for re-initialization. As part of the initialization and execution of the first command in the initialization sequence “GetVersion” virtChnl command, Host Management will set PF/VFGEN_RSTAT register back to “PF/VFR_ACTIVE” state (10b).
 
-## Asynchronous VFR
+### Asynchronous VFR
 
 In this case, XLR happens asynchronously to the driver, usually triggered by Device, OS or any other source described above. In this case the driver is expected to detect XLR condition and start polling till function is back to normal working state and then to start re-initialization process.
 
@@ -5150,8 +5157,8 @@ this PF.
 
 # Standard offloads
 
-- Multiple Default vPorts
-- Container Dedicated Queues
+- Multiple Default vPorts (WIP)
+- Container Dedicated Queues (WIP)
 
 All offloads (standard or advanced) are negotiated. This gives a device
 the opportunity to opt out of supporting a particular offload.
@@ -5164,11 +5171,11 @@ The driver uses this interface to add/delete L2 MAC addresses as filters
 to redirect packets to a specific vport.
 
 - Capability and Data structures
-
+```C
     \#define VIRTCHNL2_CAP_MACFILTER BIT(2)
-
+```
 The opcodes used to add/delete mac filters are
-
+```C
     \#define VIRTCHNL2_OP_ADD_MAC_ADDR 535
 
     \#define VIRTCHNL2_OP_DEL_MAC_ADDR 536
@@ -5240,6 +5247,7 @@ The opcodes used to add/delete mac filters are
         struct virtchnl2_mac_addr mac_addr_list\[1\];
 
     };
+```
 
 - Configuration Options
 
@@ -5270,7 +5278,7 @@ The driver uses this interface to configure unicast or multicast
 promiscuous mode on a vport.
 
 - Capability and Data structures
-
+```C
 \#define VIRTCHNL2_CAP_PROMISC BIT(8)
 
 \#define VIRTCHNL2_OP_CONFIG_PROMISCUOUS_MODE 537
@@ -5305,6 +5313,7 @@ struct virtchnl2_promisc_info {
 u8 pad\[2\];
 
 };
+```
 
 - Driver Configuration and Runtime flow
 
@@ -5406,6 +5415,7 @@ capable of offloading. This may include L3 checksum (i.e., IPv4) and/or
 L4 checksum (i.e., TCP, UDP, SCTP). Software must not attempt to offload
 checksum calculation for a protocol that the device cannot support.
 
+```C
 /\* VIRTCHNL2_CHECKSUM_OFFLOAD_CAPS
 
 \* Checksum offload capability flags
@@ -5437,7 +5447,7 @@ struct virtchnl2_get_capabilities {
 …
 
 }
-
+```
 - Configuration
 
 There are several different offload models for transmit checksum. The
@@ -5635,6 +5645,8 @@ Rx Checksum offload is requested by the driver on a per-queue basis after the De
 
 - Capability and Data structures
 
+```C
+
 > <span class="mark">\#define VIRTCHNL2_CAP_RX_CSUM_L3_IPV4
 > BIT(8)</span>
 >
@@ -5693,7 +5705,7 @@ Rx Checksum offload is requested by the driver on a per-queue basis after the De
 > <span class="mark">…</span>
 >
 > <span class="mark">}</span>
-
+```
 - Configuration: (WIP)
 
 - Driver Configuration and Runtime flow (WIP)
@@ -5716,7 +5728,7 @@ As a result of this feature, the device will calculate a hash on certain fields 
   - RSS hash value is delivered in the RX descriptor as described in the RX Descriptor sections.
 
 - Capability and Data structures
-
+```C
 > <span class="mark">\#define VIRTCHNL2_OP_GET_RSS_KEY 513</span>
 >
 > <span class="mark">\#define VIRTCHNL2_OP_SET_RSS_KEY 514</span>
@@ -5833,7 +5845,7 @@ As a result of this feature, the device will calculate a hash on certain fields 
 > \*/</span>
 >
 > <span class="mark">};</span>
-
+```
 - Configuration
 
 RSS can be configured as a standard feature by negotiation with CP as part of device Capability negotiation.
@@ -6034,7 +6046,7 @@ When RSC is enabled, the receive flow in the device is as follows:
 In both cases the timestamp reported in the TX completion represents the
 time upon which completion is sent to host SW.
 
-- Host SW should deallocate the original packet buffers when it gets the first completion and should send a completion to the congestion control SW (with the completion timestamp) when it gets the second completion. Host SW activates a timer between the first and second completion . Host SW reports the completion to congestion control SW if timer expires before second completion was sent from HW.
+- Host SW should deallocate the original packet buffers when it gets the first completion and should send a completion to the congestion control SW (with the completion timestamp) when it gets the second completion. Host SW activates a timer between the first and second completion . Host SW reports the completion to congestion control SW if timer expires before second completion was sent from Device.
   - SW cannot release the packet buffer Context ( In case of Linux, it's the SKB) until both are done.
   
   Here are the few cases that a driver might see in terms of the order of completion, and the flow it needs to implement to support the double completion feature.
@@ -6160,10 +6172,11 @@ The Driver negotiates with the device the capability to add/delete/query flow st
 - Fence. This needs to be enabled by setting an appropriate virtchannel flag in the virtchannel Descriptor. Upon setting this flag on a request from the driver to the CP, CP responds to this particular request after the CP checks all other previous requests from the Interface on this mailbox where completed successfully or otherwise.
 
 - Capability and Data structures
+```C
 
 > \#define VIRTCHNL2_CAP_FLOW_RULES BIT(16)
 >
-
+```
 If the device supports flow steering it responds with the capability supported in get_capability flow.
 
 <table>
@@ -6182,8 +6195,10 @@ flow rules.</p>
 user queries regarding what flow rules are programmed or in future a
 QUERY_RULE opcode may be added into the virtchannel to get actual flow
 rules dumnped out of the device.</p>
+
 <p>#define VIRTCHNL2_OP_ADD_FLOW_RULE 538</p>
 <p>#define VIRTCHNL2_OP_DEL_FLOW_RULE 539</p></th>
+
 </tr>
 </thead>
 <tbody>
@@ -6610,8 +6625,6 @@ S-IOV is an advanced virtualization capability provided by the device to some of
   
   #define VIRTCHNL2_OP_DESTROY_ADI 533
   ```
-
-If the device supports flow steering it responds with teh capability support
 
 - Configuration
 
@@ -7111,10 +7124,11 @@ be used</th>
 # Register Definitions
 
 ## Static/Fixed Registers
+All the VF register offsets are the default standard assumed by the devcie driver for both PF and VF interfaces. The PF ones defined below are optional and are for devices that cannot support the VF offsets for a PF interface and are opted in per Device ID/Vendor ID check by the device driver.
 
-## VF Reset Status - VFGEN_RSTAT (0x00008800; RW)
+### VF Reset Status - VFGEN_RSTAT (0x00008800; RW)
 
-## PF Reset Status - PFGEN_RSTAT (0x08407008; RW)
+### PF Reset Status - PFGEN_RSTAT (0x08407008; RW)
 
 <table>
 <colgroup>
@@ -7155,28 +7169,28 @@ reset</u></a>.</p></th>
 </tbody>
 </table>
 
-## 
+###
 
-## PF Reset Trigger - PFGEN_CTRL (0x0840700C; RW)
+### PF Reset Trigger - PFGEN_CTRL (0x0840700C; RW)
 
-## 
+### 
 
 | **Field** | **Bit(s)** | **Init.** | **Description**                                                                                                                                                    |
 |-----------|------------|-----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | PFSWR     | 0          | 0x0       | Trigger PFR when SW sets the bit. Cleared only by device FW writing 0 to it. Related flows and usage is described in [<u>Function Level reset</u>](#ch6t4ercw1em). |
 | RSVD      | 31:1       | 0x0       | Reserved.                                                                                                                                                          |
 
-## 
+### 
 
-## 
+### 
 
-## PF/VF - Mailbox Queues
+### PF/VF - Mailbox Queues
 
 This section describes Mailbox registers.
 
-### PF MailBox Transmit Queue Base Address Low - PF_FW_ATQBAL (0x08400014; RW)
+#### PF MailBox Transmit Queue Base Address Low - PF_FW_ATQBAL (0x08400014; RW)
 
-### VF MailBox Transmit Queue Base Address Low - VF_ATQBAL (0x00007C00; RW)
+#### VF MailBox Transmit Queue Base Address Low - VF_ATQBAL (0x00007C00; RW)
 
 This register contains the lower bits of the 64-bit descriptor base
 address.
@@ -7186,9 +7200,9 @@ address.
 | ATQBAL_LSB | 5:0        | 0x0       | Tied to zero to achieve alignment.                                                        |
 | ATQBAL     | 31:6       | 0x0       | Transmit Descriptor Base Address Low. Must be 64-byte aligned (together with ATQBAL_LSB). |
 
-### PF MailBox Transmit Queue Base Address High - PF_FW_ATQBAH (0x08400018; RW)
+#### PF MailBox Transmit Queue Base Address High - PF_FW_ATQBAH (0x08400018; RW)
 
-### VF MailBox Transmit Queue Base Address High - VF_ATQBAH (0x00007800; RW)
+#### VF MailBox Transmit Queue Base Address High - VF_ATQBAH (0x00007800; RW)
 
 This register contains the higher bits of the 64-bit descriptor base
 address.
@@ -7197,11 +7211,11 @@ address.
 |-----------|------------|-----------|-----------------|----------------------------------------|
 | ATQBAH    | 31:0       | 0x0       | RW              | Transmit descriptor base address high. |
 
-### 
+#### 
 
-### PF MailBox Transmit Queue Length - PF_FW_ATQLEN (0x0840001c; RW)
+#### PF MailBox Transmit Queue Length - PF_FW_ATQLEN (0x0840001c; RW)
 
-### VF MailBox Transmit Queue Length - VF_ATQLEN (0x00006800; RW)
+#### VF MailBox Transmit Queue Length - VF_ATQLEN (0x00006800; RW)
 
 This register sets the size of the ring. Maximum size is 1024.
 
@@ -7214,9 +7228,9 @@ This register sets the size of the ring. Maximum size is 1024.
 | ATQCRIT   | 30         | 0b        | Critical Error. This bit is set by firmware when a critical error has been detected in this queue.                                                                                                  |
 | ATQENABLE | 31         | 0b        | Enable Bit. Set by the driver to indicate that the queue is active. When setting the enable bit, software should initialize all other fields. This flag is implemented by an FF and cleared by PFR. |
 
-### PF MailBox Transmit Head - PF_FW_ATQH (0x08400020; RW)
+#### PF MailBox Transmit Head - PF_FW_ATQH (0x08400020; RW)
 
-### VF MailBox Transmit Head - VF_ATQH (0x00006400; RW)
+#### VF MailBox Transmit Head - VF_ATQH (0x00006400; RW)
 
 Transmit queue head pointer. Note that this register might not be
 implemented.This head is not used by SW. For completions tracking, SW
@@ -7228,9 +7242,9 @@ as part of the queue initialization process.
 | ATQH      | 9:0        | 0x0       | Transmit Queue Head Pointer. At queue initialization, software clears the head pointer and during normal operation firmware increments the head following command execution. |
 | RESERVED  | 31:10      | 0x0       | Reserved.                                                                                                                                                                    |
 
-### PF MailBox Transmit Tail - PF_FW_ATQT (0x08400024; RW)
+#### PF MailBox Transmit Tail - PF_FW_ATQT (0x08400024; RW)
 
-### VF MailBox Transmit Tail - VF_ATQT (0x00008400; RW)
+#### VF MailBox Transmit Tail - VF_ATQT (0x00008400; RW)
 
 Transmit queue tail pointer.
 
@@ -7239,9 +7253,9 @@ Transmit queue tail pointer.
 | ATQT      | 9:0        | 0x0       | Transmit Queue Tail. Incremented to indicate that there are new valid descriptors on the ring. Software might only write to this register once both transmit and receive queues are properly initialized. And clear to zero at queue initialization. |
 | RESERVED  | 31:10      | 0x0       | Reserved.                                                                                                                                                                                                                                            |
 
-### PF MailBox Receive Queue Base Address Low - PF_FW_ARQBAL (0x08400000; RW)
+#### PF MailBox Receive Queue Base Address Low - PF_FW_ARQBAL (0x08400000; RW)
 
-### VF MailBox Receive Queue Base Address Low - VF_ARQBAL (0x00006C00; RW)
+#### VF MailBox Receive Queue Base Address Low - VF_ARQBAL (0x00006C00; RW)
 
 This register contains the lower bits of the 64-bit descriptor base
 address.
@@ -7251,11 +7265,11 @@ address.
 | ARQBAL_LSB | 5:0        | 0x0       | Tied to zero to achieve alignment.                                                        |
 | ARQBAL     | 31:6       | 0x0       | Transmit Descriptor Base Address Low. Must be 64-byte aligned (together with ATQBAL_LSB). |
 
-### 
+#### 
 
-### PF MailBox Receive Queue Base Address High - PF_FW_ARQBAH (0x08400004; RW)
+#### PF MailBox Receive Queue Base Address High - PF_FW_ARQBAH (0x08400004; RW)
 
-### VF MailBox Receive Queue Base Address High - VF_ARQBAH (0x00006000; RW)
+#### VF MailBox Receive Queue Base Address High - VF_ARQBAH (0x00006000; RW)
 
 This register contains the higher bits of the 64-bit descriptor base
 address.
@@ -7264,9 +7278,9 @@ address.
 |-----------|------------|-----------|----------------------------------------|
 | ARQBAH    | 31:0       | 0x0       | Transmit descriptor base address high. |
 
-### PF MailBox Receive Queue Length - PF_FW_ARQLEN (0x08400008; RW)
+#### PF MailBox Receive Queue Length - PF_FW_ARQLEN (0x08400008; RW)
 
-### VF MailBox Receive Queue Length - VF_ARQLEN (0x00008000; RW)
+#### VF MailBox Receive Queue Length - VF_ARQLEN (0x00008000; RW)
 
 This register sets the size of the ring. Maximum size is 1024.
 
@@ -7279,11 +7293,11 @@ This register sets the size of the ring. Maximum size is 1024.
 | ARQCRIT   | 30         | 0b        | Critical Error. This bit is set by firmware when a critical error has been detected in this queue.                                                                                                  |
 | ARQENABLE | 31         | 0b        | Enable Bit. Set by the driver to indicate that the queue is active. When setting the enable bit, software should initialize all other fields. This flag is implemented by an FF and cleared by PFR. |
 
-### 
+#### 
 
-### PF MailBox Receive Head - PF_FW_ARQH (0x0840000C; RW)
+#### PF MailBox Receive Head - PF_FW_ARQH (0x0840000C; RW)
 
-### VF MailBox Receive Head - VF_ARQH (0x00007400; RW)
+#### VF MailBox Receive Head - VF_ARQH (0x00007400; RW)
 
 Receive queue head pointer. Note that this register might not be
 implemented on a device. This head is not used by SW. For completions
@@ -7295,11 +7309,11 @@ is to zero it as part of the queue initialization process.
 | ARQH      | 9:0        | 0x0       | Receive Queue Head Pointer. At queue initialization, software clears the head pointer and during normal operation firmware increments the head following command execution. |
 | RESERVED  | 31:10      | 0x0       | Reserved.                                                                                                                                                                   |
 
-### 
+#### 
 
-### PF MailBox Receive Tail - PF_FW_ARQT (0x08400010; RW)
+#### PF MailBox Receive Tail - PF_FW_ARQT (0x08400010; RW)
 
-### VF MailBox Receive Tail - VF_ARQT (0x00007000; RW)
+#### VF MailBox Receive Tail - VF_ARQT (0x00007000; RW)
 
 Transmit queue tail pointer.
 
@@ -7308,15 +7322,16 @@ Transmit queue tail pointer.
 | ARQT      | 9:0        | 0x0       | Transmit Queue Tail. Incremented to indicate that there are new valid descriptors on the ring. Software might only write to this register once both transmit and receive queues are properly initialized. And clear to zero at queue initialization. |
 | RESERVED  | 31:10      | 0x0       | Reserved.                                                                                                                                                                                                                                            |
 
-## 
+### 
 
 ## Dynamic Registers
+Dynamic register offsets and spacing for an array of registers are learnt by the device driver upon interaction with the Device Control plane. The offsets and spacing listed below are optional and could be used by teh driver in absence of the Control plane providing the actual offsets and spacing for a device.
 
-## VF Interrupt Dynamic Control N - INT_DYN_CTLN\[n\] (0x00003800 + 0x4\*n, n=0...63; RW)
+### VF Interrupt Dynamic Control N - INT_DYN_CTLN\[n\] (0x00003800 + 0x4\*n, n=0...63; RW)
 
-## PF Interrupt Dynamic Control N - INT_DYN_CTLN\[n\] (0x08900000 + 0x1000\*n for n:0..7167; RW)
+### PF Interrupt Dynamic Control N - INT_DYN_CTLN\[n\] (0x08900000 + 0x1000\*n for n:0..7167; RW)
 
-## Interrupt Dynamic Control N - INT_DYN_CTLN\[n\] (dynctln_reg_start + dynctln_reg_spacing\*n , n = 0…num_vectors)
+### Interrupt Dynamic Control N - INT_DYN_CTLN\[n\] (dynctln_reg_start + dynctln_reg_spacing\*n , n = 0…num_vectors)
 
 Note that num_vectors may be larger than the default number of vectors.
 
@@ -7443,29 +7458,29 @@ impact the device setting. This bit is auto-cleared by hardware.</th>
 </tbody>
 </table>
 
-## 
+### 
 
-## VF Interrupt Throttling N - INT_ITRN\[n,m\] (0x00002800 + 0x4\*n + 0x40\*m, n=0...16, m=0...2,RW)
+### VF Interrupt Throttling N - INT_ITRN\[n,m\] (0x00002800 + 0x4\*n + 0x40\*m, n=0...16, m=0...2,RW)
 
 - PF Interrupt Throttling N - INT_ITRN\[n,m\] (0x08900004 + 0x1000\*n + 0x4\*m for n:0..7167, m=0...2,RW)
 
 - Interrupt Throttling N - INT_ITRN\[n,m\] ( itrn_reg_start +
   0x4\*n+itrn_reg_spacing\*m, n=0..num_vectors, m=0..2; RW)
 
-## 
+### 
 
 | **Field** | **Bit(s)** | **Init.** | **Description**                                                                                                                                                                                                                                                                                                                                   |
 |-----------|------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | INTERVAL  | 11:0       | 0x0       | ITR 'n' interval, while 'n' is the register index = 0,1,2 for the three ITRs per interrupt. It is defined in 2 µs units enabling interval range from zero to 8160 µs (0xFF0). Setting the INTERVAL to zero enable immediate interrupt. This register can be programmed also by setting the INTERVAL field in the matched xxINT_DYN_CTLx register. |
 | RSVD      | 31:12      | 0x0       | Reserved.                                                                                                                                                                                                                                                                                                                                         |
 
-## 
+### 
 
-## VF Transmit Queue Tail - QTX_TAIL\[n\] (0x00000000 + 0x4\*n, n=0...255; RW)
+### VF Transmit Queue Tail - QTX_TAIL\[n\] (0x00000000 + 0x4\*n, n=0...255; RW)
 
 - PF Transmit Queue Tail - QTX_TAIL\[n\] (0x05000000 + 0x1000\*n, n=0...12287; RW)
 
-## Transmit Queue Tail - QTX_TAIL\[n\] (qtail_reg_start + 0x4\*qtail_reg_spacing, n=0...num_queues; RW) // for q type = VIRTCHNL2_QUEUE_TYPE_TX
+### Transmit Queue Tail - QTX_TAIL\[n\] (qtail_reg_start + 0x4\*qtail_reg_spacing, n=0...num_queues; RW) // for q type = VIRTCHNL2_QUEUE_TYPE_TX
 
 Note that num_queues may be larger than the default number of queues.
 
@@ -7474,35 +7489,35 @@ Note that num_queues may be larger than the default number of queues.
 | TAIL      | 12:0       | 0x0       | The transmit tail defines the first descriptor that software prepares for hardware (it is the last valid descriptor plus one). The tail is a relative descriptor index to the beginning of the transmit descriptor ring. |
 | RSVD      | 31:13      | 0x0       | Reserved.                                                                                                                                                                                                                |
 
-## 
+### 
 
-## VF Receive Queue Tail - QRX_TAIL\[n\] (0x00002000 + 0x4\*n, n=0...255; RW)
+### VF Receive Queue Tail - QRX_TAIL\[n\] (0x00002000 + 0x4\*n, n=0...255; RW)
 
 - PF Receive Queue Tail - QRX_TAIL\[n\] (0x00000000 + 0x1000\*n, n=0...12287; RW)
 
-## Receive Queue Tail - QRX_TAIL\[n\] (qtail_reg_start + 0x4\*qtail_reg_spacing, n=0...num_queues; RW) // for q type = VIRTCHNL2_QUEUE_TYPE_RX
+### Receive Queue Tail - QRX_TAIL\[n\] (qtail_reg_start + 0x4\*qtail_reg_spacing, n=0...num_queues; RW) // for q type = VIRTCHNL2_QUEUE_TYPE_RX
 
-## 
-
-| **Field** | **Bit(s)** | **Init.** | **Description**                                                                                                                                                                                                      |
-|-----------|------------|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| TAIL      | 12:0       | 0x0       | The receive tail defines the first descriptor that software handles to hardware (it is the last valid descriptor plus one). The tail is a relative descriptor index to the beginning of the receive descriptor ring. |
-| RSVD      | 31:13      | 0x0       | Reserved.                                                                                                                                                                                                            |
-
-## 
-
-## VF Receive Buffer Queue Tail - QRXB_TAIL\[n\] (0x00060000 + 0x4\*n, n= 0..8191; RW)
-
-## PF Receive Buffer Queue Tail - QRXB_TAIL\[n\] (0x03000000 + 0x4\*n, n= 0..8191; RW)
-
-## Receive Buffer Queue Tail - QRXB_TAIL\[n\] (qtail_reg_start + 0x4\*qtail_reg_spacing, n=0...num_queues; RW) // for q type = VIRTCHNL2_QUEUE_TYPE_RX_BUFFER
+### 
 
 | **Field** | **Bit(s)** | **Init.** | **Description**                                                                                                                                                                                                      |
 |-----------|------------|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | TAIL      | 12:0       | 0x0       | The receive tail defines the first descriptor that software handles to hardware (it is the last valid descriptor plus one). The tail is a relative descriptor index to the beginning of the receive descriptor ring. |
 | RSVD      | 31:13      | 0x0       | Reserved.                                                                                                                                                                                                            |
 
-## 
+### 
+
+### VF Receive Buffer Queue Tail - QRXB_TAIL\[n\] (0x00060000 + 0x4\*n, n= 0..8191; RW)
+
+### PF Receive Buffer Queue Tail - QRXB_TAIL\[n\] (0x03000000 + 0x4\*n, n= 0..8191; RW)
+
+### Receive Buffer Queue Tail - QRXB_TAIL\[n\] (qtail_reg_start + 0x4\*qtail_reg_spacing, n=0...num_queues; RW) // for q type = VIRTCHNL2_QUEUE_TYPE_RX_BUFFER
+
+| **Field** | **Bit(s)** | **Init.** | **Description**                                                                                                                                                                                                      |
+|-----------|------------|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| TAIL      | 12:0       | 0x0       | The receive tail defines the first descriptor that software handles to hardware (it is the last valid descriptor plus one). The tail is a relative descriptor index to the beginning of the receive descriptor ring. |
+| RSVD      | 31:13      | 0x0       | Reserved.                                                                                                                                                                                                            |
+
+### 
 
 # 
 
@@ -7799,7 +7814,7 @@ from the TX descriptor.</p></th>
 <p>Device does not support calculating checksum/CRC to a field located
 deeper in the packet header.</p>
 <p>Note : Non generic checksum offload is a checksum offload that is
-executed using offsets from the HW parser.</p></th>
+executed using offsets from the Device parser.</p></th>
 <th><p><em><strong><mark>max_tx_hdr_HWparse_csum</mark></strong></em></p>
 <p><mark></mark></p></th>
 <th></th>
@@ -7938,7 +7953,7 @@ VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_SCTP_IN2</mark></em></th>
 <tr class="header">
 <th><p>TX checksum support for most inner headers.</p>
 <p>Note : Those capabilities are relevant only for an SSO. For LSO the
-packet checksums must be calculated by HW.</p></th>
+packet checksums must be calculated by Device.</p></th>
 <th><em><mark>VIRTCHNL2_CAP_TX_CSUM_L3_IPV4_IN0
 VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_TCP_IN0
 VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_UDP_IN0
@@ -7952,7 +7967,7 @@ VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_SCTP_IN0</mark></em></th>
 <tr class="odd">
 <th><p>TX checksum support for 1<sup>st</sup> inner tunnel.</p>
 <p>Note : Those capabilities are relevant only for an SSO. For LSO the
-packet checksums must be calculated by HW.</p></th>
+packet checksums must be calculated by Device.</p></th>
 <th><p><em><mark>VIRTCHNL2_CAP_TX_CSUM_L3_IPV4_IN1
 VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_TCP_IN1<br />
 VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_UDP_IN1
@@ -7969,7 +7984,7 @@ VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_SCTP_IN1</mark></em></p>
 <p>In case packet passer supports more than 2 tunnels , this capability
 represents the 2<sup>nd</sup> tunnel and the following ones.</p>
 <p>Note : Those capabilities are relevant only for an SSO. For LSO the
-packet checksums must be calculated by HW.</p></th>
+packet checksums must be calculated by Device.</p></th>
 <th><em><mark>VIRTCHNL2_CAP_TX_CSUM_L3_IPV4_IN2
 VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_TCP_IN2<br />
 VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_UDP_IN2
@@ -8173,7 +8188,8 @@ VIRTCHNL2_CAP_RSC_IPV6_TCP</th>
 
 # virtchannel2.h
 
-#ifdef DEFAULT_LICENSE
+```C
+#ifdef DEFAULT_LICENSE
 
 /\*
 
@@ -8218,7 +8234,7 @@ sender \*/
 
 \#define VIRTCHNL2_STATUS_ERR_ESRCH 3
 
-/\* I/O error - HW access error \*/
+/\* I/O error - Device access error \*/
 
 \#define VIRTCHNL2_STATUS_ERR_EIO 5
 
@@ -9970,7 +9986,7 @@ struct virtchnl2_create_adi {
 
 /\*
 
-\* mbx_id is set to 1 by PF when requesting CP to provide HW mailbox
+\* mbx_id is set to 1 by PF when requesting CP to provide Device mailbox
 
 \* id else it is set to 0 by PF
 
@@ -10508,10 +10524,13 @@ struct virtchnl2_rdma_qv_info qv_info\[1\];
 VIRTCHNL2_CHECK_STRUCT_LEN(16, virtchnl2_rdma_qvlist_info);
 
 \#endif /\* VIRTCHNL2_IWARP \*/
+```
+#
 
-# virtchannel2_lan_desc.h (WIP)
+# virtchannel2_lan_desc.h (WIP)
 
-#ifndef DEFAULT_LICENSE
+```C
+#ifndef DEFAULT_LICENSE
 
 /\*
 
@@ -11129,6 +11148,5 @@ struct virtchnl2_singleq_rx_buf_desc {
 
 }; /\* read used with buffer queues\*/
 
-# 
-
 ```
+#
