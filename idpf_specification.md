@@ -6373,36 +6373,65 @@ plane as <span class="mark">VIRTCHNL2_CAP_RDMA.</span> RDMA negotiation
 happens with RDMA Control Plane Peer identified as
 <span class="mark">VIRTCHNL2_RDMA_CPF</span>
 
-Since RDMA functionality and the dependent driver relies on the PCIE
-Core LAN driver for PCIE resources such as MSIX interrupt there are a
-few messages that are exchanged over virtchannel with the CP for
-reserving MSIX resources, binding them to queues etc. RDMA driver uses
-the IDPFdriver mailbox and virtchannel for initial configuration
-exchange with the CP.
+IDPF driver will negotiate RDMA Specific capability with the Device Control plane. 
+RDMA is a vendor specific capability as opposed to the rest of the IDPF spec compliant vendor agnostic capabilities. IDPF Spec will cover Interface and driver/device flow details to support a vendor specific RDMA driver along with a generic/common vendor agnostic IDPF driver.
+The Spec will carry the flows and Interfaces between the IDPF driver and IDPF Device Control Plane for RDMA which we refer to as South side interfaces. The North side interfaces between the IDPF driver and the RDMA vendor driver are OS specific and will be covered for Linux as OS in an Appendix section to the Spec.
 
+### South Side Interactions with Device Control Plane
+#### RDMA Capability negotiation
+As the IDPF driver comes up, if it does have the RDMA support code in it, it will announce to the Device Control that it is capable of supporting RDMA capability and driver. If the Device supports the RDMA capability along with IDPF Spec and the Control plane policy allows enabling it for an instance of the PF or VF driver it will respond with the RDMA capability enabled bit in the Capabilities bitmap.
+Note: RDMA transport protocol is agnostic to IDPF driver and the transport in use is a negotiation/learning between the RDMA driver and the Device Control plane. The same RDMA vendor driver is assumed to support all Transports that apply to a given device. 
+As an IDPF driver can come up with multiple logical LAN interfaces corresponding to the multiple vPorts created at Init or later at runtime, the Device Control must mark a vport_flag (a new ENABLE_RDMA flag) for a given vPort so that the driver can then instantiate the corresponding RDMA device Interface instance. If the Vport_flags bitmask does not indicate ENABLE_RDMA for any of the vports even if the device level capability grants RDMA to the driver, no RDMA devices/interfaces will be created by the IDPF driver.
+
+Besides the Device Interface level capability for RDMA, the driver is also enabled by Control plane per vport for enabling RDMA support along side LAN or not. This is indicated as a vport flag set in the response to create_vport by the Device Control plane.
 ```C
-VIRTCHNL2_OP_CONFIG_RDMA_IRQ_MAP
-
-VIRTCHNL2_OP_RELEASE_RDMA_IRQ_MAP
-
-struct virtchnl2_rdma_qv_info 
-{
-  __le32 v_idx; /* msix_vector */
-  __le16 ceq_idx; /* set to
-  VIRTCHNL2_RDMA_INVALID_QUEUE_IDX if invalid */
-  __le16 aeq_idx; /* set to
-  VIRTCHNL2_RDMA_INVALID_QUEUE_IDX if invalid */
-  u8 itr_idx;
-};
-
-struct virtchnl2_rdma_qvlist_inf
-{
-  __le32 num_vectors;
-  struct virtchnl2_rdma_qv_info qv_info[1];
-};
+VIRTCHNL2_VPORT_ENABLE_RDMA             = BIT(4),
 ```
 
-RDMA driver associates MSIX vector with just the CEQs and AEQs
+####	MMIO Space Learning
+After the RDMA capability Negotiation IDPF driver must learn about the various MMIO memory regions in the memory BAR that it should not map or it should map so that the RDMA driver can map its own regions in the best possible way depending on usage.
+This memory region discovery opcode can be called in other cases by IDPF driver as well in future if it needs to support other independent auxiliary drivers that need their own BAR space mapping.
+There are two flows that a driver    can follow depending on the support in the OS.
+1.	It can start with just mapping the Memory pages corresponding to the virtchannel Mailbox registers  and the reset registers. Then map the rest once the driver learns about the rest of the memory regions from Device Control Plane leaving behind regions that will be mapped by another auxiliary/dependent driver (in this case RDMA driver) appropriately.
+2.	Or it can start with mapping all the BAR and then request unmap from the OS of the regions that it should not be mapping so that the auxiliary/dependent driver can map it appropriately. (Note: currently Linux does not support this flow and is proposed as an enhancement, the benefit with this approach is that there is only one contiguous mapping/region (with holes) for the IDPF drivers MMIO space.
+In either case the virtchannel exchange with the device Control remains the same and needs to happen as soon as the driver learns that it is enabled to support RDMA auxiliary/dependent driver or any other auxiliary/dependent driver that needs its own memory mapping.
+
+Virtchannel Details
+
+```C
+enum virtchnl2_op {
+  ...
+  VIRTCHNL2_OP_GET_LAN_MEMORY_REGIONS	= 543,
+  ...
+}
+/* Opcode: VIRTCHNL2_OP_GET_LAN_MEMORY_REGIONS */
+struct vitchnl2_mem_region
+{ 
+__le64 size;
+__le64 start_offset;
+};
+
+struct virtchnl2_get_lan_memory_regions {
+	__le16 num_memory_regions;
+	u8 pad[6];
+	struct virtchnl2_mem_region mem_reg[STRUCT_VAR_LEN];
+};
+```
+####		RDMA MSIX vector allocation
+IDPF driver given the OS capabilities needs to request MSIX vectors on behalf of the  RDMA vendor specific dependent driver as a onetime request for all vectors or additional request for RDMA specific Aux driver usage once it is aware of its enabled capabilities and the number of vectors that Control Plane carves out for RDMA usage.
+Driver implements the following policy
+1.	A default allocation of 4  vectors is made for RDMA by LAN IDPF driver if the Control plane does not inform the driver about RDMA dedicate allocation of vectors. This amount will be taken from the num_allocated_vectors in get_capability that Device Control plane informs LAN driver about. So LAN will have less than max msix for its use based on the default policy.
+2.	Default allocation policy will be used only if the Device Control plane does not initialize  num_rdma_allocated_vectors in the get_capability structure using some of the padding area to specify exactly how many vectors to be allocated for RDMA and given to the RDMA CORE driver.  If this field is understood by the driver and populated by the Device Control Plane with a non-zero value, then the IDPF driver may not take any vectors from num_allocated_vectors given to the LAN but will allocate the sum of LAN + RDMA with Device Control Plane and with the OS. And give the RDMA portion to the RDMA core driver for its use.
+
+####	Init and Runtime Virtchannel  Messages and flows between RDMA driver and The Device Control Plane
+All interactions between the RDMA vendor specific dependent driver and the Device Control plane after the initial exchange are pretty much opaque to the IDPF driver.
+Opaque Virtchannel message:
+
+```C
+VIRTCHNL2_OP_RDMA			= 529,
+```
+This OP/call is used as an opaque RDMA virtchannel message between the vendor driver and the Device Control plane. A message buffer from RDMA driver is sent to the Device Control with this Opcode and the Device Control can do the reverse using the same opcode to send a message buffer to the RDMA driver. The interpretation of this message buffer is agreed upon between the Vendor RDMA driver and the Device Control plane.
+
 
 # Additional Offloads and capabilities
 
@@ -8243,10 +8272,8 @@ enum virtchnl2_op {
 	 */
 #ifdef VIRTCHNL2_IWARP
 	VIRTCHNL2_OP_RDMA			= 529,
-	VIRTCHNL2_OP_CONFIG_RDMA_IRQ_MAP	= 530,
-	VIRTCHNL2_OP_RELEASE_RDMA_IRQ_MAP	= 531,
 #else
-/* Opcodes 529, 530, and 531 are reserved */
+/* Opcodes 530, and 531 are reserved */
 #endif /* VIRTCHNL2_IWARP */
 #ifdef NON_FLEX_ARRAY_ADI_SUPPORT
 	VIRTCHNL2_OP_NON_FLEX_CREATE_ADI	= 532,
@@ -8644,11 +8671,6 @@ enum virtchnl2_itr_idx {
  * possible values of nested elements in virtchnl structures that virtual
  * channel can possibly handle in a single message.
  */
-#ifdef VIRTCHNL2_IWARP
-#define VIRTCHNL2_OP_CONFIG_RDMA_IRQ_MAP_MAX (\
-		((__le16)(~0) - sizeof(struct virtchnl2_rdma_qvlist_info)) / \
-		sizeof(struct virtchnl2_rdma_qv_info))
-#endif /* VIRTCHNL2_IWARP */
 
 #define VIRTCHNL2_OP_DEL_ENABLE_DISABLE_QUEUES_MAX (\
 		((__le16)(~0) - sizeof(struct virtchnl2_del_ena_dis_queues)) / \
@@ -8888,6 +8910,18 @@ VIRTCHNL2_CHECK_STRUCT_LEN(8, virtchnl2_version_info);
  *			segment offload
  * @max_hdr_buf_per_lso: Max number of header buffers that can be used for
  *			 an LSO
+ #ifdef VIRTCHNL2_IWARP
+ * @num_rdma_allocated_vectors: Number of vectors allocated to RDMA. If this
+ *				field is zero, driver should allocate the
+ *				vectors to RDMA from 'num_allocated_vectors' and
+ *				the recommended is 4 vectors. If it is a
+ *				non-zero value, then the driver should allocate
+ *				'num_allocated_vectors' only for LAN usage.
+ *				It should allocate the vectors that is the sum
+ *				of the two fields, with CP and the OS.
+#else
+ * @reserved2: Reserved field
+#endif
  * @pad1: Padding for future extensions
  *
  * Dataplane driver sends this message to CP to negotiate capabilities and
@@ -8941,7 +8975,13 @@ struct virtchnl2_get_capabilities {
 	__le32 device_type;
 	u8 min_sso_packet_len;
 	u8 max_hdr_buf_per_lso;
-	u8 pad1[10];
+#ifdef VIRTCHNL2_IWARP
+	__le16 num_rdma_allocated_vectors;
+#else
+	__le16 reserved2;
+#endif /* VIRTCHNL2_IWARP */
+	u8 pad1[8];
+  
 };
 VIRTCHNL2_CHECK_STRUCT_LEN(80, virtchnl2_get_capabilities);
 
@@ -10218,47 +10258,6 @@ struct virtchnl2_ptp_tx_tstamp_latches {
 VIRTCHNL2_CHECK_STRUCT_VAR_LEN(24, virtchnl2_ptp_tx_tstamp_latches,
 			       tstamp_latches);
 
-#ifdef VIRTCHNL2_IWARP
-/**
- * struct virtchnl2_rdma_qv_info - RDMA queue vector info
- * @v_idx: MSIX vector index
- * @ceq_idx: Set to VIRTCHNL2_RDMA_INVALID_QUEUE_IDX if invalid
- * @aeq_idx: Set to VIRTCHNL2_RDMA_INVALID_QUEUE_IDX if invalid
- * @itr_idx: ITR index
- *
- * PF/VF uses this message to request CP to map RDMA vectors to RDMA queues.
- * The request for this originates from the PF/VF RDMA driver through
- * a client interface between PF/VF LAN and PF/VF RDMA driver.
- * A vector could have an AEQ and CEQ attached to it although
- * there is a single AEQ per PF/VF RDMA instance in which case
- * most vectors will have an VIRTCHNL2_RDMA_INVALID_QUEUE_IDX for aeq and valid
- * idx for ceqs There will never be a case where there will be multiple CEQs
- * attached to a single vector.
- * CP configures interrupt mapping and returns status.
- *
- * Associated with VIRTCHNL2_OP_CONFIG_RDMA_IRQ_MAP.
- */
-struct virtchnl2_rdma_qv_info {
-	__le32 v_idx;
-	__le16 ceq_idx;
-	__le16 aeq_idx;
-	u8 itr_idx;
-};
-VIRTCHNL2_CHECK_STRUCT_LEN(12, virtchnl2_rdma_qv_info);
-
-/**
- * struct virtchnl2_rdma_qvlist_info - RDMA queue vector list info
- * @num_vectors: Number of vectors
- * @qv_info: Queue vector info
- */
-struct virtchnl2_rdma_qvlist_info {
-	__le32 num_vectors;
-	struct virtchnl2_rdma_qv_info qv_info[STRUCT_VAR_LEN];
-};
-VIRTCHNL2_CHECK_STRUCT_VAR_LEN(16, virtchnl2_rdma_qvlist_info, qv_info);
-
-#endif /* VIRTCHNL2_IWARP */
-
 static inline const char *virtchnl2_op_str(__le32 v_opcode)
 {
 #ifndef EXTERNAL_RELEASE
@@ -10325,10 +10324,6 @@ static inline const char *virtchnl2_op_str(__le32 v_opcode)
 #ifdef VIRTCHNL2_IWARP
 	case VIRTCHNL2_OP_RDMA:
 		return "VIRTCHNL2_OP_RDMA";
-	case VIRTCHNL2_OP_CONFIG_RDMA_IRQ_MAP:
-		return "VIRTCHNL2_OP_CONFIG_RDMA_IRQ_MAP";
-	case VIRTCHNL2_OP_RELEASE_RDMA_IRQ_MAP:
-		return "VIRTCHNL2_OP_RELEASE_RDMA_IRQ_MAP";
 #endif /* VIRTCHNL2_IWARP */
 #ifdef NON_FLEX_ARRAY_ADI_SUPPORT
 	case VIRTCHNL2_OP_NON_FLEX_CREATE_ADI:
@@ -10659,22 +10654,6 @@ virtchnl2_vc_validate_vf_msg(struct virtchnl2_version_info *ver, u32 v_opcode,
 			valid_len = msglen;
 		else
 			err_msg_format = true;
-		break;
-	case VIRTCHNL2_OP_RELEASE_RDMA_IRQ_MAP:
-		break;
-	case VIRTCHNL2_OP_CONFIG_RDMA_IRQ_MAP:
-		num_chunks = ((struct virtchnl2_rdma_qvlist_info *)msg)->num_vectors;
-		if (!num_chunks ||
-		    num_chunks > VIRTCHNL2_OP_CONFIG_RDMA_IRQ_MAP_MAX) {
-			err_msg_format = true;
-			break;
-		}
-
-		valid_len = struct_size_t(struct virtchnl2_rdma_qvlist_info,
-					  qv_info, num_chunks);
-		if (!is_flex_array)
-			valid_len -= sizeof(struct virtchnl2_rdma_qv_info);
-
 		break;
 #endif /* VIRTCHNL2_IWARP */
 	case VIRTCHNL2_OP_GET_PTP_CAPS:
@@ -11540,4 +11519,134 @@ union virtchnl2_rx_desc {
 };
 
 #endif /* _VIRTCHNL_LAN_DESC_H_ */
+```
+# Appendix : Linux RDMA
+
+## North Side Interfaces and flows for Linux: 
+This section is not part of the main spec and it is just an example implementation detail referred from the Linux support for RDMA driver.
+
+###	RDMA Aux drivers naming
+IDPF driver will create a Core and multiple vPort level Aux device instances for RDMA. The Core RDMA device driver will setup the Control Queues with RDMA FW and any other Interface level initialization and the Vport Aux device instance can be one to one with the LAN vport netdev instances. Although not ever Lan vPort netdev may not create a RDMA vport Ib driver instance as discussed earlier. 
+( Note: TBD, the LAN driver itself is also undergoing changes to create LAN netdevs as Aux device instances on the aux bus. Although RDMA vPort Aux device instances are not dependent on the LAN Aux Devices per Netdev and so the work can be done independently)  
+RDMA Aux devices will be named carrying the following key words in the name: IDPF, VENDOR ID, RDMA, , TYPE OF the DEVICE (CORE or VPort), A Global ID 
+This allows for a unique vendor specific RDMA driver to be loaded along with IDPF driver.
+The Global unique ID, is requested from the OS and helps identify individual Aux driver instances.
+###	RDMA Driver bring up and teardown flows
+1.	IDPF driver creates the RDMA Core Aux Device  Instance when the IDPF driver is granted the RDMA capability from the Device Control. IDPF driver fills out the Core Dev Info struct to be used by the RDMA Core Aux driver as part of creating the Aux device.
+2.	After the RDMA Core Aux device instance is created, the OS calls the probe for the corresponding device to load the driver if a driver is registered for the device. 
+3.	IDPF driver waits for  RDMA Core driver to call back vport_dev_ctrl()that is part of the core_ops with the status UP into the IDPF driver to indicate that RDMA Core driver is now ready to support any RDMA vport device driver load requests upon creation of the RDMA vport Aux Device.
+4.	IDPF driver has to still wait to create the RDMA vport Aux Device for the corresponding LAN vport netdev to be created and the Device Control indicating in the LAN Vport flags that an RDMA instance needs to created for this vport. So both the step 3 and 4 needs to happen for a given RDMA vport Aux device to be created.
+  (Two options :
+  1.	When LAN Aux vport devices are enabled, there is a choice to inform the IDPF Core (LAN) driver about the netdev and vport Info even when an RDMA vport device does not have to be created.)
+  2.	Other option is to inform only when RDMA vport device has to be created.)
+5.	All communication from RDMA vport driver goes to the Core RDMA driver using the handle provided by the IDPF driver in the idc_rdma_vport_dev_info as the Core RDMA Aux Device pointer.
+6.	Core Driver calls the IDPF driver with core_ops for sending any Opaque messages down to the Device control using virtchannel RDMA ops or for setting up the Queue vector mapping or requesting reset etc. 
+7.	IDPF driver can send events to the Core or the vPort RDMA Aux device such as Reset pending, MTU change etc.
+8.	IDPF driver can also send asynchronous RDMA messages received from Device Control directly to the Core RDMA Aux driver using a vc_receive call back into the Aux RDMA Core Driver.
+WIP: tear down flow
+###	Reset flows
+When the RDMA Core Aux driver requests reset, it becomes blocking as the IDPF driver goes and destroys all the Aux RDMA vPort devices and ultimately the Core RDMA Aux device is deleted as well. After that it follows through with a Function level reset for the whole PCIE interface. Upon reset Completion of the PCIE interface, the RDMA Core device and the Vport devices are created afresh as described in the RDMA init flow.
+When a Reset  pending event is detected on the IDPF driver side due to the Device Control plane indicating that the Interface is being reset, IDPF driver must first inform the Core RDMA Aux driver that a reset is pending through an event so that RDMA Core driver stops accessing  the HW and then IDPF driver goes to remove all RDMA vport Aux devices and then finally destroying the Core RDMA Aux device as well.  
+###	RDMA Driver Generic Data structures and Inter Driver Communication Ops 
+```C
+/* SPDX-License-Identifier: GPL-2.0 */
+/* Copyright (C) 2021, Intel Corporation. */
+#ifndef _IDC_RDMA_H_
+#define _IDC_RDMA_H_
+#include <linux/auxiliary_bus.h>
+#include <linux/device.h>
+#include <linux/if_ether.h>
+#include <linux/kernel.h>
+#include <linux/netdevice.h>
+
+enum idc_rdma_reset_type {
+	IDC_FUNC_RESET,
+	IDC_DEV_RESET,
+};
+enum idc_rdma_event_type {
+	IDC_RDMA_EVENT_BEFORE_MTU_CHANGE,
+	IDC_RDMA_EVENT_AFTER_MTU_CHANGE,
+	IDC_RDMA_EVENT_BEFORE_TC_CHANGE,
+	IDC_RDMA_EVENT_AFTER_TC_CHANGE,
+	IDC_RDMA_EVENT_WARN_RESET,
+	IDC_RDMA_EVENT_CRIT_ERR,
+	IDC_RDMA_EVENT_NBITS,		/* must be last */
+};
+struct idc_rdma_event {
+	DECLARE_BITMAP(type, IDC_RDMA_EVENT_NBITS);
+	u32 reg;
+};
+
+struct idc_rdma_core_dev_info;
+/* Following APIs are implemented by core PCI driver */
+struct idc_rdma_core_ops {
+	   int (*vc_send_sync)(struct iidc_core_dev_info *cdev_info, u8 *msg, u16 len, u8 *recv_msg, u16 *recv_len);
+	
+	/* vport_dev_ctrl is for RDMA CORE driver to indicate it is either ready
+	 * for individual vport aux devices, or it is leaving the state where it
+	 * can support vports and they need to be downed
+	 */
+	int (*vport_dev_ctrl)(struct idc_rdma_core_dev_info *cdev_info,
+			      bool up);
+	int (*request_reset)(struct idc_rdma_core_dev_info *cdev_info,
+			     enum idc_rdma_reset_type reset_type);
+};
+
+struct idc_rdma_lan_mapped_mem_region
+{ 
+u8 __iomem *region_addr;
+__le64 size;
+__le64 start_offset;
+};
+
+/* struct to be populated by core LAN PCI driver */
+struct idc_rdma_core_dev_info {
+	struct pci_dev *pdev; /* PCI device of corresponding to main function */
+	struct auxiliary_device *adev;
+	
+/* KVA / Linear addresses corresponding to regions of memory mappped by underlying lan device. */
+	struct idc_rdma_lan_mapped_mem_region *mapped_mem_regions;
+	__le16 num_memory_regions;
+
+	struct msix_entry *msix_entries;
+	u16 msix_count; /* How many vectors are reserved for this device */
+	/* Following struct contains function pointers to be initialized
+	 * by core PCI driver and called by auxiliary driver
+	 */
+	const struct idc_rdma_core_ops *ops;
+	void *idc_priv; //This is not used by IDPF, but is to allow RDMA driver to support other legacy devices using the same IDC interface.
+};  
+struct idc_rdma_core_auxiliary_dev {
+	struct auxiliary_device adev;
+	struct idc_rdma_core_dev_info *cdev_info;
+};
+/* struct to be populated by core LAN PCI driver */
+struct idc_rdma_vport_dev_info {
+	struct auxiliary_device *adev;
+	struct auxiliary_device *core_adev;
+	struct net_device *netdev;
+	u16 vport_id;
+};
+struct idc_rdma_vport_auxiliary_dev {
+	struct auxiliary_device adev;
+	struct idc_rdma_vport_dev_info *vdev_info;
+};
+/* structures representing the auxiliary drivers. These structs are to be
+ * allocated and populated by the auxiliary drivers' owner. The core PCI
+ * driver will access these ops by performing a container_of on the
+ * auxiliary_device->dev.driver.
+ */
+struct idc_rdma_core_auxiliary_drv {
+	struct auxiliary_driver adrv;
+	void (*event_handler)(struct idc_rdma_core_dev_info *cdev,
+			      struct idc_rdma_event *event);
+	int (*vc_receive)(struct idc_rdma_core_dev_info *cdev_info, u8 *msg,
+			  u16 len);
+};
+struct idc_rdma_vport_auxiliary_drv {
+	struct auxiliary_driver adrv;
+	void (*event_handler)(struct idc_rdma_vport_dev_info *vdev,
+			      struct idc_rdma_event *event);
+};
+#endif /* _IDC_RDMA_H_*/
 ```
