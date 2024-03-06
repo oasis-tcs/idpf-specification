@@ -128,7 +128,11 @@ Since the capabilities are negotiated with the device, this allows the Device Co
 
 ## Device identification 
 
-The IDPF will use the following device IDs (Vendor ID = 0x8086), Device ID = 0x1452 as a PF device and 0x145c as a VF Device). The RevID  can be used by OEMs to specify different revisions of the Device. The subvendor and subsystem IDs are TBD.
+The IDPF will use the following Programming Interface under PCIE class : Network Controller (02h),subclass : Ethernet Controller (00h) as Programming Interface :  Ethernet Controller with IDPF compliant Interface (01h). 
+
+This will allow the driver to be loaded just based on Programming Interface identification, and we wouldn't need a generic Vendor ID for this device that Every vendor needs to put in their HW. An Emulated IDPF device will still have a Vendor ID such as "Redhat"
+
+If  a Vendor chooses to add a Vendor ID + Device ID identification tuple in the IDPF driver, they can still do that for reasons such as Quirks/workarounds or any other reason.
 
 ## BARs
 
