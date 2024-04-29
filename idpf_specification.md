@@ -11626,25 +11626,26 @@ struct idc_rdma_vport_auxiliary_drv {
  
  - Capability and Data structures
 
-  The response from <span class="mark">VIRTCHNL2_OP_GET_CAPS will have the</span> VIRTCHNL2_DEVICE_TYPE, oem_cp_major_version, and oem_cp_minor_version to indicate what device and the CP SW the driver is talking to.
+  The response from <span class="mark">VIRTCHNL2_OP_GET_CAPS will have the</span> device_type, cp_major_version, and cp_minor_version to indicate what device and the CP SW the driver is talking to.
   
+  Vendor can define their own data structures for negotiating capabilities keeping in mind sizing of the struct to ease forward/backward compatibility etc., keeping field members naturally aligned and explicitly adding padding where necessary.
+
   Driver will use the VIRTCHNL2_OP_GET_OEM_CAPS message to learn about the special capabilities that are available. A suggested data structure that goes along with this opcode and example capability and flow could look like below
 
 ```C
   struct virtchnl2_oem_caps {
-    /* See VIRTCHNL2_OEM_CAPS definitions */
-    /* Add 64 bit OEM_version here */
+      /* Add 64 bit OEM_version here */
     __le64 oem_caps;
   };
 
-  #define VIRTCHNL2_CAP_OEM_P2P BIT(0) /* port-to-port */
+  #define VIRTCHNL2_CAP_OEM_PUSHQ BIT(0) /* Push Queue */
   ```
 
 - Configuration
 
 - Driver Configuration and Runtime flow Examples of OEM Capability:
-  1.  Port-to-port configuration
-  **port-to-port:** Upon learning the port-to-port availability and the device type, the driver may request Control plane to add device specific sequence that may request additional resources that are necessary for the device to setup the port-to-port functionality.
+  1.  Push Queue configuration
+  **Push_Queue:** Upon learning the port-to-port availability and the device type, the driver may request Control plane to add device specific sequence that may request additional resources that are necessary for the device to setup the Push queue functionality.
   
 
 - Device and Control Plane Behavioral Model
