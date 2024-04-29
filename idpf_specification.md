@@ -6456,47 +6456,21 @@ a standard capability to a PF or a VF device
   
   On driver initialization/load if the PTP capability is supported by device, driver will register the PTP object along with two read callbacks. *Gettime64* for reading the device clock and *Getcrosststamp* for PTM(Precision Time Measurement). The device registers to read the device clock are SHTIME, SHTIME_L and SHTIME_H. ART_L and ART_H are used for PTM.
 
-## OEM Capabilities (WIP)
+## OEM Capabilities
 
-This spec allows the OEMs to add new capabilities and export them to the IDPF compatible driver.
+This spec allows the OEMs to add new OEM specific capabilities and export them to an IDPF compatible vendor driver.
 
 - Device Interface
   
-  The driver learns and negotiates the OEM specific capabilities from the device. Based on the current device and the node policy, certain capabilities will be made available to the driver.
+  The driver learns and negotiates the OEM specific capabilities from the device. Based on the current device type as sepcified in get_capabilities and device policy, certain capabilities will be made available to the driver.
 
 - Capability and Data structures
 
   The response from <span class="mark">VIRTCHNL2_OP_GET_CAPS will have the</span> VIRTCHNL2_DEVICE_TYPE, oem_cp_major_version, and oem_cp_minor_version to indicate what device and the CP SW the driver is talking to.
   
-  Driver will use the VIRTCHNL2_OP_GET_OEM_CAPS message to learn about the special capabilities that are available.
+  Driver will use the VIRTCHNL2_OP_GET_OEM_CAPS message to learn about the special capabilities that are available. A suggested OEM capability negotiation struct and details plus examples can be found in the Spec appendix.
 
-  ```C
-  struct virtchnl2_oem_caps {
-    /* See VIRTCHNL2_OEM_CAPS definitions */
-    /* Add 64 bit OEM_version here */
-    __le64 oem_caps;
-  };
-
-  #define VIRTCHNL2_CAP_OEM_P2P BIT(0) /* port-to-port */
-  ```
-
-- Configuration
-
-- Driver Configuration and Runtime flow Examples of OEM Capability:
-  1.  Port-to-port configuration
-  **port-to-port:** Upon learning the port-to-port availability and the device type, the driver may request HMA to add device specific sequence that may request additional queue groups that are necessary for the device to setup the port-to-port functionality.
-  2.  Live MIgration, device state retrieval (WIP)
-
-- Device and Control Plane Behavioral Model
-
-- Examples of OEM Capability:
-  1.  port-to-port:
-  
-    The VIRTCHNL2_OP_ADD_QUEUE_GROUPS processing on the CP will automatically reserve enough RSS LUT instances for the incoming packets to be spread across the port-to-port queues. When the port-to-port offload is no longer needed, the driver may free up the associated NIC resources using the VIRTCHNL2_OP_DEL_QUEUE_GROUPS command.
-  
-  2.  Live MIgration, device state state retrieval (WIP)
-
-## Application Targeted Routing (ATR)
+  ## Application Targeted Routing (ATR)
 
 - Device Interface
 
@@ -8297,7 +8271,7 @@ enum virtchnl2_op {
 
 	/* All OEM specific opcodes start at higher offset. This will allow
 	 * OEMs to use the virtchannel header with old opcodes and their own
-	 * specific opcodes. Every OEM is reserved 1000 opcodes. All opcodes and
+	 * specific opcodes. All opcodes and
 	 * structure names of a specific OEM must include OEM specific
 	 * identifier. For example the identifier in the below case is OEM_1.
 	 */
@@ -8899,12 +8873,8 @@ VIRTCHNL2_CHECK_STRUCT_LEN(8, virtchnl2_version_info);
  *			    linearized.
  * @reserved: Reserved field
  * @max_adis: Max number of ADIs
-#ifdef NOT_FOR_UPSTREAM
- * @oem_cp_ver_major: OEM CP major version number
- * @oem_cp_ver_minor: OEM CP minor version number
-#else
- * @reserved1: Reserved field
-#endif
+ * @oem_cp_ver_major: CP major version number
+ * @oem_cp_ver_minor: CP minor version number
  * @device_type: See enum virtchl2_device_type
  * @min_sso_packet_len: Min packet length supported by device for single
  *			segment offload
@@ -8966,12 +8936,8 @@ struct virtchnl2_get_capabilities {
 	u8 max_sg_bufs_per_tx_pkt;
 	u8 reserved;
 	__le16 max_adis;
-#ifdef NOT_FOR_UPSTREAM
 	__le16 oem_cp_ver_major;
 	__le16 oem_cp_ver_minor;
-#else
-	u8 reserved1[4];
-#endif /* NOT_FOR_UPSTREAM */
 	__le32 device_type;
 	u8 min_sso_packet_len;
 	u8 max_hdr_buf_per_lso;
@@ -11654,3 +11620,39 @@ struct idc_rdma_vport_auxiliary_drv {
 };
 #endif /* _IDC_RDMA_H_*/
 ```
+
+# Appendix : OEM Capabilities
+ Vendor can define their own OEM specific capabilities and develop a vendor driver that is IDPF compliant.
+ 
+ - Capability and Data structures
+
+  The response from <span class="mark">VIRTCHNL2_OP_GET_CAPS will have the</span> device_type, cp_major_version, and cp_minor_version to indicate what device and the CP SW the driver is talking to.
+  
+  Vendor can define their own data structures for negotiating capabilities keeping in mind sizing of the struct to ease forward/backward compatibility etc., keeping field members naturally aligned and explicitly adding padding where necessary.
+
+  Driver will use the VIRTCHNL2_OP_GET_OEM_CAPS message to learn about the special capabilities that are available. A suggested data structure that goes along with this opcode and example capability and flow could look like below
+
+```C
+  struct virtchnl2_oem_caps {
+      /* Add 64 bit OEM_version here */
+    __le64 oem_caps;
+  };
+
+  #define VIRTCHNL2_CAP_OEM_PUSHQ BIT(0) /* Push Queue */
+  ```
+
+- Configuration
+
+- Driver Configuration and Runtime flow Examples of OEM Capability:
+  1.  Push Queue configuration
+  **Push_Queue:** Upon learning the port-to-port availability and the device type, the driver may request Control plane to add device specific sequence that may request additional resources that are necessary for the device to setup the Push queue functionality.
+  
+
+- Device and Control Plane Behavioral Model
+
+- Examples of OEM Capability:
+  1.  port-to-port:
+  
+    The VIRTCHNL2_OP_P2P_REQUEST_RESOURCES can be an opcode defined above opcode 5000. This opcode processing on the CP will reserve enough resources for the incoming packets to be spread across the port-to-port queues. When the port-to-port offload is no longer needed, the driver may free up the associated NIC resources using the VIRTCHNL2_OP_P2P_RELEASE_RESOURCES command.
+  
+  
