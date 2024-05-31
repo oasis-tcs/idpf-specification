@@ -2698,7 +2698,7 @@ set.</p>
 </tr>
 <tr class="header">
 <th>1</th>
-<th>WIP</th>
+<th>TSYN_EN</th>
 <th>TimeSync/PTP</th>
 </tr>
 <tr class="odd">
@@ -6454,30 +6454,30 @@ This OP/call is used as an opaque RDMA virtchannel message between the vendor dr
 
 #### PTP Sub capabilities
 1. Ability to synchronize system (OS) time with Device time by doing cross time stamping. 
-  1. In legacy Devices with no PCIe PTM capability, this was done by independently sampling Device time and system time. But doing it in a fashion that they can be done as close in time as possible. Or by taking two system time sample one before taking the Device time sample and one immediately after the Device time sample. The mean system time value between the two would be approximately the same time when the Device time was sampled.  
+  * In legacy Devices with no PCIe PTM capability, this was done by independently sampling Device time and system time. But doing it in a fashion that they can be done as close in time as possible. Or by taking two system time sample one before taking the Device time sample and one immediately after the Device time sample. The mean system time value between the two would be approximately the same time when the Device time was sampled.  
   This capability is exposed as   
   VIRTCHNL2_CAP_PTP_GET_DEVICE_CLK_TIME  
-  VIRTCHNL2_CAP_PTP_GET_DEVICE_CLK_TIME_MB  
+  VIRTCHNL2_CAP_PTP_GET_DEVICE_CLK_TIME_MB    
   Note: The Mailbox (_MB) version to get Device time over mailbox is generally not in use but is for completeness as the Device time over mailbox cannot be relied as being done exactly in the middle of the two system time samples or due to proxy nature can be far off from the system time sample. The capability returns only one time value from the Device, that of the Device PHC time.
-  2. With PCIe PTM capability, the system OS time and the Device time can be latched simultaneously by the Device. This is done by the Device’s ability to sample the system timer at the same time the Device PHC timer is sampled.   
+  * With PCIe PTM capability, the system OS time and the Device time can be latched simultaneously by the Device. This is done by the Device’s ability to sample the system timer at the same time the Device PHC timer is sampled.   
   This capability is exposed as    
-  VIRTCHNL2_CAP_PTP_GET_CROSS_TIME  	
-  VIRTCHNL2_CAP_PTP_GET_CROSS_TIME_MB     
+  VIRTCHNL2_CAP_PTP_GET_CROSS_TIME  
+  VIRTCHNL2_CAP_PTP_GET_CROSS_TIME_MB         
   Either capability is as accurate as the other in sampling the system and Device time as the Mailbox (_MB) mechanism also relies on the Device control plane to be able to latch both system time and the Device at the same instance. The mailbox method just allows for indirect access to reading the latched values by the Device. This capability returns two time values one for the Device and one for the system (CPU complex).
 2. Ability to do Tx time stamping of packets as they leave the Device (typically in the PHY).  
 This capability can be used by either the TimeReceiver clock server or by the Grandmaster clock server in the common PTP network domain to calculate packet delay in transmission and reception between TimeReceiver and the TimeTransmitter.   
-VIRTCHNL2_CAP_PTP_TX_TSTAMPS  	
-VIRTCHNL2_CAP_PTP_TX_TSTAMPS_MB  
-The packet delay calculation on the wire is used to accurately remove the time component that is common in calculation of the skew in clock between the TimeMaster and the TimeReceiver. Tx timestamping should be allowed on all vports that are tied to an external port which means their traffic goes only to a particular external physical port.      
+VIRTCHNL2_CAP_PTP_TX_TSTAMPS  
+VIRTCHNL2_CAP_PTP_TX_TSTAMPS_MB      
+The packet delay calculation on the wire is used to accurately remove the time component that is common in calculation of the skew in clock between the TimeMaster and the TimeReceiver. Tx timestamping should be allowed on all vports that are tied to an external port which means their traffic goes only to a particular external physical port.        
 Note: There are other Tx timestamp capabilities that the Device can support. Like the Tx completion timestamp, where the Device supports split queue model for Tx queues and the Tx Completion queue has an 8 byte completion descriptor that carries a Tx completion timestamp that can come from the Device when it schedules the Tx packet. This timestamp is per packet and is enabled by default as long the right completion queue format is used and does not necessarily come form the Device PHY and may be of a differnet time granularity than the Tx timestamp requested through a Tx descriptor on some of the packets.     
 3. Ability to adjust Device PHC, this capability in a multi-complex system is given to one of the CPU complex that is trusted to make this Device clock adjustment. The Complex that calculates the skew between the Grandmaster and the current Device PHC (TimeReceiver system in the PTP network domain) runs the PTP protocol and algorithm in SW which requires other capabilities such as TX_TSTAMPS and cross timestamping as well from the Device as described in 1 and 2 above. When adjusting Dveice clock, some devices may also require a secondary Phy clock to be adjusted as well, not just the Device PHC.  
 VIRTCHNL2_CAP_PTP_ADJ_DEVICE_CLK  
 VIRTCHNL2_CAP_PTP_ADJ_DEVICE_CLK_MB  
-In a system this can be done through direct register writes or over mailbox. If done over mailbox (_MB), the mailbox latency should be constant and adjusted for when setting the Device PHC time to be as close in time to the TimeTransmitter as possible. 
+In a system this can be done through direct register writes or over mailbox. If done over mailbox (_MB), the mailbox latency should be constant and adjusted for when setting the Device PHC time to be as close in time to the TimeTransmitter as possible.  
 4. Ability to initialize the Device PHC, this is done at the start of the server and is done by a trusted entity for the system. In some cases set time can also be used for adjusting time by the kernel stack if the time adjustment is higher than maximum adjtime value allowed by the stack. Again this can be done directly or over mailbox (_MB), when doing it over mailbox similar consideration for adjustment in mailbox latency should be made.  
-VIRTCHNL2_CAP_PTP_SET_DEVICE_CLK_TIME  		
-VIRTCHNL2_CAP_PTP_SET_DEVICE_CLK_TIME_MB  
-5. Ability to do Rx Timestamping of packets as they arrive on the Device, The Device automatically latches timestamp information on the receive path, and the timestamp is carried through the data pipeline in the Device as metadata. Using the default 32 byte descriptors as defined in the spec, the driver always gets the rx_timestamp in the descriptor as a 40 bit value spread in 2 fields ts_high (32 bits, carrying the nanosecond timestamp) and ts_low (8 bits, carrying the sub-nanosecond timestamp). The driver can check if the rx_timestamp field is valid or not by checking least significant bit in ts_low field in the descriptor being set or not. If the least significant bit is set, then the timestamp value is valid for the default 32 byte descriptor.   
+VIRTCHNL2_CAP_PTP_SET_DEVICE_CLK_TIME  
+VIRTCHNL2_CAP_PTP_SET_DEVICE_CLK_TIME_MB    
+5. Ability to do Rx Timestamping of packets as they arrive on the Device, The Device automatically latches timestamp information on the receive path, and the timestamp is carried through the data pipeline in the Device as metadata. Using the default 32 byte descriptors as defined in the spec, the driver always gets the rx_timestamp in the descriptor as a 40 bit value spread in 2 fields ts_high (32 bits, carrying the nanosecond timestamp) and ts_low (8 bits, carrying the sub-nanosecond timestamp). The driver can check if the rx_timestamp field is valid or not by checking least significant bit in ts_low field in the descriptor being set or not. If the least significant bit is set, then the timestamp value is valid for the default 32 byte descriptor.  
 There is no explicit enabling or disabling of this capability in the Device inetrface, although SW driver can chose to support this by copying or not copying the timestamp into the SW metadata sent with the packet to the stack.  
 Advanced Rx descriptors when defined for the Device for newer capabilities may override the upper 32 bit rx_timestamp fields with other fields and indicate the same with a new RXDID which will define the new field layout for the flex fields. This would require the driver to use the right descriptor layout and adjust the flow accordingly.
 
