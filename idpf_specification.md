@@ -2698,8 +2698,8 @@ set.</p>
 </tr>
 <tr class="header">
 <th>1</th>
-<th>WIP</th>
-<th>WIP for TimeSync/PTP</th>
+<th>TSYN_EN</th>
+<th>TimeSync/PTP</th>
 </tr>
 <tr class="odd">
 <th>2</th>
@@ -5702,7 +5702,7 @@ As a result of this feature, the device will calculate a hash on certain fields 
 2.  Distribute the RX packets belonging to different flows to different RX queues based on the distribution programmed by the Device driver as part of Lookup Table (LUT) programming.
   1.  All packets of a flow get hashed to a single RX queue as per the Data Plane programming of the device, although a device with programmable Dataplane can decide to hash them differently.
   
-  The Device driver can learn about the fields on which the hash was performed for a packet and as an advanced feature can negotiate to select the fields in teh packet to perform the hash.
+  The Device driver can learn about the fields on which the hash was performed for a packet and as an advanced feature can negotiate to select the fields in the packet to perform the hash.
 
 - Device Interface
   - RSS hash value is delivered in the RX descriptor as described in the RX Descriptor sections.
@@ -6433,28 +6433,121 @@ VIRTCHNL2_OP_RDMA			= 529,
 This OP/call is used as an opaque RDMA virtchannel message between the vendor driver and the Device Control plane. A message buffer from RDMA driver is sent to the Device Control with this Opcode and the Device Control can do the reverse using the same opcode to send a message buffer to the RDMA driver. The interpretation of this message buffer is agreed upon between the Vendor RDMA driver and the Device Control plane.
 
 
+## PTP
+
+|Term|Other Archaic terms in use|Definition|
+| ----- | -- | ------ |
+|Grandmaster| |The main Atomic clock in a PTP cluster which is the source for time syncrnization by all nodes directly or indirectly in the cluster|
+|TimeTransmitter|Master, Leader|This can be used for Grandmaster or for a an intermediate edge clock that acts as source for a local sub-cluster|
+|TimeReceiver|Slave, follower|These are all the dependent clock systems that synchronize with TimeTransmitter|
+|Device PHC|Device Master clock, Device Main clock, Device Clock|The main Device Clock, PHC stands for PTP HW clock, this si what is adjusted in a TimeReceiver|
+|Phy clock|| Apart from Device PHC, the device migth have a separate Phy clock that needs to be synchronized as well|
+
+
+### Device Interface
+  
+  With this capability, Device provides an Interface for synchronizing the system(OS) clock with Device PHC and also to adjust Device PHC etc as defined through sub capabilities below. The inetrface requires the Device to expose either direct or indirect ways to read/write/adjust Device PHC time, transmit packet timestamp, receive packet timestamp etc.  
+
+### Capability and Data structures
+  
+ This capability consists of multiple sub capabilities that can be exposed by a device and are divided primarily in a few categories as described below. The primary PTP capability request is made by IDPF driver through VIRTCHNL2_OP_GET_CAPS virtchannel command by setting VIRTCHNL2_CAP_PTP bit in other_caps bitmap. If the device supports PTP capability the response from Device Control still has the VIRTCHNL2_CAP_PTP bit set in the other_caps bitmap.
+
+#### PTP Sub capabilities
+1. Ability to synchronize system (OS) time with Device time by doing cross time stamping. 
+  * In legacy Devices with no PCIe PTM capability, this was done by independently sampling Device time and system time. But doing it in a fashion that they can be done as close in time as possible. Or by taking two system time sample one before taking the Device time sample and one immediately after the Device time sample. The mean system time value between the two would be approximately the same time when the Device time was sampled.  
+  This capability is exposed as   
+  VIRTCHNL2_CAP_PTP_GET_DEVICE_CLK_TIME  
+  VIRTCHNL2_CAP_PTP_GET_DEVICE_CLK_TIME_MB    
+  Note: The Mailbox (_MB) version to get Device time over mailbox is generally not in use but is for completeness as the Device time over mailbox cannot be relied as being done exactly in the middle of the two system time samples or due to proxy nature can be far off from the system time sample. The capability returns only one time value from the Device, that of the Device PHC time.
+  * With PCIe PTM capability, the system OS time and the Device time can be latched simultaneously by the Device. This is done by the Device’s ability to sample the system timer at the same time the Device PHC timer is sampled.   
+  This capability is exposed as    
+  VIRTCHNL2_CAP_PTP_GET_CROSS_TIME  
+  VIRTCHNL2_CAP_PTP_GET_CROSS_TIME_MB         
+  Either capability is as accurate as the other in sampling the system and Device time as the Mailbox (_MB) mechanism also relies on the Device control plane to be able to latch both system time and the Device at the same instance. The mailbox method just allows for indirect access to reading the latched values by the Device. This capability returns two time values one for the Device and one for the system (CPU complex).
+2. Ability to do Tx time stamping of packets as they leave the Device (typically in the PHY).  
+This capability can be used by either the TimeReceiver clock server or by the Grandmaster clock server in the common PTP network domain to calculate packet delay in transmission and reception between TimeReceiver and the TimeTransmitter.   
+VIRTCHNL2_CAP_PTP_TX_TSTAMPS  
+VIRTCHNL2_CAP_PTP_TX_TSTAMPS_MB      
+The packet delay calculation on the wire is used to accurately remove the time component that is common in calculation of the skew in clock between the TimeMaster and the TimeReceiver. Tx timestamping should be allowed on all vports that are tied to an external port which means their traffic goes only to a particular external physical port.        
+Note: There are other Tx timestamp capabilities that the Device can support. Like the Tx completion timestamp, where the Device supports split queue model for Tx queues and the Tx Completion queue has an 8 byte completion descriptor that carries a Tx completion timestamp that can come from the Device when it schedules the Tx packet. This timestamp is per packet and is enabled by default as long the right completion queue format is used and does not necessarily come form the Device PHY and may be of a differnet time granularity than the Tx timestamp requested through a Tx descriptor on some of the packets.     
+3. Ability to adjust Device PHC, this capability in a multi-complex system is given to one of the CPU complex that is trusted to make this Device clock adjustment. The Complex that calculates the skew between the Grandmaster and the current Device PHC (TimeReceiver system in the PTP network domain) runs the PTP protocol and algorithm in SW which requires other capabilities such as TX_TSTAMPS and cross timestamping as well from the Device as described in 1 and 2 above. When adjusting Dveice clock, some devices may also require a secondary Phy clock to be adjusted as well, not just the Device PHC.  
+VIRTCHNL2_CAP_PTP_ADJ_DEVICE_CLK  
+VIRTCHNL2_CAP_PTP_ADJ_DEVICE_CLK_MB  
+In a system this can be done through direct register writes or over mailbox. If done over mailbox (_MB), the mailbox latency should be constant and adjusted for when setting the Device PHC time to be as close in time to the TimeTransmitter as possible.  
+4. Ability to initialize the Device PHC, this is done at the start of the server and is done by a trusted entity for the system. In some cases set time can also be used for adjusting time by the kernel stack if the time adjustment is higher than maximum adjtime value allowed by the stack. Again this can be done directly or over mailbox (_MB), when doing it over mailbox similar consideration for adjustment in mailbox latency should be made.  
+VIRTCHNL2_CAP_PTP_SET_DEVICE_CLK_TIME  
+VIRTCHNL2_CAP_PTP_SET_DEVICE_CLK_TIME_MB    
+5. Ability to do Rx Timestamping of packets as they arrive on the Device, The Device automatically latches timestamp information on the receive path, and the timestamp is carried through the data pipeline in the Device as metadata. Using the default 32 byte descriptors as defined in the spec, the driver always gets the rx_timestamp in the descriptor as a 40 bit value spread in 2 fields ts_high (32 bits, carrying the nanosecond timestamp) and ts_low (8 bits, carrying the sub-nanosecond timestamp). The driver can check if the rx_timestamp field is valid or not by checking least significant bit in ts_low field in the descriptor being set or not. If the least significant bit is set, then the timestamp value is valid for the default 32 byte descriptor.  
+There is no explicit enabling or disabling of this capability in the Device inetrface, although SW driver can chose to support this by copying or not copying the timestamp into the SW metadata sent with the packet to the stack.  
+Advanced Rx descriptors when defined for the Device for newer capabilities may override the upper 32 bit rx_timestamp fields with other fields and indicate the same with a new RXDID which will define the new field layout for the flex fields. This would require the driver to use the right descriptor layout and adjust the flow accordingly.
+
+
+### Configuration
+
+**PTP Virtchannel Commands**  
+  * VIRTCHNL2_OP_PTP_GET_CAPS		
+  * VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP	
+  * VIRTCHNL2_OP_PTP_GET_DEV_CLK_TIME
+  * VIRTCHNL2_OP_PTP_GET_CROSS_TIME	
+  * VIRTCHNL2_OP_PTP_SET_DEV_CLK_TIME
+  * VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_FINE
+  * VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_TIME
+  * VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP_CAPS
+
+### Driver Configuration and Runtime flow
+  
+Depending on the OS callbacks into the driver and the Device capabilities granted to the driver, different PTP flows can be triggered.  
+For a Tenant untrusted system such as in case of Bare metal renting or a Tenant VM or even when the Infrastructure Control plane runs on a different embedded complex, then the only capability requested by the OS and granted to the driver by the Device might be to do cross time stamping. Depending on whether PTM capability is supported on the Device through PCIe or not, one of the above 4 capabilities might be used for doing cross time stamping. The legacy (non PTM) way of accessing the Device time over mailbox may not be ideal and is more for completeness. PTM whether done over mailbox or directly is the most ideal/accurate way of doing cross time stamping because the System and Device times are latched at the same time.  
+Flow here is for first the driver to learn what Device capabilities are being granted once the driver has hooks from the OS to provide cross time stamping either the non PTM or the PTM way.
+
+#### Init time flow
+1. Driver has PTP supported code to access the Device support for PTP.
+2. Driver at Init sets the VIRTCHNL2_CAP_PTP bit in GET_CAPS opcode in the other_caps field over the mailbox.
+3. The Device Control plane responds if the Device supports PTP capability or not for this instance of the driver.
+4. The driver then sends a PTP_GET_CAPS opcode over the mailbox to Device Control.
+5. Device Control responds with a bitmap of PTP sub capabilities granted to the driver instance.
+6. As part of the response for PTP_GET_CAPS if there are direct accesses available from the PCIe Interface, the driver learns the offsets of these register locations as well from the Device Control plane.
+7. A driver will do the Initialization of the Device PHC. Depending on the CPU complex trust level this capability may or may not be given to the driver instance by the Device Control. The opcode used for setting of the Device clock indirectly is VIRTCHNL2_OP_PTP_SET_DEVICE_CLK_TIME.   
+8. If the access is a direct access for setting the clock, then the Driver may have to adjust both the Device PHC clock as well as the Phy clock if the the Device PHC and Phy clock are not automatically synchornized. If done over mailbox the Device Control needs to do the same.  
+9. At this point the driver registers a PTP clock device with the SW stack for PTP runtime callbacks.
+10. A driver may also configure a separate dedicated mailbox (secondary mailbox) for doing the indirect access such as for Tx Timestamping, adjusting the Device PHC etc. The way the Device control indicates to the driver to use a dedicated secondary mailbox or not is again through the PTP capability negotiation data structures setting the flag (secondary_mbx) for driver to do the right setup. After the initial capability exchange over the default mailbox, if the Device Control suggests using a secondary mailbox, the driver sets up a secondary mailbox using the default mailbox and then switches to use secondary mailbox for any PTP related operations.
+
+#### Runtime flows
+Runtime flows are triggered by the stack and are dependent on what the system and the CPU Complex is being used for. If a system and the CPU Complex is used for Tenant hosting it may only have the Cross timestamping runtime flow. Whereas if a system and the CPU complex attached to the Device is used for Infrastructure SW hosting then it may be used for adjusting the Device PHC directly or indirectly.  
+If a system is used for a Grandmaster Independent clock for the PTP network Domain, then it may have some subset of these runtime flows as desired from a given CPU Complex attached to the Device. 
+
+##### Cross time stamping flow done on all CPU complexes attached to the Device.
+1. If the OS supports hooks for PCIe based PTM capability and a callback is received to do PTM cross time stamping, if the capability was granted to the driver instance, the driver makes a call to either do a direct or mailbox based PTM cross time stamping request to the Device. Direct method is preferred over the mailbox method for cross timestamping to avoid unnecessary mailbox chatter. The opcodes used for indirect PTM access is VIRTCHNL2_OP_PTP_GET_CROSS_TIME.  
+2. If the capability was not granted the driver will fail the call.  
+3. Legacy (non PTM) method of cross timestamping is pretty much supported in all modern OSes. Although it may not be invoked in case of a VM. VM system time may be synchronized with the Hypervisor or Host OS time through a SW flow. Direct access is the only right method for this, mailbox mechanism is only for completeness.  
+
+##### Tx Timestamping Flow (given to drivers that are trusted (not tenant) drivers.)
+Note: This Tx timestamping capability is for a 2-step timestamping device where the Tx timestamp is returned to the SW driver and not copied in the packet. In a 1-step timestamping device, a new capability should be defined and added to PTP subcapabilities, in which case the device can also copy the Tx timestamp into the outgoing packet and not just return the value to the SW driver.  
+1. In this case if the Device control plane grants the direct or indirect access for Tx timestamp as part of PTP sub capabilities negotiation, then driver must do some addition calls to Device Control for uplink vports using VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP_CAPS opcode .  
+2. The driver learns about the number of latches, the latch indices and the nansecond bits in timestamp field per Uplink vport as part of the above opcode response. If the access granted is direct access, the driver also learns about the register offsets of the latches in the PCIe MMIO space.  
+3. When a packet comes down with a PTP HW Tx timestamping request as part of packet meta data from the stack then the driver must enable the Tx timestamping bits in the Tx descriptor and specify one of the free/unused latch ID per uplink vport to be used for timestamping of this Tx packet by the HW.    
+4. At some point when the packet completion for both buffer and the Tx descriptor is received, then the driver can read the Tx timestamp directly or indirectly over the mailbox. Note: Here the packet buffer completion is assumed to happen very close to packet scheduling on the wire by the Device with no buffering of the packet after that point in the Device. The opcode used for indirect Tx timestamping reading is VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP.    
+5. When reading the timestamp over mailbox, occasionally the driver can combine the request to get the Device PHC time as well along with the Tx timestamp instead of requesting just the timestamp by setting  get_devtime_with_txtstmp flag. This is just an optimization to avoid having two mailbox request and cause jitter.  
+6. The driver can now return the latch ID to the per Uplink vport free pool, to be used for another PTP timestamping packet.  
+7. The driver reports the Tx timestamp along with Device PHC time extension to make it a full 64 bit value to the SW stack as part of packet completion flow.    
+
+##### Rx Timestamping flow
+For now every 32 byte default Rx descriptor carrying a valid packet whether in single queue or split queue mode is assumed to carry Rx timestamp for when the packet is received in the Device (mostly at PHY level). A valid Rx timestamp value is indicated by Device by setting the lowest bit to 1. SW driver can decide to deliver this to SW stack or not based on capability enabling. The driver reports the Rx timestamp along with Device PHC time extension to make it a full 64 bit value to the SW stack as part of Rx packet flow. Time conversion logic for a given kernel stack is same for both Tx and Rx timestamps.  
+
+##### Device PHC and Frequency Skewing flow (given to drivers that are trusted (not tenant) drivers.)
+This flow typically is in conjunction with Tx timestamping flows but from the driver perspective, it’s a callback from the stack that can happen anytime. 
+1. If the callback to adjust the time or the frequency of the Device clock is made from the stack into the driver, the driver checks if it has the capability to do direct or indirect Time or frequency adjustment of the Device PHC.
+2. If it has the capability, it uses either the direct registers to make the adjustments or send the request over mailbox using the following opcodes VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_TIME or VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_FINE. The SW driver gets the base increment value (base_incval) for the frequency adjustment as part of the initial VIRTCHNL2_OP_PTP_GET_CAPS response from the Device Control. Also it gets the maximum frequency adjustment possible from Device Control.
+3. If the access is a direct access, then the Driver may have to adjust both the Device PHC clock and Frequency as well as the Phy clock and frequecny if the the Device PHC and Phy clock are not automatically synchornized. If done over mailbox the Device Control needs to do the same.
+4. If done over the mailbox it's best to use a dedicated secondary mailbox for it so as to avoid any jitter introduced through mailbox mechanism due to other config requests queue-up on the main mailbox.
+5. Device Control may also have separate thread and a mailbox to handle just the PTP requests to avoid similar jitters on the other side.
+6. Note: This is a write request and does not require a response from the control plane.
+
 # Additional Offloads and capabilities
 
 These offloads are just like standard offloads but not enabled by the
 drivers by default and the NIC vendors do not provide these offloads as
-a standard capability to a PF or a VF device
-
-## PTP (WIP)
-
-- Device Interface
-  
-  Device provides an Interface for synchronizing the system clock with device clock. The interface is mainly to read the device clock. There is no additional interface for software to control or write to the device clock. Device clock sync with external/GrandMaster is taken care of by the device itself. VFs will not have the access to device clock. If a VF is attached to VM, VM will rely on Hypervisor/Qemu API to sync VMs system clock with Host system clock.
-
-- Capability and Data structures
-  
-  The response from VIRTCHNL2_OP_GET_CAPS rrom CP will have the VIRTCHNL2_CAP_PTP information. Driver will use this info to either register the PTP interfaces to driver ro control the requests from the user/stack.
-
-- Configuration
-
-
-- Driver Configuration and Runtime flow
-  
-  On driver initialization/load if the PTP capability is supported by device, driver will register the PTP object along with two read callbacks. *Gettime64* for reading the device clock and *Getcrosststamp* for PTM(Precision Time Measurement). The device registers to read the device clock are SHTIME, SHTIME_L and SHTIME_H. ART_L and ART_H are used for PTM.
+a standard capability to a PF or a VF device.
 
 ## OEM Capabilities
 
@@ -6470,7 +6563,7 @@ This spec allows the OEMs to add new OEM specific capabilities and export them t
   
   Driver will use the VIRTCHNL2_OP_GET_OEM_CAPS message to learn about the special capabilities that are available. A suggested OEM capability negotiation struct and details plus examples can be found in the Spec appendix.
 
-  ## Application Targeted Routing (ATR)
+## Application Targeted Routing (ATR)
 
 - Device Interface
 
@@ -7250,7 +7343,7 @@ Transmit queue tail pointer.
 ### 
 
 ## Dynamic Registers
-Dynamic register offsets and spacing for an array of registers are learnt by the device driver upon interaction with the Device Control plane. The offsets and spacing listed below are optional and could be used by teh driver in absence of the Control plane providing the actual offsets and spacing for a device.
+Dynamic register offsets and spacing for an array of registers are learnt by the device driver upon interaction with the Device Control plane. The offsets and spacing listed below are optional and could be used by the driver in absence of the Control plane providing the actual offsets and spacing for a device.
 
 ### VF Interrupt Dynamic Control N - INT_DYN_CTLN [n] (0x00003800 + 0x4 *n, n=0...63; RW)
 
@@ -8261,8 +8354,16 @@ enum virtchnl2_op {
 	VIRTCHNL2_OP_DEL_QUEUE_GROUPS		= 539,
 	VIRTCHNL2_OP_GET_PORT_STATS		= 540,
 	/* TimeSync opcodes */
-	VIRTCHNL2_OP_GET_PTP_CAPS		= 541,
-	VIRTCHNL2_OP_GET_PTP_TX_TSTAMP_LATCHES	= 542,
+	VIRTCHNL2_OP_PTP_GET_CAPS			= 541,
+	VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP		= 542,
+	VIRTCHNL2_OP_PTP_GET_DEV_CLK_TIME		= 543,
+	VIRTCHNL2_OP_PTP_GET_CROSS_TIME			= 544,
+	VIRTCHNL2_OP_PTP_SET_DEV_CLK_TIME		= 545,
+	VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_FINE		= 546,
+	VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_TIME		= 547,
+	VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP_CAPS	= 548,
+	VIRTCHNL2_OP_GET_LAN_MEMORY_REGIONS		= 549,
+
 
 #ifdef NOT_FOR_UPSTREAM
 	VIRTCHNL2_OP_GET_OEM_CAPS		= 4999,
@@ -10084,145 +10185,280 @@ VIRTCHNL2_CHECK_STRUCT_LEN(8, virtchnl2_promisc_info);
  * enum virtchnl2_ptp_caps - PTP capabilities
  */
 enum virtchnl2_ptp_caps {
-	VIRTCHNL2_PTP_CAP_LEGACY_CROSS_TIME	= BIT(0),
-	VIRTCHNL2_PTP_CAP_PTM			= BIT(1),
-	VIRTCHNL2_PTP_CAP_DEVICE_CLOCK_CONTROL	= BIT(2),
-	VIRTCHNL2_PTP_CAP_TX_TSTAMPS_DIRECT	= BIT(3),
-	VIRTCHNL2_PTP_CAP_TX_TSTAMPS_VIRTCHNL	= BIT(4),
+	VIRTCHNL2_CAP_PTP_GET_DEVICE_CLK_TIME		= BIT(0),
+	VIRTCHNL2_CAP_PTP_GET_DEVICE_CLK_TIME_MB	= BIT(1),
+	VIRTCHNL2_CAP_PTP_GET_CROSS_TIME		= BIT(2),
+	VIRTCHNL2_CAP_PTP_GET_CROSS_TIME_MB		= BIT(3),
+	VIRTCHNL2_CAP_PTP_SET_DEVICE_CLK_TIME		= BIT(4),
+	VIRTCHNL2_CAP_PTP_SET_DEVICE_CLK_TIME_MB	= BIT(5),
+	VIRTCHNL2_CAP_PTP_ADJ_DEVICE_CLK		= BIT(6),
+	VIRTCHNL2_CAP_PTP_ADJ_DEVICE_CLK_MB		= BIT(7),
+	VIRTCHNL2_CAP_PTP_TX_TSTAMPS			= BIT(8),
+	VIRTCHNL2_CAP_PTP_TX_TSTAMPS_MB			= BIT(9),
 };
 
 /**
- * struct virtchnl2_ptp_legacy_cross_time_reg - Legacy cross time registers
- *						offsets.
- */
-struct virtchnl2_ptp_legacy_cross_time_reg {
-	__le32 shadow_time_0;
-	__le32 shadow_time_l;
-	__le32 shadow_time_h;
-	__le32 cmd_sync;
-};
-VIRTCHNL2_CHECK_STRUCT_LEN(16, virtchnl2_ptp_legacy_cross_time_reg);
-
-/**
- * struct virtchnl2_ptp_ptm_cross_time_reg - PTM cross time registers offsets
- */
-struct virtchnl2_ptp_ptm_cross_time_reg {
-	__le32 art_l;
-	__le32 art_h;
-	__le32 cmd_sync;
+ * struct virtchnl2_ptp_clk_reg_offsets - Offsets of device and PHY clocks
+ *					  registers
+ * @dev_clk_ns_l: Device clock low register offset, used for set/get clock 
+ * @dev_clk_ns_h: Device clock high register offset, used for set/get clock 
+ * @phy_clk_ns_l: PHY clock low register offset, used for set clock
+ * @phy_clk_ns_h: PHY clock high register offset, used for set clock
+ * @cmd_sync_trigger: The command sync trigger register offset
+ * @pad: Padding for future extensions
+  */
+struct virtchnl2_ptp_clk_reg_offsets {
+	__le32 dev_clk_ns_l;
+	__le32 dev_clk_ns_h;
+	__le32 phy_clk_ns_l;
+	__le32 phy_clk_ns_h;
+	__le32 cmd_sync_trigger;
 	u8 pad[4];
 };
-VIRTCHNL2_CHECK_STRUCT_LEN(16, virtchnl2_ptp_ptm_cross_time_reg);
+
+VIRTCHNL2_CHECK_STRUCT_LEN(24, virtchnl2_ptp_clk_reg_offsets);
 
 /**
- * struct virtchnl2_ptp_device_clock_control - Registers needed to control the
- *					       main clock.
+ * struct virtchnl2_ptp_cross_time_reg_offsets - Offsets of the device cross
+ *						 time registers
+ * @sys_time_ns_l: System time low register offset
+ * @sys_time_ns_h: System time high register offset
+ * @cmd_sync_trigger: The command sync trigger register offset
+ * @pad: Padding for future extensions
  */
-struct virtchnl2_ptp_device_clock_control {
-	__le32 cmd;
-	__le32 incval_l;
-	__le32 incval_h;
-	__le32 shadj_l;
-	__le32 shadj_h;
+struct virtchnl2_ptp_cross_time_reg_offsets {
+	__le32 sys_time_ns_l;
+	__le32 sys_time_ns_h;
+	__le32 cmd_sync_trigger;
 	u8 pad[4];
 };
-VIRTCHNL2_CHECK_STRUCT_LEN(24, virtchnl2_ptp_device_clock_control);
+
+VIRTCHNL2_CHECK_STRUCT_LEN(16, virtchnl2_ptp_cross_time_reg_offsets);
 
 /**
- * struct virtchnl2_ptp_tx_tstamp_entry - PTP TX timestamp entry
- * @tx_latch_register_base: TX latch register base
- * @tx_latch_register_offset: TX latch register offset
- * @index: Index
- * @pad: Padding
+ * struct virtchnl2_ptp_clk_adj_reg_offsets - Offsets of device and PHY clocks
+ *					      adjustments registers
+ * @dev_clk_cmd_type: Device clock command type register offset
+ * @dev_clk_incval_l: Device clock frequency increment value low register offset
+ * @dev_clk_incval_h: Device clock frequency increment value high registers offset
+ * @dev_clk_shadj_l: Device clock shadow adjust low register offset
+ * @dev_clk_shadj_h: Device clock shadow adjust high register offset
+ * @phy_clk_cmd_type: PHY timer command type register offset
+ * @phy_clk_incval_l: PHY timer frequency increment value low register offset
+ * @phy_clk_incval_h: PHY timer frequency increment value high register offset
+ * @phy_clk_shadj_l: PHY timer shadow adjust low register offset
+ * @phy_clk_shadj_h: PHY timer shadow adjust high register offset
  */
-struct virtchnl2_ptp_tx_tstamp_entry {
-	__le32 tx_latch_register_base;
-	__le32 tx_latch_register_offset;
+struct virtchnl2_ptp_clk_adj_reg_offsets {
+	__le32 dev_clk_cmd_type;
+	__le32 dev_clk_incval_l;
+	__le32 dev_clk_incval_h;
+	__le32 dev_clk_shadj_l;
+	__le32 dev_clk_shadj_h;
+	__le32 phy_clk_cmd_type;
+	__le32 phy_clk_incval_l;
+	__le32 phy_clk_incval_h;
+	__le32 phy_clk_shadj_l;
+	__le32 phy_clk_shadj_h;
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(40, virtchnl2_ptp_clk_adj_reg_offsets);
+
+/**
+ * struct virtchnl2_ptp_tx_tstamp_latch_caps - PTP Tx timestamp latch
+ *					       capabilities
+ * @tx_latch_reg_offset_l: Tx timestamp latch low register offset
+ * @tx_latch_reg_offset_h: Tx timestamp latch high register offset
+ * @index: Latch index provided to the Tx descriptor
+ * @pad: Padding for future extensions
+ */
+struct virtchnl2_ptp_tx_tstamp_latch_caps {
+	__le32 tx_latch_reg_offset_l;
+	__le32 tx_latch_reg_offset_h;
 	u8 index;
 	u8 pad[7];
 };
-VIRTCHNL2_CHECK_STRUCT_LEN(16, virtchnl2_ptp_tx_tstamp_entry);
+
+VIRTCHNL2_CHECK_STRUCT_LEN(16, virtchnl2_ptp_tx_tstamp_latch_caps);
 
 /**
- * struct virtchnl2_ptp_tx_tstamp - Structure that defines tx tstamp entries
+ * struct virtchnl2_ptp_get_vport_tx_tstamp_caps - Structure that defines Tx
+ *						   tstamp entries
+ * @vport_id: Vport number
  * @num_latches: Total number of latches
- * @latch_size: Latch size expressed in bits
- * @pad: Padding
- * @ptp_tx_tstamp_entries: Aarray of TX timestamp entries
+ * @tstamp_ns_lo_bit: First bit for nanosecond part of the timestamp
+ * @tstamp_ns_hi_bit: Last bit for nanosecond part of the timestamp
+ * @pad: Padding for future tstamp granularity extensions
+ * @tstamp_latches: Capabilities of Tx timestamp entries
+ *
+ * PF/VF sends this message to negotiate the Tx timestamp latches for each
+ * Vport.
+ *
+ * Associated with VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP_CAPS
  */
-struct virtchnl2_ptp_tx_tstamp {
+struct virtchnl2_ptp_get_vport_tx_tstamp_caps {
+	__le32 vport_id;
 	__le16 num_latches;
-	__le16 latch_size;
-	u8 pad[4];
-	struct virtchnl2_ptp_tx_tstamp_entry ptp_tx_tstamp_entries[STRUCT_VAR_LEN];
+	u8 tstamp_ns_lo_bit;
+	u8 tstamp_ns_hi_bit;
+	u8 pad[8];
+
+	struct virtchnl2_ptp_tx_tstamp_latch_caps tstamp_latches[STRUCT_VAR_LEN];
 };
-VIRTCHNL2_CHECK_STRUCT_VAR_LEN(24, virtchnl2_ptp_tx_tstamp,
-			       ptp_tx_tstamp_entries);
+
+VIRTCHNL2_CHECK_STRUCT_VAR_LEN(32, virtchnl2_ptp_get_vport_tx_tstamp_caps,
+			       tstamp_latches);
 
 /**
- * struct virtchnl2_get_ptp_caps - Get PTP capabilities
- * @ptp_caps: PTP capability bitmap. See enum virtchnl2_ptp_caps.
- * @pad: Padding
- * @legacy_cross_time_reg: Legacy cross time register
- * @ptm_cross_time_reg: PTM cross time register
- * @device_clock_control: Device clock control
- * @tx_tstamp: TX timestamp
+ * struct virtchnl2_ptp_get_caps - Get PTP capabilities
+ * @caps: PTP capability bitmap. See enum virtchnl2_ptp_caps
+ * @max_adj: The maximum possible frequency adjustment
+ * @base_incval: The default timer frequency increment value
+ * @peer_mbx_q_id: ID of the PTP Device Control daemon queue
+ * @peer_id: Peer ID for PTP Device Control daemon
+ * @secondary_mbx: Indicates to the driver that it should create a secondary
+ *		   mailbox to inetract with control plane for PTP
+ * @pad: Padding for future extensions
+ * @clk_offsets: Main timer and PHY registers offsets
+ * @cross_time_offsets: Cross time registers offsets
+ * @clk_adj_offsets: Offsets needed to adjust the PHY and the main timer
  *
- * PV/VF sends this message to negotiate PTP capabilities. CP updates bitmap
+ * PF/VF sends this message to negotiate PTP capabilities. CP updates bitmap
  * with supported features and fulfills appropriate structures.
+ * If Device Control recommends primary MBX for PTP: secondary_mbx is set to false.
+ * If Device control recommends secondary MBX for PTP: secondary_mbx is set to true.
+ * Control plane has 2 MBX and the driver has 1 or 2 MBX, send_to_peer_driver
+ * opcode must be be used to send a message when ptp_peer_mb_q_id is valid using 
+ * ptp_peer_mb_q_id and ptp_peer_id.
+ * If the Device does not require send_to peer_driver opcode: peer_mbx_q_id holds
+ * invalid value (0xFFFF) and the driver can simply use send_to_pf opcode.
  *
- * Associated with VIRTCHNL2_OP_GET_PTP_CAPS.
+ * Associated with VIRTCHNL2_OP_PTP_GET_CAPS.
  */
-struct virtchnl2_get_ptp_caps {
-	__le32 ptp_caps;
+struct virtchnl2_ptp_get_caps {
+	__le32 caps;
+	__le32 max_adj;
+	__le64 base_incval;
+	__le16 peer_mbx_q_id;
+	u8 peer_id;
+	u8 secondary_mbx;
 	u8 pad[4];
 
-	struct virtchnl2_ptp_legacy_cross_time_reg legacy_cross_time_reg;
-	struct virtchnl2_ptp_ptm_cross_time_reg ptm_cross_time_reg;
-	struct virtchnl2_ptp_device_clock_control device_clock_control;
-	struct virtchnl2_ptp_tx_tstamp tx_tstamp;
+	struct virtchnl2_ptp_clk_reg_offsets clk_offsets;
+	struct virtchnl2_ptp_cross_time_reg_offsets cross_time_offsets;
+	struct virtchnl2_ptp_clk_adj_reg_offsets clk_adj_offsets;
 };
-VIRTCHNL2_CHECK_STRUCT_VAR_LEN(88, virtchnl2_get_ptp_caps,
-			       tx_tstamp.ptp_tx_tstamp_entries);
 
-/**
- * struct virtchnl2_ptp_tx_tstamp_latch - Structure that describes tx tstamp
+VIRTCHNL2_CHECK_STRUCT_LEN(104, virtchnl2_ptp_get_caps);
+
+/* struct virtchnl2_ptp_tx_tstamp_latch - Structure that describes tx tstamp
  *					  values, index and validity.
- * @tstamp_h: Timestamp high
- * @tstamp_l: Timestamp low
+ * @tstamp: Timestamp value
  * @index: Index
  * @valid: Timestamp validity
- * @pad: Padding
+ * @pad: Padding for future extensions
  */
 struct virtchnl2_ptp_tx_tstamp_latch {
-	__le32 tstamp_h;
-	__le32 tstamp_l;
+	__le64 tstamp;
 	u8 index;
 	u8 valid;
 	u8 pad[6];
 };
+
 VIRTCHNL2_CHECK_STRUCT_LEN(16, virtchnl2_ptp_tx_tstamp_latch);
 
 /**
- * struct virtchnl2_ptp_tx_tstamp_latches - PTP TX timestamp latches
+ * struct virtchnl2_ptp_get_vport_tx_tstamp_latches - Tx timestamp latches
+ *						      associated with the vport
+ * @vport_id: Number of vport that requests the timestamp
  * @num_latches: Number of latches
- * @latch_size: Latch size expressed in bits
- * @pad: Padding
+ * @get_devtime_with_txtstmp: Flag to request device time along with Tx timestamp
+ * @pad: Padding for future extensions
+ * @device_time: device time if get_devtime_with_txtstmp was set in request
  * @tstamp_latches: PTP TX timestamp latch
  *
  * PF/VF sends this message to receive a specified number of timestamps
  * entries.
  *
- * Associated with VIRTCHNL2_OP_GET_PTP_TX_TSTAMP_LATCHES.
+ * Associated with VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP.
  */
-struct virtchnl2_ptp_tx_tstamp_latches {
+struct virtchnl2_ptp_get_vport_tx_tstamp_latches {
+	__le32 vport_id;
 	__le16 num_latches;
-	__le16 latch_size;
-	u8 pad[4];
+	u8 get_devtime_with_txtstmp;
+	u8 pad[1];
+	u64 device_time;
+
 	struct virtchnl2_ptp_tx_tstamp_latch tstamp_latches[STRUCT_VAR_LEN];
 };
-VIRTCHNL2_CHECK_STRUCT_VAR_LEN(24, virtchnl2_ptp_tx_tstamp_latches,
+
+VIRTCHNL2_CHECK_STRUCT_VAR_LEN(24, virtchnl2_ptp_get_vport_tx_tstamp_latches,
 			       tstamp_latches);
+
+/* VIRTCHNL2_OP_PTP_GET_DEV_CLK_TIME
+ * @dev_time_ns: Device clock time value in nanoseconds
+ * @pad: Padding for future extensions
+ *
+ * PF/VF sends this message to receive the time from the main timer
+ */
+struct virtchnl2_ptp_get_dev_clk_time {
+	__le64 dev_time_ns;
+	u8 pad[8];
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(16, virtchnl2_ptp_get_dev_clk_time);
+
+/* VIRTCHNL2_OP_PTP_GET_CROSS_TIME
+ * @sys_time_ns: System counter value expressed in nanoseconds, read
+ *		 synchronously with device time
+ * @dev_time_ns: Device clock time value expressed in nanoseconds
+ * @pad: Padding for future extensions
+ *
+ * PF/VF sends this message to receive the cross time
+ */
+struct virtchnl2_ptp_get_cross_time {
+	__le64 sys_time_ns;
+	__le64 dev_time_ns;
+	u8 pad[8];
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(24, virtchnl2_ptp_get_cross_time);
+
+/* VIRTCHNL2_OP_PTP_SET_DEV_CLK_TIME
+ * @dev_time_ns: Device time value expressed in nanoseconds to set
+ * @pad: Padding for future extensions
+ *
+ * PF/VF sends this message to set the time of the main timer
+ */
+struct virtchnl2_ptp_set_dev_clk_time {
+	__le64 dev_time_ns;
+	u8 pad[8];
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(16, virtchnl2_ptp_set_dev_clk_time);
+
+/* VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_FINE
+ * @incval: Source timer increment value per clock cycle
+ *
+ * PF/VF sends this message to adjust the frequency of the main timer by the
+ * indicated scaled ppm.
+ */
+struct virtchnl2_ptp_adj_dev_clk_fine {
+	__le64 incval;
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(8, virtchnl2_ptp_adj_dev_clk_fine);
+
+/* VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_TIME
+ * @delta: Offset in nanoseconds to adjust the time by
+ *
+ * PF/VF sends this message to adjust the time of the main timer by the delta
+ */
+struct virtchnl2_ptp_adj_dev_clk_time {
+	__le64 delta;
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(8, virtchnl2_ptp_adj_dev_clk_time);
 
 static inline const char *virtchnl2_op_str(__le32 v_opcode)
 {
@@ -10311,10 +10547,24 @@ static inline const char *virtchnl2_op_str(__le32 v_opcode)
 	case VIRTCHNL2_OP_GET_EDT_CAPS:
 		return "VIRTCHNL2_OP_GET_EDT_CAPS";
 #endif /* VIRTCHNL2_EDT_SUPPORT */
-	case VIRTCHNL2_OP_GET_PTP_CAPS:
-		return "VIRTCHNL2_OP_GET_PTP_CAPS";
-	case VIRTCHNL2_OP_GET_PTP_TX_TSTAMP_LATCHES:
-		return "VIRTCHNL2_OP_GET_PTP_TX_TSTAMP_LATCHES";
+	case VIRTCHNL2_OP_PTP_GET_CAPS:
+		return "VIRTCHNL2_OP_PTP_GET_CAPS";
+	case VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP:
+		return "VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP";
+	case VIRTCHNL2_OP_PTP_GET_DEV_CLK_TIME:
+		return "VIRTCHNL2_OP_PTP_GET_DEV_CLK_TIME";
+	case VIRTCHNL2_OP_PTP_GET_CROSS_TIME:
+		return "VIRTCHNL2_OP_PTP_GET_CROSS_TIME";
+	case VIRTCHNL2_OP_PTP_SET_DEV_CLK_TIME:
+		return "VIRTCHNL2_OP_PTP_SET_DEV_CLK_TIME";
+	case VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_FINE:
+		return "VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_FINE";
+	case VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_TIME:
+		return "VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_TIME";
+	case VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP_CAPS:
+		return "VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP_CAPS";
+	case VIRTCHNL2_OP_GET_LAN_MEMORY_REGIONS:
+		return "VIRTCHNL2_OP_GET_LAN_MEMORY_REGIONS";
 #ifdef NOT_FOR_UPSTREAM
 	case VIRTCHNL2_OP_GET_OEM_CAPS:
 		return "VIRTCHNL2_OP_GET_OEM_CAPS";
@@ -10622,30 +10872,58 @@ virtchnl2_vc_validate_vf_msg(struct virtchnl2_version_info *ver, u32 v_opcode,
 			err_msg_format = true;
 		break;
 #endif /* VIRTCHNL2_IWARP */
-	case VIRTCHNL2_OP_GET_PTP_CAPS:
-		num_chunks = ((struct virtchnl2_get_ptp_caps *)msg)->tx_tstamp.num_latches;
-		valid_len = struct_size_t(struct virtchnl2_get_ptp_caps,
-					  tx_tstamp.ptp_tx_tstamp_entries,
-					  num_chunks);
-		if (!is_flex_array)
-			valid_len -= sizeof(struct virtchnl2_ptp_tx_tstamp_entry);
-
-		/* Zero entries is allowed as input */
-		if (!num_chunks && msglen > valid_len)
-			valid_len += sizeof(struct virtchnl2_ptp_tx_tstamp_entry);
-
+	case VIRTCHNL2_OP_PTP_GET_CAPS:
+		valid_len = sizeof(struct virtchnl2_ptp_get_caps);
 		break;
-	case VIRTCHNL2_OP_GET_PTP_TX_TSTAMP_LATCHES:
-		num_chunks = ((struct virtchnl2_ptp_tx_tstamp_latches *)msg)->num_latches;
+	case VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP:
+		num_chunks = ((struct virtchnl2_ptp_get_vport_tx_tstamp_latches *)msg)->num_latches;
 		if (!num_chunks) {
 			err_msg_format = true;
 			break;
 		}
 
-		valid_len = struct_size_t(struct virtchnl2_ptp_tx_tstamp_latches,
+		valid_len = struct_size_t(struct virtchnl2_ptp_get_vport_tx_tstamp_latches,
 					  tstamp_latches, num_chunks);
 		if (!is_flex_array)
 			valid_len -= sizeof(struct virtchnl2_ptp_tx_tstamp_latch);
+
+		break;
+	case VIRTCHNL2_OP_PTP_GET_DEV_CLK_TIME:
+		valid_len = sizeof(struct virtchnl2_ptp_get_dev_clk_time);
+		break;
+	case VIRTCHNL2_OP_PTP_GET_CROSS_TIME:
+		valid_len = sizeof(struct virtchnl2_ptp_get_cross_time);
+		break;
+	case VIRTCHNL2_OP_PTP_SET_DEV_CLK_TIME:
+		valid_len = sizeof(struct virtchnl2_ptp_set_dev_clk_time);
+		break;
+	case VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_FINE:
+		valid_len = sizeof(struct virtchnl2_ptp_adj_dev_clk_fine);
+		break;
+	case VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_TIME:
+		valid_len = sizeof(struct virtchnl2_ptp_adj_dev_clk_time);
+		break;
+	case VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP_CAPS:
+		num_chunks = ((struct virtchnl2_ptp_get_vport_tx_tstamp_caps *)msg)->num_latches;
+
+		valid_len = struct_size_t(struct virtchnl2_ptp_get_vport_tx_tstamp_caps,
+					  tstamp_latches, num_chunks);
+
+		if (!is_flex_array)
+			valid_len -= sizeof(struct virtchnl2_ptp_tx_tstamp_latch_caps);
+
+		break;
+	case VIRTCHNL2_OP_GET_LAN_MEMORY_REGIONS:
+		num_chunks = ((struct virtchnl2_get_lan_memory_regions *)msg)->num_memory_regions;
+		if (!num_chunks) {
+			err_msg_format = true;
+			break;
+		}
+
+		valid_len = struct_size_t(struct virtchnl2_get_lan_memory_regions,
+					  mem_reg, num_chunks);
+		if (!is_flex_array)
+			valid_len -= sizeof(struct virtchnl2_mem_region);
 
 		break;
 	/* These are always errors coming from the VF */
