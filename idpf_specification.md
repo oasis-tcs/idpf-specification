@@ -7539,16 +7539,91 @@ Note that num_queues may be larger than the default number of queues.
 
 # 
 
-# Device capabilities default values assumed by the IDPF driver
+# Device Capabilities and Resource limits
 
-Any drive that is compliant with the spec should assume the default
-value.  
-In order to use a non default value it must negotiate it with the
-control plane.  
+IDPF driver uses virtchnl2 API to negotiate or learn device capabilities and resource limits. However some resource limits are assumed by the driver and hard coded using #defines. This section lists all the device capabilities and resource limits that are either negotiated, learned or assumed by the driver. The resource limits that are assumed by the driver are listed as 'Hard coded value' in the Parameter Type column. Devices compliant with the spec must support these hard coded values as min/max resource limits.
+
+For ex: 88 is the hard coded default value for minimum MSS size for a LSO segment. So any device compliant with the spec needs to support this as a mininum value. If a device cannot support hard coded minimum value, the driver needs to be udpated to negotiate or learn this value from the CP.
   
-Virtchannel data structures for vport configuration, queue configuration
-etc have enough padding defined to be able to accommodate negotiation in
-the future of non-default values with the Device control plane.
+Virtchannel data structures for device configuration, vport configuration, queue configuration etc have enough padding defined to be able to accommodate negotiation of non-default values with the Device control plane in future.
+
+### Device Resource Limits
+
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 61%" />
+<col style="width: 7%" />
+<col style="width: 8%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Resource</strong></th>
+<th><strong>SW parameter</strong></th>
+<th><strong>Parameter type</strong></th>
+<th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
+</tr>
+<tr class="odd">
+<th>Max number of vectors allocated for LAN</th>
+<th>num_allocated_vectors in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th></th>
+</tr>
+<tr class="header">
+<th>Max number of vectors allocated for RDMA</th>
+<th>num_rdma_vectors in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th></th>
+</tr>
+<tr class="odd">
+<th>Default number of vports</th>
+<th>default_num_vports in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th></th>
+</tr>
+<tr class="header">
+<th>Max number of RX queues across all the default number of vports</th>
+<th>max_rx_q in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th></th>
+</tr>
+<tr class="odd">
+<th>Max number of TX queues across all the default number of vports</th>
+<th>max_tx_q in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th></th>
+</tr>
+<tr class="header">
+<th>Max number of RX buffer queues across all the default number of vports</th>
+<th>num_rdma_vectors in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th></th>
+</tr>
+<tr class="odd">
+<th>Max number of TX completion queues across all the default number of vports</th>
+<th>max_tx_complq in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th></th>
+</tr>
+<tr class="header">
+<th>Max number of SRIOV VFs </th>
+<th>max_sriov_vfs in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
 
 ### Interrupt capabilities
 
@@ -7563,44 +7638,48 @@ the future of non-default values with the Device control plane.
 <tr class="header">
 <th><strong>Capability</strong></th>
 <th><strong>SW parameter</strong></th>
-<th><strong>Possible values</strong></th>
+<th><strong>Parameter type</strong></th>
 <th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
 </tr>
 <tr class="odd">
 <th>ITR interval granularity</th>
-<th>u8 itr_intvl_gran</th>
-<th>0.5 us , 1 us , 2 us , 4 us</th>
+<th> IDPF_ITR_GRAN_S </th>
+<th> Hard coded default </th>
 <th>2 us</th>
+<th>0.5 us , 1 us , 2 us , 4 us</th>
 </tr>
 <tr class="header">
 <th>Number of ITRs per vector</th>
-<th>u8 itr_idx_map</th>
+<th> VIRTCHNL2_ITR_IDX_0  VIRTCHNL2_ITR_IDX_1 </th>
+<th> Hard coded default </th>
+<th>8’b00001011 - ITR0,ITR1 and NOITR.</th>
 <th>8’b00001011 - ITR0,ITR1 and NOITR.<br />
 8’b00001111 - ITR0,ITR1,ITR2 and NOITR.<br />
 <br />
 ITR index N is supported when bit index N in the vector is set.<br />
 Bit 3 (NOITR) represents a zero timer (immediate interrupt).</th>
-<th>8’b00001011 - ITR0,ITR1 and NOITR.</th>
 </tr>
 <tr class="odd">
-<th>ITR rate change piggybacked to an interrupt enablement
-operation</th>
-<th>VIRTCHNL2_CAP_INTR_ADAPT_WITH_INTENA</th>
-<th>0,1</th>
+<th>ITR rate change piggybacked to an interrupt enablement operation</th>
+<th> </th>
+<th> </th>
 <th>0</th>
+<th>0,1</th>
 </tr>
 <tr class="header">
-<th>SW interrupt triggering that is piggybacked to an interrupt
-enablement operation</th>
-<th>VIRTCHNL2_CAP_INTR_SW_INTR_WITH_INTENA</th>
-<th>0,1</th>
+<th>SW interrupt triggering that is piggybacked to an interrupt enablement operation</th>
+<th> </th>
+<th> </th>
 <th>0</th>
+<th>0,1</th>
 </tr>
 <tr class="odd">
 <th>SW interrupt triggering as an individual operation</th>
-<th>VIRTCHNL2_CAP_INTR_SW_INTR_INDV</th>
-<th>0,1</th>
+<th> </th>
+<th> </th>
 <th>0</th>
+<th>0,1</th>
 </tr>
 </thead>
 <tbody>
@@ -7620,45 +7699,49 @@ enablement operation</th>
 <tr class="header">
 <th><strong>Capability</strong></th>
 <th><strong>SW parameter</strong></th>
-<th><strong>Possible values</strong></th>
+<th><strong>Parameter type</strong></th>
 <th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
 </tr>
 <tr class="odd">
-<th><p>Head writeback reporting for buffer queue descriptor fetch (on
-stride cross).</p>
-<p>Relevant only for the split queue model.</p></th>
-<th>VIRTCHNL2_CAP_RX_SPLITQ_HEAD_WB</th>
-<th>0,1</th>
-<th>1</th>
+<th>Single RX queue model</th>
+<th>negotiated via rxq_model in struct virtchnl2_create_port<br/>
+set via model in struct virtchnl2_rxq_info</th>
+<th>Negotiated </th>
+<th></th>
+<th>VIRTCHNL_QUEUE_MODEL_SINGLE</th>
 </tr>
 <tr class="header">
-<th><p>Interrupts triggering for head writeback reporting (for buffer
-queue descriptor fetch stride cross).</p>
-<p>Relevant only for the split queue model.</p></th>
-<th>VIRTCHNL2_RX_SPLITQ_INTR_ON_HEAD_WB</th>
-<th><p>0,1</p>
-<p>Can be set only when VIRTCHNL2_CAP_RX_SPLITQ_HEAD_WB is set.</p></th>
-<th>1</th>
+<th>Split RX queue model</th>
+<th>negotiated via rxq_model in struct virtchnl2_create_port<br/>
+set via model in struct virtchnl2_rxq_info</th>
+<th>Negotiated </th>
+<th></th>
+<th>VIRTCHNL2_QUEUE_MODEL_SPLIT</th>
 </tr>
 <tr class="odd">
 <th>Number of RX buffer queues per RX queue</th>
-<th><em><mark>u8 num_buf_queues_per_rx</mark></em></th>
+<th>IDPF_MAX_BUFQS_PER_RXQ_GRP</th>
+<th>Hard coded default </th>
+<th>2</th>
 <th><p>1(large buffer queue),</p>
 <p>2(large and small buffer queues)</p></th>
-<th>2</th>
 </tr>
 <tr class="header">
-<th>Single RX queue model.</th>
-<th>VIRTCHNL2_CAP_RXQ_MODEL_SINGLE (New)</th>
-<th>0,1</th>
+<th><p>Head writeback reporting for buffer queue descriptor fetch (on stride cross).<br/>
+Relevant only for the split queue model.</th>
+<th> </th>
+<th> </th>
 <th>1</th>
+<th>0,1</th>
 </tr>
 <tr class="odd">
-<th>Split RX queue model.</th>
-<th>VIRTCHNL2_CAP_RXQ_MODEL_SPLIT<br />
-(New)</th>
-<th>0,1</th>
+<th>Interrupts triggering for head writeback reporting (for buffer queue descriptor fetch stride cross).<br/>
+Relevant only for the split queue model.</th>
+<th> </th>
+<th> </th>
 <th>1</th>
+<th>0,1</th>
 </tr>
 </thead>
 <tbody>
@@ -7666,14 +7749,6 @@ queue descriptor fetch stride cross).</p>
 </table>
 
 ### TX DMA capabilities
-
-| **Capability**                       | **SW parameter**                       | **Possible values** | **Default value** |
-|--------------------------------------|----------------------------------------|---------------------|-------------------|
-| In order, split, TX queue model.     | VIRTCHNL2_TXQ_MODEL_IN_ORDER_SPLIT     | 0,1                 | 1                 |
-| In order, single, TX queue model.    | VIRTCHNL2_TXQ_MODEL_IN_ORDER_SINGLE    | 0,1                 | 1                 |
-| Out of order, split, TX queue model. | VIRTCHNL2_TXQ_MODEL_OUT_OF_ORDER_SPLIT | 0,1                 | 1                 |
-
-### TX Descriptor capabilities
 
 <table>
 <colgroup>
@@ -7686,51 +7761,144 @@ queue descriptor fetch stride cross).</p>
 <tr class="header">
 <th><strong>Capability</strong></th>
 <th><strong>SW parameter</strong></th>
-<th><strong>Possible values</strong></th>
+<th><strong>Parameter type</strong></th>
 <th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
 </tr>
 <tr class="odd">
+<th>Single TX queue model</th>
+<th>negotiated via txq_model in struct virtchnl2_create_port<br/>
+set via model in struct virtchnl2_txq_info</th>
+<th>Negotiated </th>
+<th></th>
+<th>VIRTCHNL2_QUEUE_MODEL_SINGLE</th>
+</tr>
+<tr class="header">
+<th>Split TX queue model</th>
+<th>negotiated via txq_model in struct virtchnl2_create_port<br/>
+set via model in struct virtchnl2_txq_info</th>
+<th> Negotiated </th>
+<th></th>
+<th>VIRTCHNL2_QUEUE_MODEL_SPLIT</th>
+</tr>
+<tr class="odd">
+<th>In order TX Completions</th>
+<th>set via sched_mode in struct virtchnl2_txq_info</th>
+<th> Negotiated </th>
+<th></th>
+<th>VIRTCHNL2_TXQUEUE_SCHED_MODE_QUEUE</th>
+</tr>
+<tr class="header">
+<th>Out of Order TX Completions<br/>
+Only supported with Split TX Queue Model</th>
+<th>negotiated via VIRTCHNL2_CAP_SPLITQ_QSCHED other_caps bit in struct virtchnl2_get_capabilities<br/>
+set via sched_mode in struct virtchnl2_txq_info</th>
+<th>Negotiated</th>
+<th></th>
+<th>VIRTCHNL2_TXQUEUE_SCHED_MODE_FLOW</th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+### TX Queue capabilities
+
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 36%" />
+<col style="width: 21%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Capability</strong></th>
+<th><strong>SW parameter</strong></th>
+<th><strong>Parameter type</strong></th>
+<th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
+</tr>
+<tr class="odd">
+<th>Min number of descriptors per TX Queue</th>
+<th>IDPF_MIN_TXQ_DESC</th>
+<th>Hard coded default</th>
+<th>64</th>
+<th></th>
+</tr>
+<tr class="header">
+<th>Min number of descriptors per TX Completion Queue</th>
+<th>IDPF_MIN_TXQ_COMPLQ_DESC</th>
+<th>Hard coded default</th>
+<th>256</th>
+<th></th>
+</tr>
+<tr class="odd">
+<th>TX Queue descriptor count multiple </th>
+<th>IDPF_REQ_DESC_MULTIPLE</th>
+<th>Hard coded default</th>
+<th>32</th>
+<th></th>
+</tr>
+<tr class="header">
+<th>Max number of descriptors per TX Queue</th>
+<th>IDPF_MAX_TXQ_DESC</th>
+<th>Hard coded default</th>
+<th>ALIGN_DOWN(8160, IDPF_REQ_DESC_MULTIPLE)</th>
+<th></th>
+</tr>
+<tr class="odd">
+<th>Min number of descriptors per TX Queue</th>
+<th>IDPF_MIN_TXQ_DESC</th>
+<th>Hard coded default</th>
+<th>64</th>
+<th></th>
+</tr>
+<tr class="header">
 <th>Max number of context descriptors per SSO packet</th>
-<th><em><mark>max_ctxt_desc_per_sso_packet</mark></em></th>
+<th></th>
 <th></th>
 <th>1</th>
+<th></th>
 </tr>
-<tr class="header">
+<tr class="odd">
 <th>Max number of context descriptors per LSO segment</th>
-<th><em><mark>max_ctxt_desc_per_lso_segment</mark></em></th>
+<th></th>
 <th></th>
 <th>1</th>
-</tr>
-<tr class="odd">
-<th><p>Max data buffers per SSO/LSO packet.</p>
-<p>Note : When equals to 18 SW can avoid any calculations or check for
-linearization for Linux.</p></th>
-<th><em><mark>max_sg_bufs_per_tx_pkt</mark></em></th>
-<th>1 to 18</th>
-<th>10</th>
+<th></th>
 </tr>
 <tr class="header">
-<th><p>Max number of header buffers per LSO or partial header
-buffers</p>
-<p>(partial header buffer when one buffer holds last bytes of header and
-first bytes of payload)</p></th>
-<th><em>max_hdr_buf_per_lso</em></th>
-<th></th>
-<th>3</th>
+<th>Max data buffers per SSO/LSO packet.<br/>
+Note : When equals to 18 SW can avoid any calculations or check for linearization for Linux.</th>
+<th>max_sg_bufs_per_tx_pkt in struct virtchnl2_get_capabilities</th>
+<th>Learned</th>
+<th>10</th>
+<th>1 to 18</th>
 </tr>
 <tr class="odd">
-<th><p>Min spacing between 2 RS marked descriptors<em>.</em></p>
-<p>Note : this capability is a queue level capability<em>.</em></p></th>
-<th>IECM_TX_RS_MIN_GAP</th>
+<th>Max number of header buffers per LSO or partial header buffers<br/>
+(partial header buffer when one buffer holds last bytes of header and first bytes of payload)</th>
+<th>max_hdr_buf_per_lso in struct virtchnl2_get_capabilities</th>
+<th>Learned</th>
+<th>3</th>
+<th></th>
+</tr>
+<tr class="header">
+<th>Min spacing between 2 RS marked descriptors<br/>
+Note : this capability is a queue level capability</th>
+<th></th>
 <th></th>
 <th>0</th>
-</tr>
-<tr class="header">
-<th><p>Min spacing between 2 RE marked descriptors.</p>
-<p>Note : this capability is a queue level capability.</p></th>
-<th>IECM_TX_SPLITQ_RE_MIN_GAP</th>
 <th></th>
-<th>32</th>
+</tr>
+<tr class="odd">
+<th>Min spacing between 2 RE marked descriptors.
+<br/> Note : this capability is a queue level capability.</th>
+<th>IDPF_TX_SPLITQ_RE_MIN_GAP</th>
+<th>Hard coded default</th>
+<th>64</th>
+<th></th>
 </tr>
 </thead>
 <tbody>
@@ -7750,93 +7918,151 @@ first bytes of payload)</p></th>
 </colgroup>
 <thead>
 <tr class="header">
-<th><strong>Capability</strong></th>
+<th><strong>Resource Size</strong></th>
 <th><strong>SW parameter</strong></th>
-<th><strong>Possible values</strong></th>
+<th><strong>Parameter type</strong></th>
 <th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
 </tr>
 <tr class="odd">
 <th>Max TX buffer size.</th>
-<th><em>tx_max_desc_data</em></th>
+<th>IDPF_TX_MAX_DESC_DATA</th>
+<th>Hard coded default</th>
+<th>16K-1</th>
 <th></th>
-<th>16K</th>
 </tr>
 <tr class="header">
 <th>Max LSO payload length.</th>
-<th><blockquote>
-<p><em><mark>max_lso_payload_len</mark></em></p>
-</blockquote></th>
+<th></th>
 <th></th>
 <th>256K-1</th>
+<th></th>
 </tr>
 <tr class="odd">
 <th>Min MSS for LSO</th>
-<th><em><mark>min_mss_for_lso</mark></em></th>
-<th></th>
+<th>IDPF_TX_TSO_MIN_MSS</th>
+<th>Hard coded default</th>
 <th>88</th>
+<th></th>
 </tr>
 <tr class="header">
 <th>Min SSO/LSO packet size as sent by the driver (excluding any
 expansion done by the device).<br />
 Field is described in byte units.</th>
-<th><p><strong><mark>IECM_TX_MIN_LEN</mark></strong></p>
-<p><mark></mark></p></th>
-<th></th>
+<th>IDPF_TX_MIN_PKT_LEN<br/>
+min_sso_packet_len in struct virtchnl2_get_capabilities </th>
+<th>Hard coded default / Negotiable</th>
 <th>17</th>
+<th></th>
 </tr>
 <tr class="odd">
-<th>Min LSO header length as sent by the driver (excluding any expansion
-done by the device).</th>
-<th><blockquote>
-<p><em><mark>min_lso_header_len</mark></em></p>
-</blockquote></th>
+<th>Min LSO header length as sent by the driver (excluding any expansion done by the device).</th>
+<th></th>
 <th></th>
 <th>17</th>
+<th></th>
 </tr>
 <tr class="header">
-<th><p>Max TX packet size as sent by the host driver (excluding any
-expansion done by the device).</p>
-<p>Note : Device is obligated to check the max_mtu on the TX path. On
-the RX path ,the device is not required to check the max_mtu which means
-that host SW can accept packets bigger than max_mtu.</p></th>
-<th><em><strong><mark>max_mtu</mark></strong></em></th>
-<th></th>
+<th>Max TX packet size as sent by the host driver (excluding any expansion done by the device).<br/>
+Note : Device is obligated to check the max_mtu on the TX path. On the RX path, the device is not required to check the max_mtu which means that host SW can accept packets bigger than max_mtu.</th>
+<th>max_mtu in struct virtchnl2_create_vport</th>
+<th>Learned</th>
 <th>9KB</th>
+<th></th>
 </tr>
 <tr class="odd">
-<th><p>Max header length for segmentation as sent by the driver
-(excluding any expansion done by the device).</p>
-<p>Device does not support segmentation for a header longer than
-that.</p></th>
-<th><p><em><strong><mark>max_tx_hdr_len_seg</mark></strong></em></p>
-<p><mark></mark></p></th>
+<th>Max header length for segmentation as sent by the driver (excluding any expansion done by the device).
+<br/>Device does not support segmentation for a header longer than that.</th>
+<th></th>
 <th></th>
 <th>255</th>
+<th></th>
 </tr>
 <tr class="header">
-<th><p>Max header length for generic offloads as sent by the driver
-(excluding any expansion done by the device).</p>
-<p>Device does not support doing a generic offload (i.e. checksum field
-, LSO incremental field) to a field located deeper in the packet
-header.</p>
-<p>Note : Generic offload is an offload that is executed using offsets
-from the TX descriptor.</p></th>
-<th><p><em><strong><mark>max_tx_hdr_generic_offloads</mark></strong></em></p>
-<p><mark></mark></p></th>
-<th></th>
+<th>Max header length for generic offloads as sent by the driver(excluding any expansion done by the device).<br/>
+Device does not support doing a generic offload (i.e. checksum field, LSO incremental field) to a field located deeper in the packet header.<br/>
+Note : Generic offload is an offload that is executed using offsets from the TX descriptor.</th>
+<th>max_tx_hdr_size in struct virtchnl2_get_capabilities</th>
+<th>Learned</th>
 <th>256</th>
+<th></th>
 </tr>
 <tr class="odd">
-<th><p>Max header length for non-generic checksum offload as sent by the
-(excluding any expansion done by the device).</p>
-<p>Device does not support calculating checksum/CRC to a field located
-deeper in the packet header.</p>
-<p>Note : Non generic checksum offload is a checksum offload that is
-executed using offsets from the Device parser.</p></th>
-<th><p><em><strong><mark>max_tx_hdr_HWparse_csum</mark></strong></em></p>
-<p><mark></mark></p></th>
-<th></th>
+<th>Max header length for non-generic checksum offload as sent by the (excluding any expansion done by the device).<br/>
+Device does not support calculating checksum/CRC to a field located deeper in the packet header.<br/>
+Note : Non generic checksum offload is a checksum offload that is executed using offsets from the Device parser.</th>
+<th>max_tx_hdr_size in struct virtchnl2_get_capabilities</th>
+<th>Learned</th>
 <th>256</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+###
+
+### RX Queue capabilities
+
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 36%" />
+<col style="width: 21%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Capability</strong></th>
+<th><strong>SW parameter</strong></th>
+<th><strong>Parameter type</strong></th>
+<th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
+</tr>
+<tr class="odd">
+<th>Min number of descriptors per RX Queue</th>
+<th>IDPF_MIN_RXQ_DESC</th>
+<th>Hard coded default</th>
+<th>64</th>
+<th></th>
+</tr>
+<tr class="header">
+<th>Max number of RX Buffer Queues per RX Queue</th>
+<th>IDPF_MAX_BUFQS_PER_RXQ_GRP</th>
+<th>Hard coded default</th>
+<th>2</th>
+<th></th>
+</tr>
+<tr class="odd">
+<th>RX Queue descriptor count multiple  </th>
+<th>IDPF_REQ_RXQ_DESC_MULTIPLE</th>
+<th>Hard coded default</th>
+<th>32 * IDPF_MAX_BUFQS_PER_RXQ_GRP</th>
+<th></th>
+</tr>
+</tr>
+<tr class="header">
+<th>Max number of descriptors per RX Queue</th>
+<th>IDPF_MAX_RXQ_DESC</th>
+<th>Hard coded default</th>
+<th>ALIGN_DOWN(8160, IDPF_REQ_RXQ_DESC_MULTIPLE)</th>
+<th></th>
+</tr>
+<tr class="odd">
+<th>Max number of RX Packet Types in Split Queue Model</th>
+<th>IDPF_RX_MAX_PTYPE</th>
+<th>Hard coded default</th>
+<th>1024</th>
+<th></th>
+</tr>
+</tr>
+<tr class="header">
+<th>Max number of RX Packet Types in Single Queue Model</th>
+<th>IDPF_RX_MAX_BASE_PTYPE</th>
+<th>Hard coded default</th>
+<th>256</th>
+<th></th>
 </tr>
 </thead>
 <tbody>
@@ -7858,55 +8084,53 @@ executed using offsets from the Device parser.</p></th>
 <tr class="header">
 <th><strong>Capability</strong></th>
 <th><strong>SW parameter</strong></th>
-<th><strong>Possible values</strong></th>
+<th><strong>Parameter type</strong></th>
 <th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
 </tr>
 <tr class="odd">
-<th>Minimum buffer size supported for single queue model.<br />
-Field is described in 128B units.</th>
-<th><em><mark>min_rx_buf_sz_single_queue</mark></em></th>
-<th></th>
+<th>Minimum RX buffer size supported for single queue model.</th>
+<th>IDPF_RX_BUF_2048</mark></th>
+<th>Hard coded default</th>
 <th>2K</th>
+<th> Multiple of 128B </th>
 </tr>
 <tr class="header">
-<th>Minimum “large RX buffer” size supported for split queue
-model.<br />
-Field is described in 128B units.</th>
-<th><em><mark>min_large_rx_buf_sz_split_queue</mark></em></th>
-<th></th>
+<th>Minimum “large RX buffer” size supported for split queue model.th>
+<th>IDPF_RX_BUF_4096</th>
+<th>Hard coded default</th>
 <th>4K</th>
+<th>Multiple of 128B</th>
 </tr>
 <tr class="odd">
-<th>Minimum “small RX buffer” size supported for split queue
-model.<br />
-Field is described in 128B units.</th>
-<th><em><mark>min_small_rx_buf_sz_split_queue</mark></em></th>
-<th></th>
+<th>Minimum “small RX buffer” size supported for split queue model.</th>
+<th>IDPF_RX_BUF_2048</th>
+<th>Hard coded default</th>
 <th>2K</th>
+<th>Multiple of 128B</th>
 </tr>
 <tr class="header">
-<th><p>Minimum “RX header buffer” size supported for header split.<br />
-Field is described in 64B units.</p>
-<p>Relevant for both single and split queue models.</p></th>
-<th><p><em><mark>min_rx_hdr_buf_sz</mark></em></p>
-<p><mark></mark></p></th>
-<th></th>
+<th>Minimum “RX header buffer” size supported for header split.<br/>
+Relevant for both single and split queue models.</th>
+<th>IDPF_HDR_BUF_SIZE</th>
+<th>Hard coded default</th>
 <th>256</th>
+<th>Multiple of 64B</th>
 </tr>
 <tr class="odd">
-<th><p>Maximum RX buffer size.<br />
-Field is described in 128B units.</p>
-<p>Relevant for all buffers except for “RX header buffer”</p></th>
-<th><em><mark>max_rx_buf_sz</mark></em></th>
+<th>Maximum RX buffer size.<br/>
+Relevant for all buffers except for “RX header buffer”</th>
+<th></th>
 <th></th>
 <th>16KB-128B</th>
+<th>Multiple of 128B</th>
 </tr>
 <tr class="header">
-<th>Maximum “RX header buffer” size.<br />
-Field is described in 64B units.</th>
-<th><em><mark>max_rx_hdr_buf_sz</mark></em></th>
+<th>Maximum “RX header buffer” size.</th>
+<th></th>
 <th></th>
 <th>1KB-64B</th>
+<th>Multiple of 64B</th>
 </tr>
 </thead>
 <tbody>
@@ -7926,104 +8150,40 @@ Field is described in 64B units.</th>
 <tr class="header">
 <th><strong>Capability</strong></th>
 <th><strong>SW parameter</strong></th>
-<th><strong>Possible values</strong></th>
+<th><strong>Parameter type</strong></th>
 <th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
 </tr>
 <tr class="odd">
-<th>RX checksum support for most inner headers.</th>
-<th><em><mark>VIRTCHNL2_CAP_RX_CSUM_L3_IPV4_IN0
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_TCP_IN0
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_UDP_IN0
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_SCTP_IN0
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_TCP_IN0
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_UDP_IN0
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_SCTP_IN0</mark></em></th>
+<th>Checksum offload support </th>
+<th>csum_caps in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
 <th></th>
-<th></th>
-</tr>
-<tr class="header">
-<th>RX checksum support for 1<sup>st</sup> inner tunnel.</th>
-<th><em><mark>VIRTCHNL2_CAP_RX_CSUM_L3_IPV4_IN1
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_TCP_IN1<br />
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_UDP_IN1
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_SCTP_IN1
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_TCP_IN1
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_UDP_IN1
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_SCTP_IN1</mark></em></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="odd">
-<th><p>RX checksum support for 2<sup>nd</sup> inner tunnel.</p>
-<p>In case the packet parser supports more than 2 tunnels , this
-capability represents the 2<sup>nd</sup> tunnel and the following
-ones.</p></th>
-<th><em><mark>VIRTCHNL2_CAP_RX_CSUM_L3_IPV4_IN2
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_TCP_IN2<br />
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_UDP_IN2
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_SCTP_IN2
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_TCP_IN2
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_UDP_IN2
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_SCTP_IN2</mark></em></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="header">
-<th><p>TX checksum support for most inner headers.</p>
-<p>Note : Those capabilities are relevant only for an SSO. For LSO the
-packet checksums must be calculated by Device.</p></th>
-<th><em><mark>VIRTCHNL2_CAP_TX_CSUM_L3_IPV4_IN0
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_TCP_IN0
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_UDP_IN0
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_SCTP_IN0
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_TCP_IN0
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_UDP_IN0
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_SCTP_IN0</mark></em></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="odd">
-<th><p>TX checksum support for 1<sup>st</sup> inner tunnel.</p>
-<p>Note : Those capabilities are relevant only for an SSO. For LSO the
-packet checksums must be calculated by Device.</p></th>
-<th><p><em><mark>VIRTCHNL2_CAP_TX_CSUM_L3_IPV4_IN1
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_TCP_IN1<br />
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_UDP_IN1
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_SCTP_IN1
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_TCP_IN1
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_UDP_IN1
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_SCTP_IN1</mark></em></p>
-<p><mark></mark></p></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="header">
-<th><p>TX checksum support for 2<sup>nd</sup> inner tunnel.</p>
-<p>In case packet passer supports more than 2 tunnels , this capability
-represents the 2<sup>nd</sup> tunnel and the following ones.</p>
-<p>Note : Those capabilities are relevant only for an SSO. For LSO the
-packet checksums must be calculated by Device.</p></th>
-<th><em><mark>VIRTCHNL2_CAP_TX_CSUM_L3_IPV4_IN2
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_TCP_IN2<br />
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_UDP_IN2
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_SCTP_IN2
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_TCP_IN2
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_UDP_IN2
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_SCTP_IN2</mark></em></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="odd">
-<th>Support RX packet raw checksum calculation.</th>
-<th><em><mark>VIRTCHNL2_CAP_RX_CSUM_GENERIC</mark></em></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="header">
-<th>Support TX packet generic checksum calculation.</th>
-<th><em><mark>VIRTCHNL2_CAP_TX_CSUM_GENERIC</mark></em></th>
-<th></th>
-<th></th>
+<th>
+VIRTCHNL2_CAP_TX_CSUM_L3_IPV4<br/>
+VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_TCP<br/>
+VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_UDP<br/>
+VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_SCTP<br/>
+VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_TCP<br/>
+VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_UDP<br/>
+VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_SCTP<br/>
+VIRTCHNL2_CAP_TX_CSUM_GENERIC<br/>
+VIRTCHNL2_CAP_RX_CSUM_L3_IPV4<br/>
+VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_TCP<br/>
+VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_UDP<br/>
+VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_SCTP<br/>
+VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_TCP<br/>
+VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_UDP<br/>
+VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_SCTP<br/>
+VIRTCHNL2_CAP_RX_CSUM_GENERIC<br/>
+VIRTCHNL2_CAP_TX_CSUM_L3_SINGLE_TUNNEL<br/>
+VIRTCHNL2_CAP_TX_CSUM_L3_DOUBLE_TUNNEL<br/>
+VIRTCHNL2_CAP_RX_CSUM_L3_SINGLE_TUNNEL<br/>
+VIRTCHNL2_CAP_RX_CSUM_L3_DOUBLE_TUNNEL<br/>
+VIRTCHNL2_CAP_TX_CSUM_L4_SINGLE_TUNNEL<br/>
+VIRTCHNL2_CAP_TX_CSUM_L4_DOUBLE_TUNNEL<br/>
+VIRTCHNL2_CAP_RX_CSUM_L4_SINGLE_TUNNEL<br/>
+VIRTCHNL2_CAP_RX_CSUM_L4_DOUBLE_TUNNEL</th>
 </tr>
 </thead>
 <tbody>
@@ -8043,49 +8203,24 @@ VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_SCTP_IN2</mark></em></th>
 <tr class="header">
 <th><strong>Capability</strong></th>
 <th><strong>SW parameter</strong></th>
-<th><strong>Possible values</strong></th>
+<th><strong>Parameter type</strong></th>
 <th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
 </tr>
 <tr class="odd">
-<th>TX segmentation support.</th>
-<th>VIRTCHNL2_CAP_SEG_IPV4_TCP_IN0<br />
-VIRTCHNL2_CAP_SEG_IPV4_UDP_IN0<br />
-VIRTCHNL2_CAP_SEG_IPV4_SCTP_IN0<br />
-VIRTCHNL2_CAP_SEG_IPV6_TCP_IN0<br />
-VIRTCHNL2_CAP_SEG_IPV6_UDP_IN0<br />
-VIRTCHNL2_CAP_SEG_IPV6_SCTP_IN0</th>
+<th>TX segmentation offload support</th>
+<th>seg_caps in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
 <th></th>
-<th></th>
-</tr>
-<tr class="header">
-<th>Support segmentation for packet with single tunnel.</th>
-<th>VIRTCHNL2_CAP_SEG_IPV4_TCP_IN1<br />
-VIRTCHNL2_CAP_SEG_IPV4_UDP_IN1<br />
-VIRTCHNL2_CAP_SEG_IPV4_SCTP_IN1<br />
-VIRTCHNL2_CAP_SEG_IPV6_TCP_IN1<br />
-VIRTCHNL2_CAP_SEG_IPV6_UDP_IN1<br />
-VIRTCHNL2_CAP_SEG_IPV6_SCTP_IN1</th>
-<th></th>
-<th></th>
-</tr>
-<tr class="odd">
-<th>Support segmentation for packet with more than a single tunnel.</th>
-<th>VIRTCHNL2_CAP_SEG_IPV4_TCP_IN2<br />
-VIRTCHNL2_CAP_SEG_IPV4_UDP_IN2<br />
-VIRTCHNL2_CAP_SEG_IPV4_SCTP_IN2<br />
-VIRTCHNL2_CAP_SEG_IPV6_TCP_IN2<br />
-VIRTCHNL2_CAP_SEG_IPV6_UDP_IN2<br />
-VIRTCHNL2_CAP_SEG_IPV6_SCTP_IN2</th>
-<th></th>
-<th></th>
-</tr>
-<tr class="header">
-<th><p>Support TX packet generic LSO.</p>
-<p>When this capability is supported , VIRTCHNL2_CAP_TX_CSUM_GENERIC
-must be supported as well.</p></th>
-<th>VIRTCHNL2_CAP_SEG_GENERIC</th>
-<th></th>
-<th></th>
+<th>VIRTCHNL2_CAP_SEG_IPV4_TCP<br/>
+VIRTCHNL2_CAP_SEG_IPV4_UDP<br/>
+VIRTCHNL2_CAP_SEG_IPV4_SCTP<br/>
+VIRTCHNL2_CAP_SEG_IPV6_TCP<br/>
+VIRTCHNL2_CAP_SEG_IPV6_UDP<br/>
+VIRTCHNL2_CAP_SEG_IPV6_SCTP<br/>
+VIRTCHNL2_CAP_SEG_GENERIC<br/>
+VIRTCHNL2_CAP_SEG_TX_SINGLE_TUNNEL<br/>
+VIRTCHNL2_CAP_SEG_TX_DOUBLE_TUNNEL</th>
 </tr>
 </thead>
 <tbody>
@@ -8105,21 +8240,29 @@ must be supported as well.</p></th>
 <tr class="header">
 <th><strong>Capability</strong></th>
 <th><strong>SW parameter</strong></th>
-<th><strong>Possible values</strong></th>
+<th><strong>Parameter type</strong></th>
 <th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
 </tr>
 <tr class="odd">
 <th>Protocols used for RSS key (inner most headers).</th>
-<th>VIRTCHNL2_CAP_RSS_IPV4_TCP VIRTCHNL2_CAP_RSS_IPV4_UDP<br />
-VIRTCHNL2_CAP_RSS_IPV4_SCTP VIRTCHNL2_CAP_RSS_IPV4_OTHER
-VIRTCHNL2_CAP_RSS_IPV6_TCP VIRTCHNL2_CAP_RSS_IPV6_UDP
-VIRTCHNL2_CAP_RSS_IPV6_SCTP VIRTCHNL2_CAP_RSS_IPV6_OTHER
-VIRTCHNL2_CAP_RSS_IPV4_AH<br />
-VIRTCHNL2_CAP_RSS_IPV4_ESP VIRTCHNL2_CAP_RSS_IPV4_AH_ESP
-VIRTCHNL2_CAP_RSS_IPV6_AH VIRTCHNL2_CAP_RSS_IPV6_ESP
+<th>rss_caps in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th>VIRTCHNL2_CAP_RSS_IPV4_TCP<br/>
+VIRTCHNL2_CAP_RSS_IPV4_UDP<br/>
+VIRTCHNL2_CAP_RSS_IPV4_SCTP<br/>
+VIRTCHNL2_CAP_RSS_IPV4_OTHER<br/>
+VIRTCHNL2_CAP_RSS_IPV6_TCP<br/>
+VIRTCHNL2_CAP_RSS_IPV6_UDP<br/>
+VIRTCHNL2_CAP_RSS_IPV6_SCTP<br/>
+VIRTCHNL2_CAP_RSS_IPV6_OTHER<br/>
+VIRTCHNL2_CAP_RSS_IPV4_AH<br/>
+VIRTCHNL2_CAP_RSS_IPV4_ESP<br/>
+VIRTCHNL2_CAP_RSS_IPV4_AH_ESP<br/>
+VIRTCHNL2_CAP_RSS_IPV6_AH<br/>
+VIRTCHNL2_CAP_RSS_IPV6_ESP<br/>
 VIRTCHNL2_CAP_RSS_IPV6_AH_ESP</th>
-<th></th>
-<th></th>
 </tr>
 <tr class="header">
 <th>Max RSS queues</th>
@@ -8145,16 +8288,19 @@ VIRTCHNL2_CAP_RSS_IPV6_AH_ESP</th>
 <tr class="header">
 <th><strong>Capability</strong></th>
 <th><strong>SW parameter</strong></th>
-<th><strong>Possible values</strong></th>
+<th><strong>Parameter type</strong></th>
 <th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
 </tr>
 <tr class="odd">
 <th>Header boundary for header split.</th>
-<th>VIRTCHNL2_CAP_RX_HSPLIT_AT_L2 VIRTCHNL2_CAP_RX_HSPLIT_AT_L3
-VIRTCHNL2_CAP_RX_HSPLIT_AT_L4V4<br />
+<th>hsplit_caps in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th>VIRTCHNL2_CAP_RX_HSPLIT_AT_L2<br/>
+VIRTCHNL2_CAP_RX_HSPLIT_AT_L3<br/>
+VIRTCHNL2_CAP_RX_HSPLIT_AT_L4V4<br/>
 VIRTCHNL2_CAP_RX_HSPLIT_AT_L4V6</th>
-<th></th>
-<th></th>
 </tr>
 </thead>
 <tbody>
@@ -8174,31 +8320,60 @@ VIRTCHNL2_CAP_RX_HSPLIT_AT_L4V6</th>
 <tr class="header">
 <th><strong>Capability</strong></th>
 <th><strong>SW parameter</strong></th>
-<th><strong>Possible values</strong></th>
+<th><strong>Parameter type</strong></th>
 <th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
 </tr>
 <tr class="odd">
 <th>Header format supported for RSC(inner most headers).</th>
-<th>VIRTCHNL2_CAP_RSC_IPV4_TCP<br />
+<th>rss_caps in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th>VIRTCHNL2_CAP_RSC_IPV4_TCP<br/>
 VIRTCHNL2_CAP_RSC_IPV6_TCP</th>
-<th></th>
-<th></th>
 </tr>
 </thead>
 <tbody>
 </tbody>
 </table>
 
-### L2 Tag offload capabilities
+### Advanced capabilities
 
-| **Capability**                                  | **SW parameter**                                                   | **Possible values** | **Default value** |
-|-------------------------------------------------|--------------------------------------------------------------------|---------------------|-------------------|
-| Support L2Tag1 insertion on TX from descriptor. | ***<span class="mark">VIRTCHNL2_CAP_RX_DESC_L2TAG1_ADD</span>***   |                     | **1**             |
-| Support L2Tag2 insertion on TX from descriptor. | ***<span class="mark">VIRTCHNL2_CAP_RX_DESC_L2TAG2_ADD</span>***   |                     | **1**             |
-| Support L2Tag1 “strip to RX descriptor” on RX.  | ***<span class="mark">VIRTCHNL2_CAP_RX_DESC_L2TAG1_STRIP</span>*** |                     |                   |
-| Support L2Tag2 “strip to RX descriptor” on RX.  | ***<span class="mark">VIRTCHNL2_CAP_RX_DESC_L2TAG2_STRIP</span>*** |                     |                   |
-
-### 
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 61%" />
+<col style="width: 7%" />
+<col style="width: 8%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Capability</strong></th>
+<th><strong>SW parameter</strong></th>
+<th><strong>Parameter type</strong></th>
+<th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
+</tr>
+<tr class="odd">
+<th>Advanced Capabilities</th>
+<th>other_caps in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th>VIRTCHNL2_CAP_RDMA<br/>
+VIRTCHNL2_CAP_SRIOV<br/>
+VIRTCHNL2_CAP_MACFILTER<br/>
+VIRTCHNL2_CAP_SPLITQ_QSCHED<br/>
+VIRTCHNL2_CAP_PROMISC<br/>
+VIRTCHNL2_CAP_PTP<br/>
+VIRTCHNL2_CAP_EDT<br/>
+VIRTCHNL2_CAP_LOOPBACK<br/>
+VIRTCHNL2_CAP_FLOW_STEER<br/>
+VIRTCHNL2_CAP_OEM</th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
 
 ### 
 
