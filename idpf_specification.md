@@ -7539,16 +7539,91 @@ Note that num_queues may be larger than the default number of queues.
 
 # 
 
-# Device capabilities default values assumed by the IDPF driver
+# Device Capabilities and Resource limits
 
-Any drive that is compliant with the spec should assume the default
-value.  
-In order to use a non default value it must negotiate it with the
-control plane.  
+IDPF driver uses virtchnl2 API to negotiate or learn device capabilities and resource limits. However some resource limits are assumed by the driver and hard coded using #defines. This section lists all the device capabilities and resource limits that are either negotiated, learned or assumed by the driver. The resource limits that are assumed by the driver are listed as 'Hard coded value' in the Parameter Type column. Devices compliant with the spec must support these hard coded values as min/max resource limits.
+
+For ex: 88 is the hard coded default value for minimum MSS size for a LSO segment. So any device compliant with the spec needs to support this as a mininum value. If a device cannot support hard coded minimum value, the driver needs to be udpated to negotiate or learn this value from the CP.
   
-Virtchannel data structures for vport configuration, queue configuration
-etc have enough padding defined to be able to accommodate negotiation in
-the future of non-default values with the Device control plane.
+Virtchannel data structures for device configuration, vport configuration, queue configuration etc have enough padding defined to be able to accommodate negotiation of non-default values with the Device control plane in future.
+
+### Device Resource Limits
+
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 61%" />
+<col style="width: 7%" />
+<col style="width: 8%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Resource</strong></th>
+<th><strong>SW parameter</strong></th>
+<th><strong>Parameter type</strong></th>
+<th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
+</tr>
+<tr class="odd">
+<th>Max number of vectors allocated for LAN</th>
+<th>num_allocated_vectors in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th></th>
+</tr>
+<tr class="header">
+<th>Max number of vectors allocated for RDMA</th>
+<th>num_rdma_vectors in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th></th>
+</tr>
+<tr class="odd">
+<th>Default number of vports</th>
+<th>default_num_vports in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th></th>
+</tr>
+<tr class="header">
+<th>Max number of RX queues across all the default number of vports</th>
+<th>max_rx_q in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th></th>
+</tr>
+<tr class="odd">
+<th>Max number of TX queues across all the default number of vports</th>
+<th>max_tx_q in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th></th>
+</tr>
+<tr class="header">
+<th>Max number of RX buffer queues across all the default number of vports</th>
+<th>num_rdma_vectors in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th></th>
+</tr>
+<tr class="odd">
+<th>Max number of TX completion queues across all the default number of vports</th>
+<th>max_tx_complq in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th></th>
+</tr>
+<tr class="header">
+<th>Max number of SRIOV VFs </th>
+<th>max_sriov_vfs in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
 
 ### Interrupt capabilities
 
@@ -7563,44 +7638,48 @@ the future of non-default values with the Device control plane.
 <tr class="header">
 <th><strong>Capability</strong></th>
 <th><strong>SW parameter</strong></th>
-<th><strong>Possible values</strong></th>
+<th><strong>Parameter type</strong></th>
 <th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
 </tr>
 <tr class="odd">
 <th>ITR interval granularity</th>
-<th>u8 itr_intvl_gran</th>
-<th>0.5 us , 1 us , 2 us , 4 us</th>
+<th> IDPF_ITR_GRAN_S </th>
+<th> Hard coded default </th>
 <th>2 us</th>
+<th>0.5 us , 1 us , 2 us , 4 us</th>
 </tr>
 <tr class="header">
 <th>Number of ITRs per vector</th>
-<th>u8 itr_idx_map</th>
+<th> VIRTCHNL2_ITR_IDX_0  VIRTCHNL2_ITR_IDX_1 </th>
+<th> Hard coded default </th>
+<th>8’b00001011 - ITR0,ITR1 and NOITR.</th>
 <th>8’b00001011 - ITR0,ITR1 and NOITR.<br />
 8’b00001111 - ITR0,ITR1,ITR2 and NOITR.<br />
 <br />
 ITR index N is supported when bit index N in the vector is set.<br />
 Bit 3 (NOITR) represents a zero timer (immediate interrupt).</th>
-<th>8’b00001011 - ITR0,ITR1 and NOITR.</th>
 </tr>
 <tr class="odd">
-<th>ITR rate change piggybacked to an interrupt enablement
-operation</th>
-<th>VIRTCHNL2_CAP_INTR_ADAPT_WITH_INTENA</th>
-<th>0,1</th>
+<th>ITR rate change piggybacked to an interrupt enablement operation</th>
+<th> </th>
+<th> </th>
 <th>0</th>
+<th>0,1</th>
 </tr>
 <tr class="header">
-<th>SW interrupt triggering that is piggybacked to an interrupt
-enablement operation</th>
-<th>VIRTCHNL2_CAP_INTR_SW_INTR_WITH_INTENA</th>
-<th>0,1</th>
+<th>SW interrupt triggering that is piggybacked to an interrupt enablement operation</th>
+<th> </th>
+<th> </th>
 <th>0</th>
+<th>0,1</th>
 </tr>
 <tr class="odd">
 <th>SW interrupt triggering as an individual operation</th>
-<th>VIRTCHNL2_CAP_INTR_SW_INTR_INDV</th>
-<th>0,1</th>
+<th> </th>
+<th> </th>
 <th>0</th>
+<th>0,1</th>
 </tr>
 </thead>
 <tbody>
@@ -7620,45 +7699,49 @@ enablement operation</th>
 <tr class="header">
 <th><strong>Capability</strong></th>
 <th><strong>SW parameter</strong></th>
-<th><strong>Possible values</strong></th>
+<th><strong>Parameter type</strong></th>
 <th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
 </tr>
 <tr class="odd">
-<th><p>Head writeback reporting for buffer queue descriptor fetch (on
-stride cross).</p>
-<p>Relevant only for the split queue model.</p></th>
-<th>VIRTCHNL2_CAP_RX_SPLITQ_HEAD_WB</th>
-<th>0,1</th>
-<th>1</th>
+<th>Single RX queue model</th>
+<th>negotiated via rxq_model in struct virtchnl2_create_port<br/>
+set via model in struct virtchnl2_rxq_info</th>
+<th>Negotiated </th>
+<th></th>
+<th>VIRTCHNL_QUEUE_MODEL_SINGLE</th>
 </tr>
 <tr class="header">
-<th><p>Interrupts triggering for head writeback reporting (for buffer
-queue descriptor fetch stride cross).</p>
-<p>Relevant only for the split queue model.</p></th>
-<th>VIRTCHNL2_RX_SPLITQ_INTR_ON_HEAD_WB</th>
-<th><p>0,1</p>
-<p>Can be set only when VIRTCHNL2_CAP_RX_SPLITQ_HEAD_WB is set.</p></th>
-<th>1</th>
+<th>Split RX queue model</th>
+<th>negotiated via rxq_model in struct virtchnl2_create_port<br/>
+set via model in struct virtchnl2_rxq_info</th>
+<th>Negotiated </th>
+<th></th>
+<th>VIRTCHNL2_QUEUE_MODEL_SPLIT</th>
 </tr>
 <tr class="odd">
 <th>Number of RX buffer queues per RX queue</th>
-<th><em><mark>u8 num_buf_queues_per_rx</mark></em></th>
+<th>IDPF_MAX_BUFQS_PER_RXQ_GRP</th>
+<th>Hard coded default </th>
+<th>2</th>
 <th><p>1(large buffer queue),</p>
 <p>2(large and small buffer queues)</p></th>
-<th>2</th>
 </tr>
 <tr class="header">
-<th>Single RX queue model.</th>
-<th>VIRTCHNL2_CAP_RXQ_MODEL_SINGLE (New)</th>
-<th>0,1</th>
+<th><p>Head writeback reporting for buffer queue descriptor fetch (on stride cross).<br/>
+Relevant only for the split queue model.</th>
+<th> </th>
+<th> </th>
 <th>1</th>
+<th>0,1</th>
 </tr>
 <tr class="odd">
-<th>Split RX queue model.</th>
-<th>VIRTCHNL2_CAP_RXQ_MODEL_SPLIT<br />
-(New)</th>
-<th>0,1</th>
+<th>Interrupts triggering for head writeback reporting (for buffer queue descriptor fetch stride cross).<br/>
+Relevant only for the split queue model.</th>
+<th> </th>
+<th> </th>
 <th>1</th>
+<th>0,1</th>
 </tr>
 </thead>
 <tbody>
@@ -7666,14 +7749,6 @@ queue descriptor fetch stride cross).</p>
 </table>
 
 ### TX DMA capabilities
-
-| **Capability**                       | **SW parameter**                       | **Possible values** | **Default value** |
-|--------------------------------------|----------------------------------------|---------------------|-------------------|
-| In order, split, TX queue model.     | VIRTCHNL2_TXQ_MODEL_IN_ORDER_SPLIT     | 0,1                 | 1                 |
-| In order, single, TX queue model.    | VIRTCHNL2_TXQ_MODEL_IN_ORDER_SINGLE    | 0,1                 | 1                 |
-| Out of order, split, TX queue model. | VIRTCHNL2_TXQ_MODEL_OUT_OF_ORDER_SPLIT | 0,1                 | 1                 |
-
-### TX Descriptor capabilities
 
 <table>
 <colgroup>
@@ -7686,51 +7761,144 @@ queue descriptor fetch stride cross).</p>
 <tr class="header">
 <th><strong>Capability</strong></th>
 <th><strong>SW parameter</strong></th>
-<th><strong>Possible values</strong></th>
+<th><strong>Parameter type</strong></th>
 <th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
 </tr>
 <tr class="odd">
+<th>Single TX queue model</th>
+<th>negotiated via txq_model in struct virtchnl2_create_port<br/>
+set via model in struct virtchnl2_txq_info</th>
+<th>Negotiated </th>
+<th></th>
+<th>VIRTCHNL2_QUEUE_MODEL_SINGLE</th>
+</tr>
+<tr class="header">
+<th>Split TX queue model</th>
+<th>negotiated via txq_model in struct virtchnl2_create_port<br/>
+set via model in struct virtchnl2_txq_info</th>
+<th> Negotiated </th>
+<th></th>
+<th>VIRTCHNL2_QUEUE_MODEL_SPLIT</th>
+</tr>
+<tr class="odd">
+<th>In order TX Completions</th>
+<th>set via sched_mode in struct virtchnl2_txq_info</th>
+<th> Negotiated </th>
+<th></th>
+<th>VIRTCHNL2_TXQUEUE_SCHED_MODE_QUEUE</th>
+</tr>
+<tr class="header">
+<th>Out of Order TX Completions<br/>
+Only supported with Split TX Queue Model</th>
+<th>negotiated via VIRTCHNL2_CAP_SPLITQ_QSCHED other_caps bit in struct virtchnl2_get_capabilities<br/>
+set via sched_mode in struct virtchnl2_txq_info</th>
+<th>Negotiated</th>
+<th></th>
+<th>VIRTCHNL2_TXQUEUE_SCHED_MODE_FLOW</th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+### TX Queue capabilities
+
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 36%" />
+<col style="width: 21%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Capability</strong></th>
+<th><strong>SW parameter</strong></th>
+<th><strong>Parameter type</strong></th>
+<th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
+</tr>
+<tr class="odd">
+<th>Min number of descriptors per TX Queue</th>
+<th>IDPF_MIN_TXQ_DESC</th>
+<th>Hard coded default</th>
+<th>64</th>
+<th></th>
+</tr>
+<tr class="header">
+<th>Min number of descriptors per TX Completion Queue</th>
+<th>IDPF_MIN_TXQ_COMPLQ_DESC</th>
+<th>Hard coded default</th>
+<th>256</th>
+<th></th>
+</tr>
+<tr class="odd">
+<th>TX Queue descriptor count multiple </th>
+<th>IDPF_REQ_DESC_MULTIPLE</th>
+<th>Hard coded default</th>
+<th>32</th>
+<th></th>
+</tr>
+<tr class="header">
+<th>Max number of descriptors per TX Queue</th>
+<th>IDPF_MAX_TXQ_DESC</th>
+<th>Hard coded default</th>
+<th>ALIGN_DOWN(8160, IDPF_REQ_DESC_MULTIPLE)</th>
+<th></th>
+</tr>
+<tr class="odd">
+<th>Min number of descriptors per TX Queue</th>
+<th>IDPF_MIN_TXQ_DESC</th>
+<th>Hard coded default</th>
+<th>64</th>
+<th></th>
+</tr>
+<tr class="header">
 <th>Max number of context descriptors per SSO packet</th>
-<th><em><mark>max_ctxt_desc_per_sso_packet</mark></em></th>
+<th></th>
 <th></th>
 <th>1</th>
+<th></th>
 </tr>
-<tr class="header">
+<tr class="odd">
 <th>Max number of context descriptors per LSO segment</th>
-<th><em><mark>max_ctxt_desc_per_lso_segment</mark></em></th>
+<th></th>
 <th></th>
 <th>1</th>
-</tr>
-<tr class="odd">
-<th><p>Max data buffers per SSO/LSO packet.</p>
-<p>Note : When equals to 18 SW can avoid any calculations or check for
-linearization for Linux.</p></th>
-<th><em><mark>max_sg_bufs_per_tx_pkt</mark></em></th>
-<th>1 to 18</th>
-<th>10</th>
+<th></th>
 </tr>
 <tr class="header">
-<th><p>Max number of header buffers per LSO or partial header
-buffers</p>
-<p>(partial header buffer when one buffer holds last bytes of header and
-first bytes of payload)</p></th>
-<th><em>max_hdr_buf_per_lso</em></th>
-<th></th>
-<th>3</th>
+<th>Max data buffers per SSO/LSO packet.<br/>
+Note : When equals to 18 SW can avoid any calculations or check for linearization for Linux.</th>
+<th>max_sg_bufs_per_tx_pkt in struct virtchnl2_get_capabilities</th>
+<th>Learned</th>
+<th>10</th>
+<th>1 to 18</th>
 </tr>
 <tr class="odd">
-<th><p>Min spacing between 2 RS marked descriptors<em>.</em></p>
-<p>Note : this capability is a queue level capability<em>.</em></p></th>
-<th>IECM_TX_RS_MIN_GAP</th>
+<th>Max number of header buffers per LSO or partial header buffers<br/>
+(partial header buffer when one buffer holds last bytes of header and first bytes of payload)</th>
+<th>max_hdr_buf_per_lso in struct virtchnl2_get_capabilities</th>
+<th>Learned</th>
+<th>3</th>
+<th></th>
+</tr>
+<tr class="header">
+<th>Min spacing between 2 RS marked descriptors<br/>
+Note : this capability is a queue level capability</th>
+<th></th>
 <th></th>
 <th>0</th>
-</tr>
-<tr class="header">
-<th><p>Min spacing between 2 RE marked descriptors.</p>
-<p>Note : this capability is a queue level capability.</p></th>
-<th>IECM_TX_SPLITQ_RE_MIN_GAP</th>
 <th></th>
-<th>32</th>
+</tr>
+<tr class="odd">
+<th>Min spacing between 2 RE marked descriptors.
+<br/> Note : this capability is a queue level capability.</th>
+<th>IDPF_TX_SPLITQ_RE_MIN_GAP</th>
+<th>Hard coded default</th>
+<th>64</th>
+<th></th>
 </tr>
 </thead>
 <tbody>
@@ -7750,93 +7918,151 @@ first bytes of payload)</p></th>
 </colgroup>
 <thead>
 <tr class="header">
-<th><strong>Capability</strong></th>
+<th><strong>Resource Size</strong></th>
 <th><strong>SW parameter</strong></th>
-<th><strong>Possible values</strong></th>
+<th><strong>Parameter type</strong></th>
 <th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
 </tr>
 <tr class="odd">
 <th>Max TX buffer size.</th>
-<th><em>tx_max_desc_data</em></th>
+<th>IDPF_TX_MAX_DESC_DATA</th>
+<th>Hard coded default</th>
+<th>16K-1</th>
 <th></th>
-<th>16K</th>
 </tr>
 <tr class="header">
 <th>Max LSO payload length.</th>
-<th><blockquote>
-<p><em><mark>max_lso_payload_len</mark></em></p>
-</blockquote></th>
+<th></th>
 <th></th>
 <th>256K-1</th>
+<th></th>
 </tr>
 <tr class="odd">
 <th>Min MSS for LSO</th>
-<th><em><mark>min_mss_for_lso</mark></em></th>
-<th></th>
+<th>IDPF_TX_TSO_MIN_MSS</th>
+<th>Hard coded default</th>
 <th>88</th>
+<th></th>
 </tr>
 <tr class="header">
 <th>Min SSO/LSO packet size as sent by the driver (excluding any
 expansion done by the device).<br />
 Field is described in byte units.</th>
-<th><p><strong><mark>IECM_TX_MIN_LEN</mark></strong></p>
-<p><mark></mark></p></th>
-<th></th>
+<th>IDPF_TX_MIN_PKT_LEN<br/>
+min_sso_packet_len in struct virtchnl2_get_capabilities </th>
+<th>Hard coded default / Negotiable</th>
 <th>17</th>
+<th></th>
 </tr>
 <tr class="odd">
-<th>Min LSO header length as sent by the driver (excluding any expansion
-done by the device).</th>
-<th><blockquote>
-<p><em><mark>min_lso_header_len</mark></em></p>
-</blockquote></th>
+<th>Min LSO header length as sent by the driver (excluding any expansion done by the device).</th>
+<th></th>
 <th></th>
 <th>17</th>
+<th></th>
 </tr>
 <tr class="header">
-<th><p>Max TX packet size as sent by the host driver (excluding any
-expansion done by the device).</p>
-<p>Note : Device is obligated to check the max_mtu on the TX path. On
-the RX path ,the device is not required to check the max_mtu which means
-that host SW can accept packets bigger than max_mtu.</p></th>
-<th><em><strong><mark>max_mtu</mark></strong></em></th>
-<th></th>
+<th>Max TX packet size as sent by the host driver (excluding any expansion done by the device).<br/>
+Note : Device is obligated to check the max_mtu on the TX path. On the RX path, the device is not required to check the max_mtu which means that host SW can accept packets bigger than max_mtu.</th>
+<th>max_mtu in struct virtchnl2_create_vport</th>
+<th>Learned</th>
 <th>9KB</th>
+<th></th>
 </tr>
 <tr class="odd">
-<th><p>Max header length for segmentation as sent by the driver
-(excluding any expansion done by the device).</p>
-<p>Device does not support segmentation for a header longer than
-that.</p></th>
-<th><p><em><strong><mark>max_tx_hdr_len_seg</mark></strong></em></p>
-<p><mark></mark></p></th>
+<th>Max header length for segmentation as sent by the driver (excluding any expansion done by the device).
+<br/>Device does not support segmentation for a header longer than that.</th>
+<th></th>
 <th></th>
 <th>255</th>
+<th></th>
 </tr>
 <tr class="header">
-<th><p>Max header length for generic offloads as sent by the driver
-(excluding any expansion done by the device).</p>
-<p>Device does not support doing a generic offload (i.e. checksum field
-, LSO incremental field) to a field located deeper in the packet
-header.</p>
-<p>Note : Generic offload is an offload that is executed using offsets
-from the TX descriptor.</p></th>
-<th><p><em><strong><mark>max_tx_hdr_generic_offloads</mark></strong></em></p>
-<p><mark></mark></p></th>
-<th></th>
+<th>Max header length for generic offloads as sent by the driver(excluding any expansion done by the device).<br/>
+Device does not support doing a generic offload (i.e. checksum field, LSO incremental field) to a field located deeper in the packet header.<br/>
+Note : Generic offload is an offload that is executed using offsets from the TX descriptor.</th>
+<th>max_tx_hdr_size in struct virtchnl2_get_capabilities</th>
+<th>Learned</th>
 <th>256</th>
+<th></th>
 </tr>
 <tr class="odd">
-<th><p>Max header length for non-generic checksum offload as sent by the
-(excluding any expansion done by the device).</p>
-<p>Device does not support calculating checksum/CRC to a field located
-deeper in the packet header.</p>
-<p>Note : Non generic checksum offload is a checksum offload that is
-executed using offsets from the Device parser.</p></th>
-<th><p><em><strong><mark>max_tx_hdr_HWparse_csum</mark></strong></em></p>
-<p><mark></mark></p></th>
-<th></th>
+<th>Max header length for non-generic checksum offload as sent by the (excluding any expansion done by the device).<br/>
+Device does not support calculating checksum/CRC to a field located deeper in the packet header.<br/>
+Note : Non generic checksum offload is a checksum offload that is executed using offsets from the Device parser.</th>
+<th>max_tx_hdr_size in struct virtchnl2_get_capabilities</th>
+<th>Learned</th>
 <th>256</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+###
+
+### RX Queue capabilities
+
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 36%" />
+<col style="width: 21%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Capability</strong></th>
+<th><strong>SW parameter</strong></th>
+<th><strong>Parameter type</strong></th>
+<th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
+</tr>
+<tr class="odd">
+<th>Min number of descriptors per RX Queue</th>
+<th>IDPF_MIN_RXQ_DESC</th>
+<th>Hard coded default</th>
+<th>64</th>
+<th></th>
+</tr>
+<tr class="header">
+<th>Max number of RX Buffer Queues per RX Queue</th>
+<th>IDPF_MAX_BUFQS_PER_RXQ_GRP</th>
+<th>Hard coded default</th>
+<th>2</th>
+<th></th>
+</tr>
+<tr class="odd">
+<th>RX Queue descriptor count multiple  </th>
+<th>IDPF_REQ_RXQ_DESC_MULTIPLE</th>
+<th>Hard coded default</th>
+<th>32 * IDPF_MAX_BUFQS_PER_RXQ_GRP</th>
+<th></th>
+</tr>
+</tr>
+<tr class="header">
+<th>Max number of descriptors per RX Queue</th>
+<th>IDPF_MAX_RXQ_DESC</th>
+<th>Hard coded default</th>
+<th>ALIGN_DOWN(8160, IDPF_REQ_RXQ_DESC_MULTIPLE)</th>
+<th></th>
+</tr>
+<tr class="odd">
+<th>Max number of RX Packet Types in Split Queue Model</th>
+<th>IDPF_RX_MAX_PTYPE</th>
+<th>Hard coded default</th>
+<th>1024</th>
+<th></th>
+</tr>
+</tr>
+<tr class="header">
+<th>Max number of RX Packet Types in Single Queue Model</th>
+<th>IDPF_RX_MAX_BASE_PTYPE</th>
+<th>Hard coded default</th>
+<th>256</th>
+<th></th>
 </tr>
 </thead>
 <tbody>
@@ -7858,55 +8084,53 @@ executed using offsets from the Device parser.</p></th>
 <tr class="header">
 <th><strong>Capability</strong></th>
 <th><strong>SW parameter</strong></th>
-<th><strong>Possible values</strong></th>
+<th><strong>Parameter type</strong></th>
 <th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
 </tr>
 <tr class="odd">
-<th>Minimum buffer size supported for single queue model.<br />
-Field is described in 128B units.</th>
-<th><em><mark>min_rx_buf_sz_single_queue</mark></em></th>
-<th></th>
+<th>Minimum RX buffer size supported for single queue model.</th>
+<th>IDPF_RX_BUF_2048</mark></th>
+<th>Hard coded default</th>
 <th>2K</th>
+<th> Multiple of 128B </th>
 </tr>
 <tr class="header">
-<th>Minimum “large RX buffer” size supported for split queue
-model.<br />
-Field is described in 128B units.</th>
-<th><em><mark>min_large_rx_buf_sz_split_queue</mark></em></th>
-<th></th>
+<th>Minimum “large RX buffer” size supported for split queue model.th>
+<th>IDPF_RX_BUF_4096</th>
+<th>Hard coded default</th>
 <th>4K</th>
+<th>Multiple of 128B</th>
 </tr>
 <tr class="odd">
-<th>Minimum “small RX buffer” size supported for split queue
-model.<br />
-Field is described in 128B units.</th>
-<th><em><mark>min_small_rx_buf_sz_split_queue</mark></em></th>
-<th></th>
+<th>Minimum “small RX buffer” size supported for split queue model.</th>
+<th>IDPF_RX_BUF_2048</th>
+<th>Hard coded default</th>
 <th>2K</th>
+<th>Multiple of 128B</th>
 </tr>
 <tr class="header">
-<th><p>Minimum “RX header buffer” size supported for header split.<br />
-Field is described in 64B units.</p>
-<p>Relevant for both single and split queue models.</p></th>
-<th><p><em><mark>min_rx_hdr_buf_sz</mark></em></p>
-<p><mark></mark></p></th>
-<th></th>
+<th>Minimum “RX header buffer” size supported for header split.<br/>
+Relevant for both single and split queue models.</th>
+<th>IDPF_HDR_BUF_SIZE</th>
+<th>Hard coded default</th>
 <th>256</th>
+<th>Multiple of 64B</th>
 </tr>
 <tr class="odd">
-<th><p>Maximum RX buffer size.<br />
-Field is described in 128B units.</p>
-<p>Relevant for all buffers except for “RX header buffer”</p></th>
-<th><em><mark>max_rx_buf_sz</mark></em></th>
+<th>Maximum RX buffer size.<br/>
+Relevant for all buffers except for “RX header buffer”</th>
+<th></th>
 <th></th>
 <th>16KB-128B</th>
+<th>Multiple of 128B</th>
 </tr>
 <tr class="header">
-<th>Maximum “RX header buffer” size.<br />
-Field is described in 64B units.</th>
-<th><em><mark>max_rx_hdr_buf_sz</mark></em></th>
+<th>Maximum “RX header buffer” size.</th>
+<th></th>
 <th></th>
 <th>1KB-64B</th>
+<th>Multiple of 64B</th>
 </tr>
 </thead>
 <tbody>
@@ -7926,104 +8150,40 @@ Field is described in 64B units.</th>
 <tr class="header">
 <th><strong>Capability</strong></th>
 <th><strong>SW parameter</strong></th>
-<th><strong>Possible values</strong></th>
+<th><strong>Parameter type</strong></th>
 <th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
 </tr>
 <tr class="odd">
-<th>RX checksum support for most inner headers.</th>
-<th><em><mark>VIRTCHNL2_CAP_RX_CSUM_L3_IPV4_IN0
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_TCP_IN0
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_UDP_IN0
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_SCTP_IN0
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_TCP_IN0
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_UDP_IN0
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_SCTP_IN0</mark></em></th>
+<th>Checksum offload support </th>
+<th>csum_caps in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
 <th></th>
-<th></th>
-</tr>
-<tr class="header">
-<th>RX checksum support for 1<sup>st</sup> inner tunnel.</th>
-<th><em><mark>VIRTCHNL2_CAP_RX_CSUM_L3_IPV4_IN1
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_TCP_IN1<br />
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_UDP_IN1
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_SCTP_IN1
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_TCP_IN1
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_UDP_IN1
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_SCTP_IN1</mark></em></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="odd">
-<th><p>RX checksum support for 2<sup>nd</sup> inner tunnel.</p>
-<p>In case the packet parser supports more than 2 tunnels , this
-capability represents the 2<sup>nd</sup> tunnel and the following
-ones.</p></th>
-<th><em><mark>VIRTCHNL2_CAP_RX_CSUM_L3_IPV4_IN2
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_TCP_IN2<br />
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_UDP_IN2
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_SCTP_IN2
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_TCP_IN2
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_UDP_IN2
-VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_SCTP_IN2</mark></em></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="header">
-<th><p>TX checksum support for most inner headers.</p>
-<p>Note : Those capabilities are relevant only for an SSO. For LSO the
-packet checksums must be calculated by Device.</p></th>
-<th><em><mark>VIRTCHNL2_CAP_TX_CSUM_L3_IPV4_IN0
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_TCP_IN0
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_UDP_IN0
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_SCTP_IN0
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_TCP_IN0
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_UDP_IN0
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_SCTP_IN0</mark></em></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="odd">
-<th><p>TX checksum support for 1<sup>st</sup> inner tunnel.</p>
-<p>Note : Those capabilities are relevant only for an SSO. For LSO the
-packet checksums must be calculated by Device.</p></th>
-<th><p><em><mark>VIRTCHNL2_CAP_TX_CSUM_L3_IPV4_IN1
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_TCP_IN1<br />
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_UDP_IN1
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_SCTP_IN1
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_TCP_IN1
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_UDP_IN1
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_SCTP_IN1</mark></em></p>
-<p><mark></mark></p></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="header">
-<th><p>TX checksum support for 2<sup>nd</sup> inner tunnel.</p>
-<p>In case packet passer supports more than 2 tunnels , this capability
-represents the 2<sup>nd</sup> tunnel and the following ones.</p>
-<p>Note : Those capabilities are relevant only for an SSO. For LSO the
-packet checksums must be calculated by Device.</p></th>
-<th><em><mark>VIRTCHNL2_CAP_TX_CSUM_L3_IPV4_IN2
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_TCP_IN2<br />
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_UDP_IN2
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_SCTP_IN2
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_TCP_IN2
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_UDP_IN2
-VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_SCTP_IN2</mark></em></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="odd">
-<th>Support RX packet raw checksum calculation.</th>
-<th><em><mark>VIRTCHNL2_CAP_RX_CSUM_GENERIC</mark></em></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="header">
-<th>Support TX packet generic checksum calculation.</th>
-<th><em><mark>VIRTCHNL2_CAP_TX_CSUM_GENERIC</mark></em></th>
-<th></th>
-<th></th>
+<th>
+VIRTCHNL2_CAP_TX_CSUM_L3_IPV4<br/>
+VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_TCP<br/>
+VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_UDP<br/>
+VIRTCHNL2_CAP_TX_CSUM_L4_IPV4_SCTP<br/>
+VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_TCP<br/>
+VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_UDP<br/>
+VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_SCTP<br/>
+VIRTCHNL2_CAP_TX_CSUM_GENERIC<br/>
+VIRTCHNL2_CAP_RX_CSUM_L3_IPV4<br/>
+VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_TCP<br/>
+VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_UDP<br/>
+VIRTCHNL2_CAP_RX_CSUM_L4_IPV4_SCTP<br/>
+VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_TCP<br/>
+VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_UDP<br/>
+VIRTCHNL2_CAP_RX_CSUM_L4_IPV6_SCTP<br/>
+VIRTCHNL2_CAP_RX_CSUM_GENERIC<br/>
+VIRTCHNL2_CAP_TX_CSUM_L3_SINGLE_TUNNEL<br/>
+VIRTCHNL2_CAP_TX_CSUM_L3_DOUBLE_TUNNEL<br/>
+VIRTCHNL2_CAP_RX_CSUM_L3_SINGLE_TUNNEL<br/>
+VIRTCHNL2_CAP_RX_CSUM_L3_DOUBLE_TUNNEL<br/>
+VIRTCHNL2_CAP_TX_CSUM_L4_SINGLE_TUNNEL<br/>
+VIRTCHNL2_CAP_TX_CSUM_L4_DOUBLE_TUNNEL<br/>
+VIRTCHNL2_CAP_RX_CSUM_L4_SINGLE_TUNNEL<br/>
+VIRTCHNL2_CAP_RX_CSUM_L4_DOUBLE_TUNNEL</th>
 </tr>
 </thead>
 <tbody>
@@ -8043,49 +8203,24 @@ VIRTCHNL2_CAP_TX_CSUM_L4_IPV6_SCTP_IN2</mark></em></th>
 <tr class="header">
 <th><strong>Capability</strong></th>
 <th><strong>SW parameter</strong></th>
-<th><strong>Possible values</strong></th>
+<th><strong>Parameter type</strong></th>
 <th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
 </tr>
 <tr class="odd">
-<th>TX segmentation support.</th>
-<th>VIRTCHNL2_CAP_SEG_IPV4_TCP_IN0<br />
-VIRTCHNL2_CAP_SEG_IPV4_UDP_IN0<br />
-VIRTCHNL2_CAP_SEG_IPV4_SCTP_IN0<br />
-VIRTCHNL2_CAP_SEG_IPV6_TCP_IN0<br />
-VIRTCHNL2_CAP_SEG_IPV6_UDP_IN0<br />
-VIRTCHNL2_CAP_SEG_IPV6_SCTP_IN0</th>
+<th>TX segmentation offload support</th>
+<th>seg_caps in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
 <th></th>
-<th></th>
-</tr>
-<tr class="header">
-<th>Support segmentation for packet with single tunnel.</th>
-<th>VIRTCHNL2_CAP_SEG_IPV4_TCP_IN1<br />
-VIRTCHNL2_CAP_SEG_IPV4_UDP_IN1<br />
-VIRTCHNL2_CAP_SEG_IPV4_SCTP_IN1<br />
-VIRTCHNL2_CAP_SEG_IPV6_TCP_IN1<br />
-VIRTCHNL2_CAP_SEG_IPV6_UDP_IN1<br />
-VIRTCHNL2_CAP_SEG_IPV6_SCTP_IN1</th>
-<th></th>
-<th></th>
-</tr>
-<tr class="odd">
-<th>Support segmentation for packet with more than a single tunnel.</th>
-<th>VIRTCHNL2_CAP_SEG_IPV4_TCP_IN2<br />
-VIRTCHNL2_CAP_SEG_IPV4_UDP_IN2<br />
-VIRTCHNL2_CAP_SEG_IPV4_SCTP_IN2<br />
-VIRTCHNL2_CAP_SEG_IPV6_TCP_IN2<br />
-VIRTCHNL2_CAP_SEG_IPV6_UDP_IN2<br />
-VIRTCHNL2_CAP_SEG_IPV6_SCTP_IN2</th>
-<th></th>
-<th></th>
-</tr>
-<tr class="header">
-<th><p>Support TX packet generic LSO.</p>
-<p>When this capability is supported , VIRTCHNL2_CAP_TX_CSUM_GENERIC
-must be supported as well.</p></th>
-<th>VIRTCHNL2_CAP_SEG_GENERIC</th>
-<th></th>
-<th></th>
+<th>VIRTCHNL2_CAP_SEG_IPV4_TCP<br/>
+VIRTCHNL2_CAP_SEG_IPV4_UDP<br/>
+VIRTCHNL2_CAP_SEG_IPV4_SCTP<br/>
+VIRTCHNL2_CAP_SEG_IPV6_TCP<br/>
+VIRTCHNL2_CAP_SEG_IPV6_UDP<br/>
+VIRTCHNL2_CAP_SEG_IPV6_SCTP<br/>
+VIRTCHNL2_CAP_SEG_GENERIC<br/>
+VIRTCHNL2_CAP_SEG_TX_SINGLE_TUNNEL<br/>
+VIRTCHNL2_CAP_SEG_TX_DOUBLE_TUNNEL</th>
 </tr>
 </thead>
 <tbody>
@@ -8105,21 +8240,29 @@ must be supported as well.</p></th>
 <tr class="header">
 <th><strong>Capability</strong></th>
 <th><strong>SW parameter</strong></th>
-<th><strong>Possible values</strong></th>
+<th><strong>Parameter type</strong></th>
 <th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
 </tr>
 <tr class="odd">
 <th>Protocols used for RSS key (inner most headers).</th>
-<th>VIRTCHNL2_CAP_RSS_IPV4_TCP VIRTCHNL2_CAP_RSS_IPV4_UDP<br />
-VIRTCHNL2_CAP_RSS_IPV4_SCTP VIRTCHNL2_CAP_RSS_IPV4_OTHER
-VIRTCHNL2_CAP_RSS_IPV6_TCP VIRTCHNL2_CAP_RSS_IPV6_UDP
-VIRTCHNL2_CAP_RSS_IPV6_SCTP VIRTCHNL2_CAP_RSS_IPV6_OTHER
-VIRTCHNL2_CAP_RSS_IPV4_AH<br />
-VIRTCHNL2_CAP_RSS_IPV4_ESP VIRTCHNL2_CAP_RSS_IPV4_AH_ESP
-VIRTCHNL2_CAP_RSS_IPV6_AH VIRTCHNL2_CAP_RSS_IPV6_ESP
+<th>rss_caps in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th>VIRTCHNL2_CAP_RSS_IPV4_TCP<br/>
+VIRTCHNL2_CAP_RSS_IPV4_UDP<br/>
+VIRTCHNL2_CAP_RSS_IPV4_SCTP<br/>
+VIRTCHNL2_CAP_RSS_IPV4_OTHER<br/>
+VIRTCHNL2_CAP_RSS_IPV6_TCP<br/>
+VIRTCHNL2_CAP_RSS_IPV6_UDP<br/>
+VIRTCHNL2_CAP_RSS_IPV6_SCTP<br/>
+VIRTCHNL2_CAP_RSS_IPV6_OTHER<br/>
+VIRTCHNL2_CAP_RSS_IPV4_AH<br/>
+VIRTCHNL2_CAP_RSS_IPV4_ESP<br/>
+VIRTCHNL2_CAP_RSS_IPV4_AH_ESP<br/>
+VIRTCHNL2_CAP_RSS_IPV6_AH<br/>
+VIRTCHNL2_CAP_RSS_IPV6_ESP<br/>
 VIRTCHNL2_CAP_RSS_IPV6_AH_ESP</th>
-<th></th>
-<th></th>
 </tr>
 <tr class="header">
 <th>Max RSS queues</th>
@@ -8145,16 +8288,19 @@ VIRTCHNL2_CAP_RSS_IPV6_AH_ESP</th>
 <tr class="header">
 <th><strong>Capability</strong></th>
 <th><strong>SW parameter</strong></th>
-<th><strong>Possible values</strong></th>
+<th><strong>Parameter type</strong></th>
 <th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
 </tr>
 <tr class="odd">
 <th>Header boundary for header split.</th>
-<th>VIRTCHNL2_CAP_RX_HSPLIT_AT_L2 VIRTCHNL2_CAP_RX_HSPLIT_AT_L3
-VIRTCHNL2_CAP_RX_HSPLIT_AT_L4V4<br />
+<th>hsplit_caps in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th>VIRTCHNL2_CAP_RX_HSPLIT_AT_L2<br/>
+VIRTCHNL2_CAP_RX_HSPLIT_AT_L3<br/>
+VIRTCHNL2_CAP_RX_HSPLIT_AT_L4V4<br/>
 VIRTCHNL2_CAP_RX_HSPLIT_AT_L4V6</th>
-<th></th>
-<th></th>
 </tr>
 </thead>
 <tbody>
@@ -8174,31 +8320,60 @@ VIRTCHNL2_CAP_RX_HSPLIT_AT_L4V6</th>
 <tr class="header">
 <th><strong>Capability</strong></th>
 <th><strong>SW parameter</strong></th>
-<th><strong>Possible values</strong></th>
+<th><strong>Parameter type</strong></th>
 <th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
 </tr>
 <tr class="odd">
 <th>Header format supported for RSC(inner most headers).</th>
-<th>VIRTCHNL2_CAP_RSC_IPV4_TCP<br />
+<th>rss_caps in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th>VIRTCHNL2_CAP_RSC_IPV4_TCP<br/>
 VIRTCHNL2_CAP_RSC_IPV6_TCP</th>
-<th></th>
-<th></th>
 </tr>
 </thead>
 <tbody>
 </tbody>
 </table>
 
-### L2 Tag offload capabilities
+### Advanced capabilities
 
-| **Capability**                                  | **SW parameter**                                                   | **Possible values** | **Default value** |
-|-------------------------------------------------|--------------------------------------------------------------------|---------------------|-------------------|
-| Support L2Tag1 insertion on TX from descriptor. | ***<span class="mark">VIRTCHNL2_CAP_RX_DESC_L2TAG1_ADD</span>***   |                     | **1**             |
-| Support L2Tag2 insertion on TX from descriptor. | ***<span class="mark">VIRTCHNL2_CAP_RX_DESC_L2TAG2_ADD</span>***   |                     | **1**             |
-| Support L2Tag1 “strip to RX descriptor” on RX.  | ***<span class="mark">VIRTCHNL2_CAP_RX_DESC_L2TAG1_STRIP</span>*** |                     |                   |
-| Support L2Tag2 “strip to RX descriptor” on RX.  | ***<span class="mark">VIRTCHNL2_CAP_RX_DESC_L2TAG2_STRIP</span>*** |                     |                   |
-
-### 
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 61%" />
+<col style="width: 7%" />
+<col style="width: 8%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Capability</strong></th>
+<th><strong>SW parameter</strong></th>
+<th><strong>Parameter type</strong></th>
+<th><strong>Default value</strong></th>
+<th><strong>Possible values</strong></th>
+</tr>
+<tr class="odd">
+<th>Advanced Capabilities</th>
+<th>other_caps in struct virtchnl2_get_capabilities</th>
+<th>Negotiated</th>
+<th></th>
+<th>VIRTCHNL2_CAP_RDMA<br/>
+VIRTCHNL2_CAP_SRIOV<br/>
+VIRTCHNL2_CAP_MACFILTER<br/>
+VIRTCHNL2_CAP_SPLITQ_QSCHED<br/>
+VIRTCHNL2_CAP_PROMISC<br/>
+VIRTCHNL2_CAP_PTP<br/>
+VIRTCHNL2_CAP_EDT<br/>
+VIRTCHNL2_CAP_LOOPBACK<br/>
+VIRTCHNL2_CAP_FLOW_STEER<br/>
+VIRTCHNL2_CAP_OEM</th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
 
 ### 
 
@@ -8301,72 +8476,77 @@ enum virtchnl2_status {
  * VIRTCHNL version as 2.0 during VIRTCHNL2_OP_VERSION exchange.
  */
 enum virtchnl2_op {
-	VIRTCHNL2_OP_UNKNOWN			= 0,
-	VIRTCHNL2_OP_VERSION			= 1,
-	VIRTCHNL2_OP_GET_CAPS			= 500,
-	VIRTCHNL2_OP_CREATE_VPORT		= 501,
-	VIRTCHNL2_OP_DESTROY_VPORT		= 502,
-	VIRTCHNL2_OP_ENABLE_VPORT		= 503,
-	VIRTCHNL2_OP_DISABLE_VPORT		= 504,
-	VIRTCHNL2_OP_CONFIG_TX_QUEUES		= 505,
-	VIRTCHNL2_OP_CONFIG_RX_QUEUES		= 506,
-	VIRTCHNL2_OP_ENABLE_QUEUES		= 507,
-	VIRTCHNL2_OP_DISABLE_QUEUES		= 508,
-	VIRTCHNL2_OP_ADD_QUEUES			= 509,
-	VIRTCHNL2_OP_DEL_QUEUES			= 510,
-	VIRTCHNL2_OP_MAP_QUEUE_VECTOR		= 511,
-	VIRTCHNL2_OP_UNMAP_QUEUE_VECTOR		= 512,
-	VIRTCHNL2_OP_GET_RSS_KEY		= 513,
-	VIRTCHNL2_OP_SET_RSS_KEY		= 514,
-	VIRTCHNL2_OP_GET_RSS_LUT		= 515,
-	VIRTCHNL2_OP_SET_RSS_LUT		= 516,
-	VIRTCHNL2_OP_GET_RSS_HASH		= 517,
-	VIRTCHNL2_OP_SET_RSS_HASH		= 518,
-	VIRTCHNL2_OP_SET_SRIOV_VFS		= 519,
-	VIRTCHNL2_OP_ALLOC_VECTORS		= 520,
-	VIRTCHNL2_OP_DEALLOC_VECTORS		= 521,
-	VIRTCHNL2_OP_EVENT			= 522,
-	VIRTCHNL2_OP_GET_STATS			= 523,
-	VIRTCHNL2_OP_RESET_VF			= 524,
+	VIRTCHNL2_OP_UNKNOWN			                = 0,
+	VIRTCHNL2_OP_VERSION			                = 1,
+	VIRTCHNL2_OP_GET_CAPS			                = 500,
+	VIRTCHNL2_OP_CREATE_VPORT		                = 501,
+	VIRTCHNL2_OP_DESTROY_VPORT		                = 502,
+	VIRTCHNL2_OP_ENABLE_VPORT		                = 503,
+	VIRTCHNL2_OP_DISABLE_VPORT		                = 504,
+	VIRTCHNL2_OP_CONFIG_TX_QUEUES                   = 505,
+	VIRTCHNL2_OP_CONFIG_RX_QUEUES                   = 506,
+	VIRTCHNL2_OP_ENABLE_QUEUES		                = 507,
+	VIRTCHNL2_OP_DISABLE_QUEUES		                = 508,
+	VIRTCHNL2_OP_ADD_QUEUES			                = 509,
+	VIRTCHNL2_OP_DEL_QUEUES			                = 510,
+	VIRTCHNL2_OP_MAP_QUEUE_VECTOR		            = 511,
+	VIRTCHNL2_OP_UNMAP_QUEUE_VECTOR		            = 512,
+	VIRTCHNL2_OP_GET_RSS_KEY		                = 513,
+	VIRTCHNL2_OP_SET_RSS_KEY		                = 514,
+	VIRTCHNL2_OP_GET_RSS_LUT		                = 515,
+	VIRTCHNL2_OP_SET_RSS_LUT		                = 516,
+	VIRTCHNL2_OP_GET_RSS_HASH		                = 517,
+	VIRTCHNL2_OP_SET_RSS_HASH		                = 518,
+	VIRTCHNL2_OP_SET_SRIOV_VFS		                = 519,
+	VIRTCHNL2_OP_ALLOC_VECTORS		                = 520,
+	VIRTCHNL2_OP_DEALLOC_VECTORS		            = 521,
+	VIRTCHNL2_OP_EVENT			                    = 522,
+	VIRTCHNL2_OP_GET_STATS			                = 523,
+	VIRTCHNL2_OP_RESET_VF			                = 524,
 #ifdef VIRTCHNL2_EDT_SUPPORT
-	VIRTCHNL2_OP_GET_EDT_CAPS		= 525,
+	VIRTCHNL2_OP_GET_EDT_CAPS		                = 525,
 #else
 	/* Opcode 525 is reserved */
 #endif /* VIRTCHNL2_EDT_SUPPORT */
-	VIRTCHNL2_OP_GET_PTYPE_INFO		= 526,
+	VIRTCHNL2_OP_GET_PTYPE_INFO		                = 526,
 	/* Opcode 527 and 528 are reserved for VIRTCHNL2_OP_GET_PTYPE_ID and
 	 * VIRTCHNL2_OP_GET_PTYPE_INFO_RAW.
 	 */
 #ifdef VIRTCHNL2_IWARP
-	VIRTCHNL2_OP_RDMA			= 529,
+	VIRTCHNL2_OP_RDMA			                    = 529,
 #else
 /* Opcodes 530, and 531 are reserved */
 #endif /* VIRTCHNL2_IWARP */
 #ifdef NON_FLEX_ARRAY_ADI_SUPPORT
-	VIRTCHNL2_OP_NON_FLEX_CREATE_ADI	= 532,
-	VIRTCHNL2_OP_NON_FLEX_DESTROY_ADI	= 533,
+	VIRTCHNL2_OP_NON_FLEX_CREATE_ADI	            = 532,
+	VIRTCHNL2_OP_NON_FLEX_DESTROY_ADI	            = 533,
 #endif /* NON_FLEX_ARRAY_ADI_SUPPORT */
-	VIRTCHNL2_OP_LOOPBACK			= 534,
-	VIRTCHNL2_OP_ADD_MAC_ADDR		= 535,
-	VIRTCHNL2_OP_DEL_MAC_ADDR		= 536,
-	VIRTCHNL2_OP_CONFIG_PROMISCUOUS_MODE	= 537,
-	VIRTCHNL2_OP_ADD_QUEUE_GROUPS		= 538,
-	VIRTCHNL2_OP_DEL_QUEUE_GROUPS		= 539,
-	VIRTCHNL2_OP_GET_PORT_STATS		= 540,
+	VIRTCHNL2_OP_LOOPBACK			                = 534,
+	VIRTCHNL2_OP_ADD_MAC_ADDR		                = 535,
+	VIRTCHNL2_OP_DEL_MAC_ADDR		                = 536,
+	VIRTCHNL2_OP_CONFIG_PROMISCUOUS_MODE	        = 537,
+	VIRTCHNL2_OP_ADD_QUEUE_GROUPS		            = 538,
+	VIRTCHNL2_OP_DEL_QUEUE_GROUPS		            = 539,
+	VIRTCHNL2_OP_GET_PORT_STATS		                = 540,
 	/* TimeSync opcodes */
-	VIRTCHNL2_OP_PTP_GET_CAPS			= 541,
-	VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP		= 542,
-	VIRTCHNL2_OP_PTP_GET_DEV_CLK_TIME		= 543,
-	VIRTCHNL2_OP_PTP_GET_CROSS_TIME			= 544,
-	VIRTCHNL2_OP_PTP_SET_DEV_CLK_TIME		= 545,
-	VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_FINE		= 546,
-	VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_TIME		= 547,
-	VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP_CAPS	= 548,
-	VIRTCHNL2_OP_GET_LAN_MEMORY_REGIONS		= 549,
-
+	VIRTCHNL2_OP_PTP_GET_CAPS			            = 541,
+	VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP		    = 542,
+	VIRTCHNL2_OP_PTP_GET_DEV_CLK_TIME		        = 543,
+	VIRTCHNL2_OP_PTP_GET_CROSS_TIME			        = 544,
+	VIRTCHNL2_OP_PTP_SET_DEV_CLK_TIME		        = 545,
+	VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_FINE		        = 546,
+	VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_TIME		        = 547,
+	VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP_CAPS	    = 548,
+	VIRTCHNL2_OP_GET_LAN_MEMORY_REGIONS		        = 549,
+	VIRTCHNL2_OP_FLOW_RULE_CHECK			        = 550,
+	VIRTCHNL2_OP_FLOW_RULE_ADD			            = 551,
+	VIRTCHNL2_OP_FLOW_RULE_GET			            = 552,
+	VIRTCHNL2_OP_FLOW_RULE_DEL			            = 553,
+	VIRTCHNL2_OP_FLOW_RULE_IDS_GET			        = 554,
+	VIRTCHNL2_OP_FLOW_RULE_BY_IDS_DEL		        = 555,
 
 #ifdef NOT_FOR_UPSTREAM
-	VIRTCHNL2_OP_GET_OEM_CAPS		= 4999,
+	VIRTCHNL2_OP_GET_OEM_CAPS		                = 4999,
 #endif /* NOT_FOR_UPSTREAM */
 #ifndef EXTERNAL_RELEASE
 
@@ -8376,7 +8556,7 @@ enum virtchnl2_op {
 	 * structure names of a specific OEM must include OEM specific
 	 * identifier. For example the identifier in the below case is OEM_1.
 	 */
-	VIRTCHNL2_OP_OEM_1			= 5000,
+	VIRTCHNL2_OP_OEM_1			                    = 5000,
 #endif /* !EXTERNAL_RELEASE */
 };
 
@@ -8505,37 +8685,37 @@ enum virtchnl2_cap_other : u64 {
 #else
 enum virtchnl2_cap_other {
 #endif
-	VIRTCHNL2_CAP_RDMA			= BIT_ULL(0),
-	VIRTCHNL2_CAP_SRIOV			= BIT_ULL(1),
-	VIRTCHNL2_CAP_MACFILTER			= BIT_ULL(2),
-	VIRTCHNL2_CAP_FLOW_DIRECTOR		= BIT_ULL(3),
-	VIRTCHNL2_CAP_SPLITQ_QSCHED		= BIT_ULL(4),
-	VIRTCHNL2_CAP_CRC			= BIT_ULL(5),
+	VIRTCHNL2_CAP_RDMA			        = BIT_ULL(0),
+	VIRTCHNL2_CAP_SRIOV			        = BIT_ULL(1),
+	VIRTCHNL2_CAP_MACFILTER			    = BIT_ULL(2),
+	/* BIT 3 is reserved and can be used for future caps */
+	VIRTCHNL2_CAP_SPLITQ_QSCHED		    = BIT_ULL(4),
+	VIRTCHNL2_CAP_CRC			        = BIT_ULL(5),
 	/* Bit 6 is reserved */
-	VIRTCHNL2_CAP_WB_ON_ITR			= BIT_ULL(7),
-	VIRTCHNL2_CAP_PROMISC			= BIT_ULL(8),
-	VIRTCHNL2_CAP_LINK_SPEED		= BIT_ULL(9),
-	VIRTCHNL2_CAP_INLINE_IPSEC		= BIT_ULL(10),
+	VIRTCHNL2_CAP_WB_ON_ITR			    = BIT_ULL(7),
+	VIRTCHNL2_CAP_PROMISC			    = BIT_ULL(8),
+	VIRTCHNL2_CAP_LINK_SPEED		    = BIT_ULL(9),
+	VIRTCHNL2_CAP_INLINE_IPSEC		    = BIT_ULL(10),
 	VIRTCHNL2_CAP_LARGE_NUM_QUEUES		= BIT_ULL(11),
 	/* Require additional info */
-	VIRTCHNL2_CAP_VLAN			= BIT_ULL(12),
-	VIRTCHNL2_CAP_PTP			= BIT_ULL(13),
+	VIRTCHNL2_CAP_VLAN			        = BIT_ULL(12),
+	VIRTCHNL2_CAP_PTP			        = BIT_ULL(13),
 #ifdef VIRTCHNL2_EDT_SUPPORT
 	/* EDT: Earliest Departure Time capability used for Timing Wheel */
-	VIRTCHNL2_CAP_EDT			= BIT_ULL(14),
+	VIRTCHNL2_CAP_EDT			        = BIT_ULL(14),
 #endif /* VIRTCHNL2_EDT_SUPPORT */
-	VIRTCHNL2_CAP_ADV_RSS			= BIT_ULL(15),
-	VIRTCHNL2_CAP_FDIR			= BIT_ULL(16),
-	VIRTCHNL2_CAP_RX_FLEX_DESC		= BIT_ULL(17),
-	VIRTCHNL2_CAP_PTYPE			= BIT_ULL(18),
-	VIRTCHNL2_CAP_LOOPBACK			= BIT_ULL(19),
+	VIRTCHNL2_CAP_ADV_RSS			    = BIT_ULL(15),
+	/* BIT 16 is reserved and can be used for future caps */
+	VIRTCHNL2_CAP_RX_FLEX_DESC		    = BIT_ULL(17),
+	VIRTCHNL2_CAP_PTYPE			        = BIT_ULL(18),
+	VIRTCHNL2_CAP_LOOPBACK			    = BIT_ULL(19),
 	/* Enable miss completion types plus ability to detect a miss completion
 	 * if a reserved bit is set in a standard completion's tag.
 	 */
 	VIRTCHNL2_CAP_MISS_COMPL_TAG		= BIT_ULL(20),
-	VIRTCHNL2_CAP_FLOW_STEER		= BIT_ULL(21),
+	VIRTCHNL2_CAP_FLOW_STEER		    = BIT_ULL(21),
 	/* This must be the last capability */
-	VIRTCHNL2_CAP_OEM			= BIT_ULL(63),
+	VIRTCHNL2_CAP_OEM			        = BIT_ULL(63),
 };
 
 /**
@@ -10460,6 +10640,299 @@ struct virtchnl2_ptp_adj_dev_clk_time {
 
 VIRTCHNL2_CHECK_STRUCT_LEN(8, virtchnl2_ptp_adj_dev_clk_time);
 
+/**
+ * struct virtchnl2_mem_region - LAN memory region
+ * @start_offset: starting offset of the LAN memory region
+ * @size: size of the LAN memory region
+ */
+struct virtchnl2_mem_region {
+	__le64 start_offset;
+	__le64 size;
+};
+VIRTCHNL2_CHECK_STRUCT_LEN(16, virtchnl2_mem_region);
+
+/**
+ * struct virtchnl2_mem_region - List of LAN memory regions
+ * @num_memory_regions: number of memory regions
+ * @mem_reg: List with memory region info
+ *
+ * PF/VF sends this message to learn what LAN memory regions it should map.
+ */
+struct virtchnl2_get_lan_memory_regions {
+	__le16 num_memory_regions;
+	u8 pad[6];
+	struct virtchnl2_mem_region mem_reg[STRUCT_VAR_LEN];
+};
+VIRTCHNL2_CHECK_STRUCT_VAR_LEN(24, virtchnl2_get_lan_memory_regions, mem_reg);
+
+#define VIRTCHNL2_MAX_NUM_PROTO_HDRS	4
+#define VIRTCHNL2_MAX_SIZE_RAW_PACKET	256
+#define VIRTCHNL2_MAX_NUM_ACTIONS	8
+
+/**
+ * struct virtchnl2_proto_hdr
+ * @hdr_type : See enum virtchnl2_proto_hdr_type
+ * @pad  : padding
+ * @buffer_spec : binary buffer based on header type.
+ * @buffer_mask : mask applied on buffer_spec.
+ *
+ * Structure to hold protocol headers based on hdr_type
+ */
+struct virtchnl2_proto_hdr {
+	__le32 hdr_type;
+	u8 pad[4];
+	u8 buffer_spec[64];
+	u8 buffer_mask[64];
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(136, virtchnl2_proto_hdr);
+
+/**
+ * struct virtchnl2_proto_hdrs - struct to represent match criteria
+ * @tunnel_level : specify where protocol header(s) start from.
+ *                 must be 0 when sending a raw packet request.
+ *                 0 - from the outer layer
+ *                 1 - from the first inner layer
+ *                 2 - from the second inner layer
+ * @pad : Padding bytes
+ * @count : total number of protocol headers in proto_hdr. 0 for raw packet.
+ * @proto_hdr : Array of protocol headers
+ * @raw   : struct holding raw packet buffer when count is 0
+ */
+struct virtchnl2_proto_hdrs {
+	u8 tunnel_level;
+	u8 pad[3];
+	__le32 count;
+	union {
+		struct virtchnl2_proto_hdr
+			proto_hdr[VIRTCHNL2_MAX_NUM_PROTO_HDRS];
+		struct {
+			__le16 pkt_len;
+			u8 spec[VIRTCHNL2_MAX_SIZE_RAW_PACKET];
+			u8 mask[VIRTCHNL2_MAX_SIZE_RAW_PACKET];
+		} raw;
+	};
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(552, virtchnl2_proto_hdrs);
+
+/**
+ * struct virtchnl2_rule_action - struct representing single action for a flow
+ * @action_type : see enum virtchnl2_action_types
+ * @act_conf : union representing action depending on action_type.
+ * @q_id : queue id to redirect the packets to.
+ * @q_grp_id : queue group id to redirect the packets to.
+ * ctr_id : used for count action. If input value 0xFFFFFFFF control plane
+ *          assigns a new counter and returns the counter ID to the driver. If
+ *          input value is not 0xFFFFFFFF then it must be an existing counter
+ *          given to the driver for an earlier flow. Then this flow will share
+ *          the counter.
+ * mark_id : Value used to mark the packets with. Used for mark action.
+ * reserved: Reserved for future use.
+ */
+struct virtchnl2_rule_action {
+	__le32 action_type;
+	union {
+		__le32 q_id;
+		__le32 q_grp_id;
+		__le32 ctr_id;
+		__le32 mark_id;
+		u8 reserved[8];
+	} act_conf;
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(12, virtchnl2_rule_action);
+
+/**
+ * struct virtchnl2_rule_action_set - struct representing multiple actions
+ * @count : number of valid actions in the action set of a rule
+ * @actions : array of struct virtchnl2_rule_action
+ */
+struct virtchnl2_rule_action_set {
+	/* action count must be less than VIRTCHNL2_MAX_NUM_ACTIONS */
+	__le32 count;
+	struct virtchnl2_rule_action actions[VIRTCHNL2_MAX_NUM_ACTIONS];
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(100, virtchnl2_rule_action_set);
+
+/**
+ * struct virtchnl2_flow_rule
+ * @proto_hdrs : array of protocol header buffers representing match criteria
+ * @action_set : series of actions to be applied for given rule
+ * @priority : rule priority.
+ * @pad : padding for future extensions.
+ */
+struct virtchnl2_flow_rule {
+	struct virtchnl2_proto_hdrs proto_hdrs;
+	struct virtchnl2_rule_action_set action_set;
+	__le32 priority;
+	u8 pad[8];
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(664, virtchnl2_flow_rule);
+
+enum virtchnl2_flow_rule_status {
+	VIRTCHNL2_FLOW_RULE_SUCCESS			= 1,
+	VIRTCHNL2_FLOW_RULE_NORESOURCE			= 2,
+	VIRTCHNL2_FLOW_RULE_EXIST			= 3,
+	VIRTCHNL2_FLOW_RULE_TIMEOUT			= 4,
+	VIRTCHNL2_FLOW_RULE_FLOW_TYPE_NOT_SUPPORTED	= 5,
+	VIRTCHNL2_FLOW_RULE_MATCH_KEY_NOT_SUPPORTED	= 6,
+	VIRTCHNL2_FLOW_RULE_ACTION_NOT_SUPPORTED	= 7,
+	VIRTCHNL2_FLOW_RULE_ACTION_COMBINATION_INVALID	= 8,
+	VIRTCHNL2_FLOW_RULE_ACTION_DATA_INVALID		= 9,
+	VIRTCHNL2_FLOW_RULE_NOT_ADDED			= 10,
+};
+
+/**
+ * struct virtchnl2_flow_rule_info : structure representing single flow rule
+ * @rule_id : rule_id associated with the flow_rule.
+ * @rule_cfg : structure representing rule.
+ * @status : status of rule programming. See enum virtchnl2_flow_rule_status.
+ */
+
+struct virtchnl2_flow_rule_info {
+	__le32 rule_id;
+	struct virtchnl2_flow_rule rule_cfg;
+	__le32 status;
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(672, virtchnl2_flow_rule_info);
+
+/**
+ * struct virtchnl2_flow_rule_add_del
+ * @vport_id : vport id for which the rule is to be added or deleted.
+ * @count : Indicates number of rules to be added or deleted.
+ * @rule_info: Array of flow rules to be added or deleted.
+ *
+ * For VIRTCHNL2_OP_FLOW_RULE_ADD, rule_info contains list of rules to be
+ * added. If rule_id is 0xFFFFFFFF, then the rule is programmed and not cached.
+ *
+ * For VIRTCHNL2_OP_FLOW_RULE_DEL, there are two possibilities. The structure
+ * can contain either array of rule_ids or array of match keys to be deleted.
+ * When match keys are used the corresponding rule_ids must be 0xFFFFFFFF.
+ *
+ * status member of each rule indicates the result. Maximum of 6 rules can be
+ * added or deleted using this method. Driver has to retry in case of any
+ * failure of ADD or DEL opcode. CP doesn't retry in case of failure.
+ */
+struct virtchnl2_flow_rule_add_del {
+	__le32 vport_id;
+	__le32 count;
+	struct virtchnl2_flow_rule_info rule_info[];
+}
+
+VIRTCHNL2_CHECK_STRUCT_LEN(8, virtchnl2_flow_rule_add_del);
+
+/**
+ * struct virtchnl2_flow_rule_ids
+ * @vport_id : vport id on which rules need to be fetched/deleted by rule ids.
+ * @start_rule_id : Starting offset(rule_id) of flow_rule_id_bitmap.
+ * @count : Indicates size of flow_rule_id_bitmap entries array.
+ * @start_rule_id_to_retry : output param. Used for DEL only. Indicates the
+ *			     starting rule_id from which the opcode has to
+ *			     be retried.
+ * @status : output param used for DEL only.See enum virtchnl2_flow_rule_status
+ * @flow_rule_id_bitmap: bitmap indicating the locations of valid flow rules.
+ *			 output for GET and input for DEL.
+
+ * For VIRTCHNL2_OP_FLOW_RULE_IDS_GET, the returned bitmap indicates the
+ * rule_ids having flow rules on the device. Offset is the rule_id
+ * and a set bit implies flow rule is present in device for corresponding
+ * rule_id.
+ *
+ * For VIRTCHNL2_OP_FLOW_RULE_BY_IDS_DEL, bitmap indicates list of rules to be
+ * to be deleted from HW.
+ *
+ * For deleting all rules, start_rule_id must be 0 and count should be set to
+ * 0xFFFFFFFF for VIRTCHNL2_OP_FLOW_RULE_BY_IDS_DEL. This would delete all
+ * rules stored in cache and HW.
+ *
+ * Note: count is not number of bitmap entries. It is size of the bitmap array.
+ * say if count=2, bitmap contains 2 u8 entries. Maximum number of contiguous
+ * rules that can be deleted/fetched is 16. In this case assumption is rule_ids
+ * are contiguous.
+ */
+struct virtchnl2_flow_rule_ids {
+	__le32 vport_id;
+	__le32 start_rule_id;
+	__le32 count;
+	__le32 start_rule_id_to_retry;
+	__le32 status;
+	u8 flow_rule_id_bitmap[];
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(12, virtchnl2_flow_rule_ids);
+
+/**
+ * struct virtchnl2_flow_rule_get
+ * @vport_id : vport id. Input param.
+ * @start_rule_id : input param. Most likely a valid rule_id of rule that
+ *		    exists. If not CP will start populating from next
+ *		    valid rule. 0xFFFFFFFF implies match key based GET.
+ * @count : input/output param. Indicates number of rules to be fetched and
+ *	    in reply CP indicated number of flow rules actually returned.
+ *	    Up to 6 rules will be returned at a time (4k/676B)
+ * @rule_info: Array of flow rules (input and output) for match key based GET.
+ *	      list of flow rules (output) for rule_id based GET.
+ *
+ * This struct can be used in two ways with opcode VIRTCHNL2_OP_FLOW_RULE_GET
+ * (1) flow_rule_id based GET : By indicating * start_flow_rule_id and count.
+ * This returns list of corresponding rules in the given rule_id range. Up to
+ * 6 rules fit in 4KB page. (2) Match key based GET: Complete rules can be
+ * obtained by providing count and match keys in rule_cfg array. CP returns
+ * match key + action set for each provided match key in the array.
+ */
+struct virtchnl2_flow_rule_get {
+	__le32 vport_id;
+	__le32 start_rule_id;
+	__le32 count;
+	struct virtchnl2_flow_rule_info rule_info[];
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(12, virtchnl2_flow_rule_get);
+
+/**
+ * Flow rule programming modes supported for a given flow type and Input
+ * set. In some cases, other than sideband, the device may support
+ * inline programming mode as well, which can be used either with
+ * regular packets or with dummy packets that are sent on data queues. A
+ * driver can choose to use Inline programming method over sideband, if
+ * supported, for a much higher rate of programming those kinds of
+ * rules. Also, when using dummy packets (packets that are used for just
+ * programming the rule and then dropped), the driver can choose to
+ * allocate an extra data queue just for sending dummy packets for
+ * programming the rules in place of a sideband.
+ */
+enum virtchnl2_flow_rule_prog_mode {
+	VIRTCHNL2_RULE_PROG_MODE_SIDEBAND	= BIT(0),
+	VIRTCHNL2_RULE_PROG_MODE_INLINE		= BIT(1),
+};
+
+/**
+ * struct virtchnl2_flow_rule_check : structure representing data related to
+ *                                    VIRTCHNL2_OP_FLOW_RULE_CHECK
+ * @vport_id : vport id for which the rule is to be added.
+ * @rule_cfg : structure representing rule.
+ * @prog_modes : Indicates inline or sideband programming of rule.
+ * @pad : Padding bytes.
+ * @status : status of rule programming. See enum virtchnl2_flow_rule_status.
+ *
+ * For VIRTCHNL2_OP_FLOW_RULE_CHECK, PF/VF driver sends request to CP with
+ * vport_id and rule_cfg as input. VIRTCHNL2_FLOW_RULE_SUCCESS is returned
+ * if rule can be programmed. Driver uses status field in response and
+ * ignores other fields in the message.
+ */
+struct virtchnl2_flow_rule_check {
+	__le32 vport_id;
+	struct virtchnl2_flow_rule rule_cfg;
+	u8 prog_modes;
+	u8 pad[3];
+	__le32 status;
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(676, virtchnl2_flow_rule_check);
 static inline const char *virtchnl2_op_str(__le32 v_opcode)
 {
 #ifndef EXTERNAL_RELEASE
@@ -10565,6 +11038,18 @@ static inline const char *virtchnl2_op_str(__le32 v_opcode)
 		return "VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP_CAPS";
 	case VIRTCHNL2_OP_GET_LAN_MEMORY_REGIONS:
 		return "VIRTCHNL2_OP_GET_LAN_MEMORY_REGIONS";
+	case VIRTCHNL2_OP_FLOW_RULE_ADD:
+		return "VIRTCHNL2_OP_FLOW_RULE_ADD";
+	case VIRTCHNL2_OP_FLOW_RULE_DEL:
+		return "VIRTCHNL2_OP_FLOW_RULE_DEL";
+	case VIRTCHNL2_OP_FLOW_RULE_BY_IDS_DEL:
+		return "VIRTCHNL2_OP_FLOW_RULE_BY_IDS_DEL";
+	case VIRTCHNL2_OP_FLOW_RULE_GET:
+		return "VIRTCHNL2_OP_FLOW_RULE_GET";
+	case VIRTCHNL2_OP_FLOW_RULE_IDS_GET:
+		return "VIRTCHNL2_OP_FLOW_RULE_IDS_GET";
+	case VIRTCHNL2_OP_FLOW_RULE_CHECK:
+		return "VIRTCHNL2_OP_FLOW_RULE_CHECK";
 #ifdef NOT_FOR_UPSTREAM
 	case VIRTCHNL2_OP_GET_OEM_CAPS:
 		return "VIRTCHNL2_OP_GET_OEM_CAPS";
@@ -10925,6 +11410,24 @@ virtchnl2_vc_validate_vf_msg(struct virtchnl2_version_info *ver, u32 v_opcode,
 		if (!is_flex_array)
 			valid_len -= sizeof(struct virtchnl2_mem_region);
 
+		break;
+	case VIRTCHNL2_OP_FLOW_RULE_ADD:
+		valid_len = sizeof(struct virtchnl2_flow_rule_add_del);
+		break;
+	case VIRTCHNL2_OP_FLOW_RULE_DEL:
+		valid_len = sizeof(struct virtchnl2_flow_rule_add_del);
+		break;
+	case VIRTCHNL2_OP_FLOW_RULE_BY_IDS_DEL:
+		valid_len = sizeof(struct virtchnl2_flow_rule_ids);
+		break;
+	case VIRTCHNL2_OP_FLOW_RULE_GET:
+		valid_len = sizeof(struct virtchnl2_flow_rule_get);
+		break;
+	case VIRTCHNL2_OP_FLOW_RULE_IDS_GET:
+		valid_len = sizeof(struct virtchnl2_flow_rule_ids);
+		break;
+	case VIRTCHNL2_OP_FLOW_RULE_CHECK:
+		valid_len = sizeof(struct virtchnl2_flow_rule_check);
 		break;
 	/* These are always errors coming from the VF */
 	case VIRTCHNL2_OP_EVENT:
@@ -11764,6 +12267,305 @@ union virtchnl2_rx_desc {
 
 #endif /* _VIRTCHNL_LAN_DESC_H_ */
 ```
+
+# idpf_lan_txrx.h
+
+```C
+/* SPDX-License-Identifier: GPL-2.0-only */
+/* Copyright (C) 2023 Intel Corporation */
+
+#ifndef _IDPF_LAN_TXRX_H_
+#define _IDPF_LAN_TXRX_H_
+
+enum idpf_rss_hash {
+	IDPF_HASH_INVALID			= 0,
+	/* Values 1 - 28 are reserved for future use */
+	IDPF_HASH_NONF_UNICAST_IPV4_UDP		= 29,
+	IDPF_HASH_NONF_MULTICAST_IPV4_UDP,
+	IDPF_HASH_NONF_IPV4_UDP,
+	IDPF_HASH_NONF_IPV4_TCP_SYN_NO_ACK,
+	IDPF_HASH_NONF_IPV4_TCP,
+	IDPF_HASH_NONF_IPV4_SCTP,
+	IDPF_HASH_NONF_IPV4_OTHER,
+	IDPF_HASH_FRAG_IPV4,
+	/* Values 37-38 are reserved */
+	IDPF_HASH_NONF_UNICAST_IPV6_UDP		= 39,
+	IDPF_HASH_NONF_MULTICAST_IPV6_UDP,
+	IDPF_HASH_NONF_IPV6_UDP,
+	IDPF_HASH_NONF_IPV6_TCP_SYN_NO_ACK,
+	IDPF_HASH_NONF_IPV6_TCP,
+	IDPF_HASH_NONF_IPV6_SCTP,
+	IDPF_HASH_NONF_IPV6_OTHER,
+	IDPF_HASH_FRAG_IPV6,
+	IDPF_HASH_NONF_RSVD47,
+	IDPF_HASH_NONF_FCOE_OX,
+	IDPF_HASH_NONF_FCOE_RX,
+	IDPF_HASH_NONF_FCOE_OTHER,
+	/* Values 51-62 are reserved */
+	IDPF_HASH_L2_PAYLOAD			= 63,
+
+	IDPF_HASH_MAX
+};
+
+/* Supported RSS offloads */
+#define IDPF_DEFAULT_RSS_HASH			\
+	(BIT_ULL(IDPF_HASH_NONF_IPV4_UDP) |	\
+	BIT_ULL(IDPF_HASH_NONF_IPV4_SCTP) |	\
+	BIT_ULL(IDPF_HASH_NONF_IPV4_TCP) |	\
+	BIT_ULL(IDPF_HASH_NONF_IPV4_OTHER) |	\
+	BIT_ULL(IDPF_HASH_FRAG_IPV4) |		\
+	BIT_ULL(IDPF_HASH_NONF_IPV6_UDP) |	\
+	BIT_ULL(IDPF_HASH_NONF_IPV6_TCP) |	\
+	BIT_ULL(IDPF_HASH_NONF_IPV6_SCTP) |	\
+	BIT_ULL(IDPF_HASH_NONF_IPV6_OTHER) |	\
+	BIT_ULL(IDPF_HASH_FRAG_IPV6) |		\
+	BIT_ULL(IDPF_HASH_L2_PAYLOAD))
+
+#define IDPF_DEFAULT_RSS_HASH_EXPANDED (IDPF_DEFAULT_RSS_HASH | \
+	BIT_ULL(IDPF_HASH_NONF_IPV4_TCP_SYN_NO_ACK) |		\
+	BIT_ULL(IDPF_HASH_NONF_UNICAST_IPV4_UDP) |		\
+	BIT_ULL(IDPF_HASH_NONF_MULTICAST_IPV4_UDP) |		\
+	BIT_ULL(IDPF_HASH_NONF_IPV6_TCP_SYN_NO_ACK) |		\
+	BIT_ULL(IDPF_HASH_NONF_UNICAST_IPV6_UDP) |		\
+	BIT_ULL(IDPF_HASH_NONF_MULTICAST_IPV6_UDP))
+
+/* For idpf_splitq_base_tx_compl_desc */
+#define IDPF_TXD_COMPLQ_GEN_S		15
+#define IDPF_TXD_COMPLQ_GEN_M		BIT_ULL(IDPF_TXD_COMPLQ_GEN_S)
+#define IDPF_TXD_COMPLQ_COMPL_TYPE_S	11
+#define IDPF_TXD_COMPLQ_COMPL_TYPE_M	GENMASK_ULL(13, 11)
+#define IDPF_TXD_COMPLQ_QID_S		0
+#define IDPF_TXD_COMPLQ_QID_M		GENMASK_ULL(9, 0)
+
+/* For base mode TX descriptors */
+
+#define IDPF_TXD_CTX_QW0_TUNN_L4T_CS_S	23
+#define IDPF_TXD_CTX_QW0_TUNN_L4T_CS_M	BIT_ULL(IDPF_TXD_CTX_QW0_TUNN_L4T_CS_S)
+#define IDPF_TXD_CTX_QW0_TUNN_DECTTL_S	19
+#define IDPF_TXD_CTX_QW0_TUNN_DECTTL_M	\
+	(0xFULL << IDPF_TXD_CTX_QW0_TUNN_DECTTL_S)
+#define IDPF_TXD_CTX_QW0_TUNN_NATLEN_S	12
+#define IDPF_TXD_CTX_QW0_TUNN_NATLEN_M	\
+	(0X7FULL << IDPF_TXD_CTX_QW0_TUNN_NATLEN_S)
+#define IDPF_TXD_CTX_QW0_TUNN_EIP_NOINC_S	11
+#define IDPF_TXD_CTX_QW0_TUNN_EIP_NOINC_M    \
+	BIT_ULL(IDPF_TXD_CTX_QW0_TUNN_EIP_NOINC_S)
+#define IDPF_TXD_CTX_EIP_NOINC_IPID_CONST	\
+	IDPF_TXD_CTX_QW0_TUNN_EIP_NOINC_M
+#define IDPF_TXD_CTX_QW0_TUNN_NATT_S	        9
+#define IDPF_TXD_CTX_QW0_TUNN_NATT_M	(0x3ULL << IDPF_TXD_CTX_QW0_TUNN_NATT_S)
+#define IDPF_TXD_CTX_UDP_TUNNELING	BIT_ULL(IDPF_TXD_CTX_QW0_TUNN_NATT_S)
+#define IDPF_TXD_CTX_GRE_TUNNELING	(0x2ULL << IDPF_TXD_CTX_QW0_TUNN_NATT_S)
+#define IDPF_TXD_CTX_QW0_TUNN_EXT_IPLEN_S	2
+#define IDPF_TXD_CTX_QW0_TUNN_EXT_IPLEN_M	\
+	(0x3FULL << IDPF_TXD_CTX_QW0_TUNN_EXT_IPLEN_S)
+#define IDPF_TXD_CTX_QW0_TUNN_EXT_IP_S	0
+#define IDPF_TXD_CTX_QW0_TUNN_EXT_IP_M	\
+	(0x3ULL << IDPF_TXD_CTX_QW0_TUNN_EXT_IP_S)
+
+#define IDPF_TXD_CTX_QW1_MSS_S		50
+#define IDPF_TXD_CTX_QW1_MSS_M		GENMASK_ULL(63, 50)
+#define IDPF_TXD_CTX_QW1_TSO_LEN_S	30
+#define IDPF_TXD_CTX_QW1_TSO_LEN_M	GENMASK_ULL(47, 30)
+#define IDPF_TXD_CTX_QW1_CMD_S		4
+#define IDPF_TXD_CTX_QW1_CMD_M		GENMASK_ULL(15, 4)
+#define IDPF_TXD_CTX_QW1_DTYPE_S	0
+#define IDPF_TXD_CTX_QW1_DTYPE_M	GENMASK_ULL(3, 0)
+#define IDPF_TXD_QW1_L2TAG1_S		48
+#define IDPF_TXD_QW1_L2TAG1_M		GENMASK_ULL(63, 48)
+#define IDPF_TXD_QW1_TX_BUF_SZ_S	34
+#define IDPF_TXD_QW1_TX_BUF_SZ_M	GENMASK_ULL(47, 34)
+#define IDPF_TXD_QW1_OFFSET_S		16
+#define IDPF_TXD_QW1_OFFSET_M		GENMASK_ULL(33, 16)
+#define IDPF_TXD_QW1_CMD_S		4
+#define IDPF_TXD_QW1_CMD_M		GENMASK_ULL(15, 4)
+#define IDPF_TXD_QW1_DTYPE_S		0
+#define IDPF_TXD_QW1_DTYPE_M		GENMASK_ULL(3, 0)
+
+/* TX Completion Descriptor Completion Types */
+#define IDPF_TXD_COMPLT_ITR_FLUSH	0
+/* Descriptor completion type 1 is reserved */
+#define IDPF_TXD_COMPLT_RS		2
+/* Descriptor completion type 3 is reserved */
+#define IDPF_TXD_COMPLT_RE		4
+#define IDPF_TXD_COMPLT_SW_MARKER	5
+
+enum idpf_tx_desc_dtype_value {
+	IDPF_TX_DESC_DTYPE_DATA				= 0,
+	IDPF_TX_DESC_DTYPE_CTX				= 1,
+	/* DTYPE 2 is reserved
+	 * DTYPE 3 is free for future use
+	 * DTYPE 4 is reserved
+	 */
+	IDPF_TX_DESC_DTYPE_FLEX_TSO_CTX			= 5,
+	/* DTYPE 6 is reserved */
+	IDPF_TX_DESC_DTYPE_FLEX_L2TAG1_L2TAG2		= 7,
+	/* DTYPE 8, 9 are free for future use
+	 * DTYPE 10 is reserved
+	 * DTYPE 11 is free for future use
+	 */
+	IDPF_TX_DESC_DTYPE_FLEX_FLOW_SCHE		= 12,
+	/* DTYPE 13, 14 are free for future use */
+
+	/* DESC_DONE - HW has completed write-back of descriptor */
+	IDPF_TX_DESC_DTYPE_DESC_DONE			= 15,
+};
+
+enum idpf_tx_ctx_desc_cmd_bits {
+	IDPF_TX_CTX_DESC_TSO		= 0x01,
+	IDPF_TX_CTX_DESC_TSYN		= 0x02,
+	IDPF_TX_CTX_DESC_IL2TAG2	= 0x04,
+	IDPF_TX_CTX_DESC_RSVD		= 0x08,
+	IDPF_TX_CTX_DESC_SWTCH_NOTAG	= 0x00,
+	IDPF_TX_CTX_DESC_SWTCH_UPLINK	= 0x10,
+	IDPF_TX_CTX_DESC_SWTCH_LOCAL	= 0x20,
+	IDPF_TX_CTX_DESC_SWTCH_VSI	= 0x30,
+	IDPF_TX_CTX_DESC_FILT_AU_EN	= 0x40,
+	IDPF_TX_CTX_DESC_FILT_AU_EVICT	= 0x80,
+	IDPF_TX_CTX_DESC_RSVD1		= 0xF00
+};
+
+enum idpf_tx_desc_len_fields {
+	/* Note: These are predefined bit offsets */
+	IDPF_TX_DESC_LEN_MACLEN_S	= 0, /* 7 BITS */
+	IDPF_TX_DESC_LEN_IPLEN_S	= 7, /* 7 BITS */
+	IDPF_TX_DESC_LEN_L4_LEN_S	= 14 /* 4 BITS */
+};
+
+enum idpf_tx_base_desc_cmd_bits {
+	IDPF_TX_DESC_CMD_EOP			= BIT(0),
+	IDPF_TX_DESC_CMD_RS			= BIT(1),
+	 /* only on VFs else RSVD */
+	IDPF_TX_DESC_CMD_ICRC			= BIT(2),
+	IDPF_TX_DESC_CMD_IL2TAG1		= BIT(3),
+	IDPF_TX_DESC_CMD_RSVD1			= BIT(4),
+	IDPF_TX_DESC_CMD_IIPT_IPV6		= BIT(5),
+	IDPF_TX_DESC_CMD_IIPT_IPV4		= BIT(6),
+	IDPF_TX_DESC_CMD_IIPT_IPV4_CSUM		= GENMASK(6, 5),
+	IDPF_TX_DESC_CMD_RSVD2			= BIT(7),
+	IDPF_TX_DESC_CMD_L4T_EOFT_TCP		= BIT(8),
+	IDPF_TX_DESC_CMD_L4T_EOFT_SCTP		= BIT(9),
+	IDPF_TX_DESC_CMD_L4T_EOFT_UDP		= GENMASK(9, 8),
+	IDPF_TX_DESC_CMD_RSVD3			= BIT(10),
+	IDPF_TX_DESC_CMD_RSVD4			= BIT(11),
+};
+
+/* Transmit descriptors  */
+/* splitq tx buf, singleq tx buf and singleq compl desc */
+struct idpf_base_tx_desc {
+	__le64 buf_addr; /* Address of descriptor's data buf */
+	__le64 qw1; /* type_cmd_offset_bsz_l2tag1 */
+}; /* read used with buffer queues */
+
+struct idpf_splitq_tx_compl_desc {
+	/* qid=[10:0] comptype=[13:11] rsvd=[14] gen=[15] */
+	__le16 qid_comptype_gen;
+	union {
+		__le16 q_head; /* Queue head */
+		__le16 compl_tag; /* Completion tag */
+	} q_head_compl_tag;
+	u8 ts[3];
+	u8 rsvd; /* Reserved */
+}; /* writeback used with completion queues */
+
+/* Context descriptors */
+struct idpf_base_tx_ctx_desc {
+	struct {
+		__le32 tunneling_params;
+		__le16 l2tag2;
+		__le16 rsvd1;
+	} qw0;
+	__le64 qw1; /* type_cmd_tlen_mss/rt_hint */
+};
+
+/* Common cmd field defines for all desc except Flex Flow Scheduler (0x0C) */
+enum idpf_tx_flex_desc_cmd_bits {
+	IDPF_TX_FLEX_DESC_CMD_EOP			= BIT(0),
+	IDPF_TX_FLEX_DESC_CMD_RS			= BIT(1),
+	IDPF_TX_FLEX_DESC_CMD_RE			= BIT(2),
+	IDPF_TX_FLEX_DESC_CMD_IL2TAG1			= BIT(3),
+	IDPF_TX_FLEX_DESC_CMD_DUMMY			= BIT(4),
+	IDPF_TX_FLEX_DESC_CMD_CS_EN			= BIT(5),
+	IDPF_TX_FLEX_DESC_CMD_FILT_AU_EN		= BIT(6),
+	IDPF_TX_FLEX_DESC_CMD_FILT_AU_EVICT		= BIT(7),
+};
+
+struct idpf_flex_tx_desc {
+	__le64 buf_addr;	/* Packet buffer address */
+	struct {
+#define IDPF_FLEX_TXD_QW1_DTYPE_S	0
+#define IDPF_FLEX_TXD_QW1_DTYPE_M	GENMASK(4, 0)
+#define IDPF_FLEX_TXD_QW1_CMD_S		5
+#define IDPF_FLEX_TXD_QW1_CMD_M		GENMASK(15, 5)
+		__le16 cmd_dtype;
+		/* DTYPE=IDPF_TX_DESC_DTYPE_FLEX_L2TAG1_L2TAG2 (0x07) */
+		struct {
+			__le16 l2tag1;
+			__le16 l2tag2;
+		} l2tags;
+		__le16 buf_size;
+	} qw1;
+};
+
+struct idpf_flex_tx_sched_desc {
+	__le64 buf_addr;	/* Packet buffer address */
+
+	/* DTYPE = IDPF_TX_DESC_DTYPE_FLEX_FLOW_SCHE_16B (0x0C) */
+	struct {
+		u8 cmd_dtype;
+#define IDPF_TXD_FLEX_FLOW_DTYPE_M	GENMASK(4, 0)
+#define IDPF_TXD_FLEX_FLOW_CMD_EOP	BIT(5)
+#define IDPF_TXD_FLEX_FLOW_CMD_CS_EN	BIT(6)
+#define IDPF_TXD_FLEX_FLOW_CMD_RE	BIT(7)
+
+		/* [23:23] Horizon Overflow bit, [22:0] timestamp */
+		u8 ts[3];
+#define IDPF_TXD_FLOW_SCH_HORIZON_OVERFLOW_M	BIT(7)
+
+		__le16 compl_tag;
+		__le16 rxr_bufsize;
+#define IDPF_TXD_FLEX_FLOW_RXR		BIT(14)
+#define IDPF_TXD_FLEX_FLOW_BUFSIZE_M	GENMASK(13, 0)
+	} qw1;
+};
+
+/* Common cmd fields for all flex context descriptors
+ * Note: these defines already account for the 5 bit dtype in the cmd_dtype
+ * field
+ */
+enum idpf_tx_flex_ctx_desc_cmd_bits {
+	IDPF_TX_FLEX_CTX_DESC_CMD_TSO			= BIT(5),
+	IDPF_TX_FLEX_CTX_DESC_CMD_TSYN_EN		= BIT(6),
+	IDPF_TX_FLEX_CTX_DESC_CMD_L2TAG2		= BIT(7),
+	IDPF_TX_FLEX_CTX_DESC_CMD_SWTCH_UPLNK		= BIT(9),
+	IDPF_TX_FLEX_CTX_DESC_CMD_SWTCH_LOCAL		= BIT(10),
+	IDPF_TX_FLEX_CTX_DESC_CMD_SWTCH_TARGETVSI	= GENMASK(10, 9),
+};
+
+/* Standard flex descriptor TSO context quad word */
+struct idpf_flex_tx_tso_ctx_qw {
+	__le32 flex_tlen;
+#define IDPF_TXD_FLEX_CTX_TLEN_M	GENMASK(17, 0)
+#define IDPF_TXD_FLEX_TSO_CTX_FLEX_S	24
+	__le16 mss_rt;
+#define IDPF_TXD_FLEX_CTX_MSS_RT_M	GENMASK(13, 0)
+	u8 hdr_len;
+	u8 flex;
+};
+
+struct idpf_flex_tx_ctx_desc {
+	/* DTYPE = IDPF_TX_DESC_DTYPE_FLEX_TSO_CTX (0x05) */
+	struct {
+		struct idpf_flex_tx_tso_ctx_qw qw0;
+		struct {
+			__le16 cmd_dtype;
+			u8 flex[6];
+		} qw1;
+	} tso;
+};
+#endif /* _IDPF_LAN_TXRX_H_ */
+```
+
 # Appendix : Linux RDMA
 
 ## North Side Interfaces and flows for Linux: 
