@@ -8301,72 +8301,77 @@ enum virtchnl2_status {
  * VIRTCHNL version as 2.0 during VIRTCHNL2_OP_VERSION exchange.
  */
 enum virtchnl2_op {
-	VIRTCHNL2_OP_UNKNOWN			= 0,
-	VIRTCHNL2_OP_VERSION			= 1,
-	VIRTCHNL2_OP_GET_CAPS			= 500,
-	VIRTCHNL2_OP_CREATE_VPORT		= 501,
-	VIRTCHNL2_OP_DESTROY_VPORT		= 502,
-	VIRTCHNL2_OP_ENABLE_VPORT		= 503,
-	VIRTCHNL2_OP_DISABLE_VPORT		= 504,
-	VIRTCHNL2_OP_CONFIG_TX_QUEUES		= 505,
-	VIRTCHNL2_OP_CONFIG_RX_QUEUES		= 506,
-	VIRTCHNL2_OP_ENABLE_QUEUES		= 507,
-	VIRTCHNL2_OP_DISABLE_QUEUES		= 508,
-	VIRTCHNL2_OP_ADD_QUEUES			= 509,
-	VIRTCHNL2_OP_DEL_QUEUES			= 510,
-	VIRTCHNL2_OP_MAP_QUEUE_VECTOR		= 511,
-	VIRTCHNL2_OP_UNMAP_QUEUE_VECTOR		= 512,
-	VIRTCHNL2_OP_GET_RSS_KEY		= 513,
-	VIRTCHNL2_OP_SET_RSS_KEY		= 514,
-	VIRTCHNL2_OP_GET_RSS_LUT		= 515,
-	VIRTCHNL2_OP_SET_RSS_LUT		= 516,
-	VIRTCHNL2_OP_GET_RSS_HASH		= 517,
-	VIRTCHNL2_OP_SET_RSS_HASH		= 518,
-	VIRTCHNL2_OP_SET_SRIOV_VFS		= 519,
-	VIRTCHNL2_OP_ALLOC_VECTORS		= 520,
-	VIRTCHNL2_OP_DEALLOC_VECTORS		= 521,
-	VIRTCHNL2_OP_EVENT			= 522,
-	VIRTCHNL2_OP_GET_STATS			= 523,
-	VIRTCHNL2_OP_RESET_VF			= 524,
+	VIRTCHNL2_OP_UNKNOWN			                = 0,
+	VIRTCHNL2_OP_VERSION			                = 1,
+	VIRTCHNL2_OP_GET_CAPS			                = 500,
+	VIRTCHNL2_OP_CREATE_VPORT		                = 501,
+	VIRTCHNL2_OP_DESTROY_VPORT		                = 502,
+	VIRTCHNL2_OP_ENABLE_VPORT		                = 503,
+	VIRTCHNL2_OP_DISABLE_VPORT		                = 504,
+	VIRTCHNL2_OP_CONFIG_TX_QUEUES                   = 505,
+	VIRTCHNL2_OP_CONFIG_RX_QUEUES                   = 506,
+	VIRTCHNL2_OP_ENABLE_QUEUES		                = 507,
+	VIRTCHNL2_OP_DISABLE_QUEUES		                = 508,
+	VIRTCHNL2_OP_ADD_QUEUES			                = 509,
+	VIRTCHNL2_OP_DEL_QUEUES			                = 510,
+	VIRTCHNL2_OP_MAP_QUEUE_VECTOR		            = 511,
+	VIRTCHNL2_OP_UNMAP_QUEUE_VECTOR		            = 512,
+	VIRTCHNL2_OP_GET_RSS_KEY		                = 513,
+	VIRTCHNL2_OP_SET_RSS_KEY		                = 514,
+	VIRTCHNL2_OP_GET_RSS_LUT		                = 515,
+	VIRTCHNL2_OP_SET_RSS_LUT		                = 516,
+	VIRTCHNL2_OP_GET_RSS_HASH		                = 517,
+	VIRTCHNL2_OP_SET_RSS_HASH		                = 518,
+	VIRTCHNL2_OP_SET_SRIOV_VFS		                = 519,
+	VIRTCHNL2_OP_ALLOC_VECTORS		                = 520,
+	VIRTCHNL2_OP_DEALLOC_VECTORS		            = 521,
+	VIRTCHNL2_OP_EVENT			                    = 522,
+	VIRTCHNL2_OP_GET_STATS			                = 523,
+	VIRTCHNL2_OP_RESET_VF			                = 524,
 #ifdef VIRTCHNL2_EDT_SUPPORT
-	VIRTCHNL2_OP_GET_EDT_CAPS		= 525,
+	VIRTCHNL2_OP_GET_EDT_CAPS		                = 525,
 #else
 	/* Opcode 525 is reserved */
 #endif /* VIRTCHNL2_EDT_SUPPORT */
-	VIRTCHNL2_OP_GET_PTYPE_INFO		= 526,
+	VIRTCHNL2_OP_GET_PTYPE_INFO		                = 526,
 	/* Opcode 527 and 528 are reserved for VIRTCHNL2_OP_GET_PTYPE_ID and
 	 * VIRTCHNL2_OP_GET_PTYPE_INFO_RAW.
 	 */
 #ifdef VIRTCHNL2_IWARP
-	VIRTCHNL2_OP_RDMA			= 529,
+	VIRTCHNL2_OP_RDMA			                    = 529,
 #else
 /* Opcodes 530, and 531 are reserved */
 #endif /* VIRTCHNL2_IWARP */
 #ifdef NON_FLEX_ARRAY_ADI_SUPPORT
-	VIRTCHNL2_OP_NON_FLEX_CREATE_ADI	= 532,
-	VIRTCHNL2_OP_NON_FLEX_DESTROY_ADI	= 533,
+	VIRTCHNL2_OP_NON_FLEX_CREATE_ADI	            = 532,
+	VIRTCHNL2_OP_NON_FLEX_DESTROY_ADI	            = 533,
 #endif /* NON_FLEX_ARRAY_ADI_SUPPORT */
-	VIRTCHNL2_OP_LOOPBACK			= 534,
-	VIRTCHNL2_OP_ADD_MAC_ADDR		= 535,
-	VIRTCHNL2_OP_DEL_MAC_ADDR		= 536,
-	VIRTCHNL2_OP_CONFIG_PROMISCUOUS_MODE	= 537,
-	VIRTCHNL2_OP_ADD_QUEUE_GROUPS		= 538,
-	VIRTCHNL2_OP_DEL_QUEUE_GROUPS		= 539,
-	VIRTCHNL2_OP_GET_PORT_STATS		= 540,
+	VIRTCHNL2_OP_LOOPBACK			                = 534,
+	VIRTCHNL2_OP_ADD_MAC_ADDR		                = 535,
+	VIRTCHNL2_OP_DEL_MAC_ADDR		                = 536,
+	VIRTCHNL2_OP_CONFIG_PROMISCUOUS_MODE	        = 537,
+	VIRTCHNL2_OP_ADD_QUEUE_GROUPS		            = 538,
+	VIRTCHNL2_OP_DEL_QUEUE_GROUPS		            = 539,
+	VIRTCHNL2_OP_GET_PORT_STATS		                = 540,
 	/* TimeSync opcodes */
-	VIRTCHNL2_OP_PTP_GET_CAPS			= 541,
-	VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP		= 542,
-	VIRTCHNL2_OP_PTP_GET_DEV_CLK_TIME		= 543,
-	VIRTCHNL2_OP_PTP_GET_CROSS_TIME			= 544,
-	VIRTCHNL2_OP_PTP_SET_DEV_CLK_TIME		= 545,
-	VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_FINE		= 546,
-	VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_TIME		= 547,
-	VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP_CAPS	= 548,
-	VIRTCHNL2_OP_GET_LAN_MEMORY_REGIONS		= 549,
-
+	VIRTCHNL2_OP_PTP_GET_CAPS			            = 541,
+	VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP		    = 542,
+	VIRTCHNL2_OP_PTP_GET_DEV_CLK_TIME		        = 543,
+	VIRTCHNL2_OP_PTP_GET_CROSS_TIME			        = 544,
+	VIRTCHNL2_OP_PTP_SET_DEV_CLK_TIME		        = 545,
+	VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_FINE		        = 546,
+	VIRTCHNL2_OP_PTP_ADJ_DEV_CLK_TIME		        = 547,
+	VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP_CAPS	    = 548,
+	VIRTCHNL2_OP_GET_LAN_MEMORY_REGIONS		        = 549,
+	VIRTCHNL2_OP_FLOW_RULE_CHECK			        = 550,
+	VIRTCHNL2_OP_FLOW_RULE_ADD			            = 551,
+	VIRTCHNL2_OP_FLOW_RULE_GET			            = 552,
+	VIRTCHNL2_OP_FLOW_RULE_DEL			            = 553,
+	VIRTCHNL2_OP_FLOW_RULE_IDS_GET			        = 554,
+	VIRTCHNL2_OP_FLOW_RULE_BY_IDS_DEL		        = 555,
 
 #ifdef NOT_FOR_UPSTREAM
-	VIRTCHNL2_OP_GET_OEM_CAPS		= 4999,
+	VIRTCHNL2_OP_GET_OEM_CAPS		                = 4999,
 #endif /* NOT_FOR_UPSTREAM */
 #ifndef EXTERNAL_RELEASE
 
@@ -8376,7 +8381,7 @@ enum virtchnl2_op {
 	 * structure names of a specific OEM must include OEM specific
 	 * identifier. For example the identifier in the below case is OEM_1.
 	 */
-	VIRTCHNL2_OP_OEM_1			= 5000,
+	VIRTCHNL2_OP_OEM_1			                    = 5000,
 #endif /* !EXTERNAL_RELEASE */
 };
 
@@ -8505,37 +8510,37 @@ enum virtchnl2_cap_other : u64 {
 #else
 enum virtchnl2_cap_other {
 #endif
-	VIRTCHNL2_CAP_RDMA			= BIT_ULL(0),
-	VIRTCHNL2_CAP_SRIOV			= BIT_ULL(1),
-	VIRTCHNL2_CAP_MACFILTER			= BIT_ULL(2),
-	VIRTCHNL2_CAP_FLOW_DIRECTOR		= BIT_ULL(3),
-	VIRTCHNL2_CAP_SPLITQ_QSCHED		= BIT_ULL(4),
-	VIRTCHNL2_CAP_CRC			= BIT_ULL(5),
+	VIRTCHNL2_CAP_RDMA			        = BIT_ULL(0),
+	VIRTCHNL2_CAP_SRIOV			        = BIT_ULL(1),
+	VIRTCHNL2_CAP_MACFILTER			    = BIT_ULL(2),
+	/* BIT 3 is reserved and can be used for future caps */
+	VIRTCHNL2_CAP_SPLITQ_QSCHED		    = BIT_ULL(4),
+	VIRTCHNL2_CAP_CRC			        = BIT_ULL(5),
 	/* Bit 6 is reserved */
-	VIRTCHNL2_CAP_WB_ON_ITR			= BIT_ULL(7),
-	VIRTCHNL2_CAP_PROMISC			= BIT_ULL(8),
-	VIRTCHNL2_CAP_LINK_SPEED		= BIT_ULL(9),
-	VIRTCHNL2_CAP_INLINE_IPSEC		= BIT_ULL(10),
+	VIRTCHNL2_CAP_WB_ON_ITR			    = BIT_ULL(7),
+	VIRTCHNL2_CAP_PROMISC			    = BIT_ULL(8),
+	VIRTCHNL2_CAP_LINK_SPEED		    = BIT_ULL(9),
+	VIRTCHNL2_CAP_INLINE_IPSEC		    = BIT_ULL(10),
 	VIRTCHNL2_CAP_LARGE_NUM_QUEUES		= BIT_ULL(11),
 	/* Require additional info */
-	VIRTCHNL2_CAP_VLAN			= BIT_ULL(12),
-	VIRTCHNL2_CAP_PTP			= BIT_ULL(13),
+	VIRTCHNL2_CAP_VLAN			        = BIT_ULL(12),
+	VIRTCHNL2_CAP_PTP			        = BIT_ULL(13),
 #ifdef VIRTCHNL2_EDT_SUPPORT
 	/* EDT: Earliest Departure Time capability used for Timing Wheel */
-	VIRTCHNL2_CAP_EDT			= BIT_ULL(14),
+	VIRTCHNL2_CAP_EDT			        = BIT_ULL(14),
 #endif /* VIRTCHNL2_EDT_SUPPORT */
-	VIRTCHNL2_CAP_ADV_RSS			= BIT_ULL(15),
-	VIRTCHNL2_CAP_FDIR			= BIT_ULL(16),
-	VIRTCHNL2_CAP_RX_FLEX_DESC		= BIT_ULL(17),
-	VIRTCHNL2_CAP_PTYPE			= BIT_ULL(18),
-	VIRTCHNL2_CAP_LOOPBACK			= BIT_ULL(19),
+	VIRTCHNL2_CAP_ADV_RSS			    = BIT_ULL(15),
+	/* BIT 16 is reserved and can be used for future caps */
+	VIRTCHNL2_CAP_RX_FLEX_DESC		    = BIT_ULL(17),
+	VIRTCHNL2_CAP_PTYPE			        = BIT_ULL(18),
+	VIRTCHNL2_CAP_LOOPBACK			    = BIT_ULL(19),
 	/* Enable miss completion types plus ability to detect a miss completion
 	 * if a reserved bit is set in a standard completion's tag.
 	 */
 	VIRTCHNL2_CAP_MISS_COMPL_TAG		= BIT_ULL(20),
-	VIRTCHNL2_CAP_FLOW_STEER		= BIT_ULL(21),
+	VIRTCHNL2_CAP_FLOW_STEER		    = BIT_ULL(21),
 	/* This must be the last capability */
-	VIRTCHNL2_CAP_OEM			= BIT_ULL(63),
+	VIRTCHNL2_CAP_OEM			        = BIT_ULL(63),
 };
 
 /**
@@ -10460,6 +10465,299 @@ struct virtchnl2_ptp_adj_dev_clk_time {
 
 VIRTCHNL2_CHECK_STRUCT_LEN(8, virtchnl2_ptp_adj_dev_clk_time);
 
+/**
+ * struct virtchnl2_mem_region - LAN memory region
+ * @start_offset: starting offset of the LAN memory region
+ * @size: size of the LAN memory region
+ */
+struct virtchnl2_mem_region {
+	__le64 start_offset;
+	__le64 size;
+};
+VIRTCHNL2_CHECK_STRUCT_LEN(16, virtchnl2_mem_region);
+
+/**
+ * struct virtchnl2_mem_region - List of LAN memory regions
+ * @num_memory_regions: number of memory regions
+ * @mem_reg: List with memory region info
+ *
+ * PF/VF sends this message to learn what LAN memory regions it should map.
+ */
+struct virtchnl2_get_lan_memory_regions {
+	__le16 num_memory_regions;
+	u8 pad[6];
+	struct virtchnl2_mem_region mem_reg[STRUCT_VAR_LEN];
+};
+VIRTCHNL2_CHECK_STRUCT_VAR_LEN(24, virtchnl2_get_lan_memory_regions, mem_reg);
+
+#define VIRTCHNL2_MAX_NUM_PROTO_HDRS	4
+#define VIRTCHNL2_MAX_SIZE_RAW_PACKET	256
+#define VIRTCHNL2_MAX_NUM_ACTIONS	8
+
+/**
+ * struct virtchnl2_proto_hdr
+ * @hdr_type : See enum virtchnl2_proto_hdr_type
+ * @pad  : padding
+ * @buffer_spec : binary buffer based on header type.
+ * @buffer_mask : mask applied on buffer_spec.
+ *
+ * Structure to hold protocol headers based on hdr_type
+ */
+struct virtchnl2_proto_hdr {
+	__le32 hdr_type;
+	u8 pad[4];
+	u8 buffer_spec[64];
+	u8 buffer_mask[64];
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(136, virtchnl2_proto_hdr);
+
+/**
+ * struct virtchnl2_proto_hdrs - struct to represent match criteria
+ * @tunnel_level : specify where protocol header(s) start from.
+ *                 must be 0 when sending a raw packet request.
+ *                 0 - from the outer layer
+ *                 1 - from the first inner layer
+ *                 2 - from the second inner layer
+ * @pad : Padding bytes
+ * @count : total number of protocol headers in proto_hdr. 0 for raw packet.
+ * @proto_hdr : Array of protocol headers
+ * @raw   : struct holding raw packet buffer when count is 0
+ */
+struct virtchnl2_proto_hdrs {
+	u8 tunnel_level;
+	u8 pad[3];
+	__le32 count;
+	union {
+		struct virtchnl2_proto_hdr
+			proto_hdr[VIRTCHNL2_MAX_NUM_PROTO_HDRS];
+		struct {
+			__le16 pkt_len;
+			u8 spec[VIRTCHNL2_MAX_SIZE_RAW_PACKET];
+			u8 mask[VIRTCHNL2_MAX_SIZE_RAW_PACKET];
+		} raw;
+	};
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(552, virtchnl2_proto_hdrs);
+
+/**
+ * struct virtchnl2_rule_action - struct representing single action for a flow
+ * @action_type : see enum virtchnl2_action_types
+ * @act_conf : union representing action depending on action_type.
+ * @q_id : queue id to redirect the packets to.
+ * @q_grp_id : queue group id to redirect the packets to.
+ * ctr_id : used for count action. If input value 0xFFFFFFFF control plane
+ *          assigns a new counter and returns the counter ID to the driver. If
+ *          input value is not 0xFFFFFFFF then it must be an existing counter
+ *          given to the driver for an earlier flow. Then this flow will share
+ *          the counter.
+ * mark_id : Value used to mark the packets with. Used for mark action.
+ * reserved: Reserved for future use.
+ */
+struct virtchnl2_rule_action {
+	__le32 action_type;
+	union {
+		__le32 q_id;
+		__le32 q_grp_id;
+		__le32 ctr_id;
+		__le32 mark_id;
+		u8 reserved[8];
+	} act_conf;
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(12, virtchnl2_rule_action);
+
+/**
+ * struct virtchnl2_rule_action_set - struct representing multiple actions
+ * @count : number of valid actions in the action set of a rule
+ * @actions : array of struct virtchnl2_rule_action
+ */
+struct virtchnl2_rule_action_set {
+	/* action count must be less than VIRTCHNL2_MAX_NUM_ACTIONS */
+	__le32 count;
+	struct virtchnl2_rule_action actions[VIRTCHNL2_MAX_NUM_ACTIONS];
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(100, virtchnl2_rule_action_set);
+
+/**
+ * struct virtchnl2_flow_rule
+ * @proto_hdrs : array of protocol header buffers representing match criteria
+ * @action_set : series of actions to be applied for given rule
+ * @priority : rule priority.
+ * @pad : padding for future extensions.
+ */
+struct virtchnl2_flow_rule {
+	struct virtchnl2_proto_hdrs proto_hdrs;
+	struct virtchnl2_rule_action_set action_set;
+	__le32 priority;
+	u8 pad[8];
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(664, virtchnl2_flow_rule);
+
+enum virtchnl2_flow_rule_status {
+	VIRTCHNL2_FLOW_RULE_SUCCESS			= 1,
+	VIRTCHNL2_FLOW_RULE_NORESOURCE			= 2,
+	VIRTCHNL2_FLOW_RULE_EXIST			= 3,
+	VIRTCHNL2_FLOW_RULE_TIMEOUT			= 4,
+	VIRTCHNL2_FLOW_RULE_FLOW_TYPE_NOT_SUPPORTED	= 5,
+	VIRTCHNL2_FLOW_RULE_MATCH_KEY_NOT_SUPPORTED	= 6,
+	VIRTCHNL2_FLOW_RULE_ACTION_NOT_SUPPORTED	= 7,
+	VIRTCHNL2_FLOW_RULE_ACTION_COMBINATION_INVALID	= 8,
+	VIRTCHNL2_FLOW_RULE_ACTION_DATA_INVALID		= 9,
+	VIRTCHNL2_FLOW_RULE_NOT_ADDED			= 10,
+};
+
+/**
+ * struct virtchnl2_flow_rule_info : structure representing single flow rule
+ * @rule_id : rule_id associated with the flow_rule.
+ * @rule_cfg : structure representing rule.
+ * @status : status of rule programming. See enum virtchnl2_flow_rule_status.
+ */
+
+struct virtchnl2_flow_rule_info {
+	__le32 rule_id;
+	struct virtchnl2_flow_rule rule_cfg;
+	__le32 status;
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(672, virtchnl2_flow_rule_info);
+
+/**
+ * struct virtchnl2_flow_rule_add_del
+ * @vport_id : vport id for which the rule is to be added or deleted.
+ * @count : Indicates number of rules to be added or deleted.
+ * @rule_info: Array of flow rules to be added or deleted.
+ *
+ * For VIRTCHNL2_OP_FLOW_RULE_ADD, rule_info contains list of rules to be
+ * added. If rule_id is 0xFFFFFFFF, then the rule is programmed and not cached.
+ *
+ * For VIRTCHNL2_OP_FLOW_RULE_DEL, there are two possibilities. The structure
+ * can contain either array of rule_ids or array of match keys to be deleted.
+ * When match keys are used the corresponding rule_ids must be 0xFFFFFFFF.
+ *
+ * status member of each rule indicates the result. Maximum of 6 rules can be
+ * added or deleted using this method. Driver has to retry in case of any
+ * failure of ADD or DEL opcode. CP doesn't retry in case of failure.
+ */
+struct virtchnl2_flow_rule_add_del {
+	__le32 vport_id;
+	__le32 count;
+	struct virtchnl2_flow_rule_info rule_info[];
+}
+
+VIRTCHNL2_CHECK_STRUCT_LEN(8, virtchnl2_flow_rule_add_del);
+
+/**
+ * struct virtchnl2_flow_rule_ids
+ * @vport_id : vport id on which rules need to be fetched/deleted by rule ids.
+ * @start_rule_id : Starting offset(rule_id) of flow_rule_id_bitmap.
+ * @count : Indicates size of flow_rule_id_bitmap entries array.
+ * @start_rule_id_to_retry : output param. Used for DEL only. Indicates the
+ *			     starting rule_id from which the opcode has to
+ *			     be retried.
+ * @status : output param used for DEL only.See enum virtchnl2_flow_rule_status
+ * @flow_rule_id_bitmap: bitmap indicating the locations of valid flow rules.
+ *			 output for GET and input for DEL.
+
+ * For VIRTCHNL2_OP_FLOW_RULE_IDS_GET, the returned bitmap indicates the
+ * rule_ids having flow rules on the device. Offset is the rule_id
+ * and a set bit implies flow rule is present in device for corresponding
+ * rule_id.
+ *
+ * For VIRTCHNL2_OP_FLOW_RULE_BY_IDS_DEL, bitmap indicates list of rules to be
+ * to be deleted from HW.
+ *
+ * For deleting all rules, start_rule_id must be 0 and count should be set to
+ * 0xFFFFFFFF for VIRTCHNL2_OP_FLOW_RULE_BY_IDS_DEL. This would delete all
+ * rules stored in cache and HW.
+ *
+ * Note: count is not number of bitmap entries. It is size of the bitmap array.
+ * say if count=2, bitmap contains 2 u8 entries. Maximum number of contiguous
+ * rules that can be deleted/fetched is 16. In this case assumption is rule_ids
+ * are contiguous.
+ */
+struct virtchnl2_flow_rule_ids {
+	__le32 vport_id;
+	__le32 start_rule_id;
+	__le32 count;
+	__le32 start_rule_id_to_retry;
+	__le32 status;
+	u8 flow_rule_id_bitmap[];
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(12, virtchnl2_flow_rule_ids);
+
+/**
+ * struct virtchnl2_flow_rule_get
+ * @vport_id : vport id. Input param.
+ * @start_rule_id : input param. Most likely a valid rule_id of rule that
+ *		    exists. If not CP will start populating from next
+ *		    valid rule. 0xFFFFFFFF implies match key based GET.
+ * @count : input/output param. Indicates number of rules to be fetched and
+ *	    in reply CP indicated number of flow rules actually returned.
+ *	    Up to 6 rules will be returned at a time (4k/676B)
+ * @rule_info: Array of flow rules (input and output) for match key based GET.
+ *	      list of flow rules (output) for rule_id based GET.
+ *
+ * This struct can be used in two ways with opcode VIRTCHNL2_OP_FLOW_RULE_GET
+ * (1) flow_rule_id based GET : By indicating * start_flow_rule_id and count.
+ * This returns list of corresponding rules in the given rule_id range. Up to
+ * 6 rules fit in 4KB page. (2) Match key based GET: Complete rules can be
+ * obtained by providing count and match keys in rule_cfg array. CP returns
+ * match key + action set for each provided match key in the array.
+ */
+struct virtchnl2_flow_rule_get {
+	__le32 vport_id;
+	__le32 start_rule_id;
+	__le32 count;
+	struct virtchnl2_flow_rule_info rule_info[];
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(12, virtchnl2_flow_rule_get);
+
+/**
+ * Flow rule programming modes supported for a given flow type and Input
+ * set. In some cases, other than sideband, the device may support
+ * inline programming mode as well, which can be used either with
+ * regular packets or with dummy packets that are sent on data queues. A
+ * driver can choose to use Inline programming method over sideband, if
+ * supported, for a much higher rate of programming those kinds of
+ * rules. Also, when using dummy packets (packets that are used for just
+ * programming the rule and then dropped), the driver can choose to
+ * allocate an extra data queue just for sending dummy packets for
+ * programming the rules in place of a sideband.
+ */
+enum virtchnl2_flow_rule_prog_mode {
+	VIRTCHNL2_RULE_PROG_MODE_SIDEBAND	= BIT(0),
+	VIRTCHNL2_RULE_PROG_MODE_INLINE		= BIT(1),
+};
+
+/**
+ * struct virtchnl2_flow_rule_check : structure representing data related to
+ *                                    VIRTCHNL2_OP_FLOW_RULE_CHECK
+ * @vport_id : vport id for which the rule is to be added.
+ * @rule_cfg : structure representing rule.
+ * @prog_modes : Indicates inline or sideband programming of rule.
+ * @pad : Padding bytes.
+ * @status : status of rule programming. See enum virtchnl2_flow_rule_status.
+ *
+ * For VIRTCHNL2_OP_FLOW_RULE_CHECK, PF/VF driver sends request to CP with
+ * vport_id and rule_cfg as input. VIRTCHNL2_FLOW_RULE_SUCCESS is returned
+ * if rule can be programmed. Driver uses status field in response and
+ * ignores other fields in the message.
+ */
+struct virtchnl2_flow_rule_check {
+	__le32 vport_id;
+	struct virtchnl2_flow_rule rule_cfg;
+	u8 prog_modes;
+	u8 pad[3];
+	__le32 status;
+};
+
+VIRTCHNL2_CHECK_STRUCT_LEN(676, virtchnl2_flow_rule_check);
 static inline const char *virtchnl2_op_str(__le32 v_opcode)
 {
 #ifndef EXTERNAL_RELEASE
@@ -10565,6 +10863,18 @@ static inline const char *virtchnl2_op_str(__le32 v_opcode)
 		return "VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP_CAPS";
 	case VIRTCHNL2_OP_GET_LAN_MEMORY_REGIONS:
 		return "VIRTCHNL2_OP_GET_LAN_MEMORY_REGIONS";
+	case VIRTCHNL2_OP_FLOW_RULE_ADD:
+		return "VIRTCHNL2_OP_FLOW_RULE_ADD";
+	case VIRTCHNL2_OP_FLOW_RULE_DEL:
+		return "VIRTCHNL2_OP_FLOW_RULE_DEL";
+	case VIRTCHNL2_OP_FLOW_RULE_BY_IDS_DEL:
+		return "VIRTCHNL2_OP_FLOW_RULE_BY_IDS_DEL";
+	case VIRTCHNL2_OP_FLOW_RULE_GET:
+		return "VIRTCHNL2_OP_FLOW_RULE_GET";
+	case VIRTCHNL2_OP_FLOW_RULE_IDS_GET:
+		return "VIRTCHNL2_OP_FLOW_RULE_IDS_GET";
+	case VIRTCHNL2_OP_FLOW_RULE_CHECK:
+		return "VIRTCHNL2_OP_FLOW_RULE_CHECK";
 #ifdef NOT_FOR_UPSTREAM
 	case VIRTCHNL2_OP_GET_OEM_CAPS:
 		return "VIRTCHNL2_OP_GET_OEM_CAPS";
@@ -10925,6 +11235,24 @@ virtchnl2_vc_validate_vf_msg(struct virtchnl2_version_info *ver, u32 v_opcode,
 		if (!is_flex_array)
 			valid_len -= sizeof(struct virtchnl2_mem_region);
 
+		break;
+	case VIRTCHNL2_OP_FLOW_RULE_ADD:
+		valid_len = sizeof(struct virtchnl2_flow_rule_add_del);
+		break;
+	case VIRTCHNL2_OP_FLOW_RULE_DEL:
+		valid_len = sizeof(struct virtchnl2_flow_rule_add_del);
+		break;
+	case VIRTCHNL2_OP_FLOW_RULE_BY_IDS_DEL:
+		valid_len = sizeof(struct virtchnl2_flow_rule_ids);
+		break;
+	case VIRTCHNL2_OP_FLOW_RULE_GET:
+		valid_len = sizeof(struct virtchnl2_flow_rule_get);
+		break;
+	case VIRTCHNL2_OP_FLOW_RULE_IDS_GET:
+		valid_len = sizeof(struct virtchnl2_flow_rule_ids);
+		break;
+	case VIRTCHNL2_OP_FLOW_RULE_CHECK:
+		valid_len = sizeof(struct virtchnl2_flow_rule_check);
 		break;
 	/* These are always errors coming from the VF */
 	case VIRTCHNL2_OP_EVENT:
