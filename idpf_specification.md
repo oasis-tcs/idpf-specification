@@ -827,7 +827,7 @@ descriptors:
 3.  All other fields are valid only in the last descriptor of a packet.
 
 
-#### 16B RX descriptors write format Base
+#### 16B RX Descriptors Write Format Base
 
 This is the write descriptor used when the queue operates in “In order,
 single queue model.”  
@@ -7607,7 +7607,7 @@ enablement operation</th>
 </tbody>
 </table>
 
-### RX DMA capabilities
+### RX DMA Capabilities
 
 <table>
 <colgroup>
@@ -7642,7 +7642,7 @@ queue descriptor fetch stride cross).</p>
 </tr>
 <tr class="odd">
 <th>Number of RX buffer queues per RX queue</th>
-<th><em><mark>u8 num_buf_queues_per_rx</mark></em></th>
+<th><em>u8 num_buf_queues_per_rx</em></th>
 <th><p>1(large buffer queue),</p>
 <p>2(large and small buffer queues)</p></th>
 <th>2</th>
@@ -7665,15 +7665,15 @@ queue descriptor fetch stride cross).</p>
 </tbody>
 </table>
 
-### TX DMA capabilities
+### TX DMA Capabilities
 
-| **Capability**                       | **SW parameter**                       | **Possible values** | **Default value** |
+| **Capability**                       | **SW Parameter**                       | **Possible Values** | **Default Value** |
 |--------------------------------------|----------------------------------------|---------------------|-------------------|
 | In order, split, TX queue model.     | VIRTCHNL2_TXQ_MODEL_IN_ORDER_SPLIT     | 0,1                 | 1                 |
 | In order, single, TX queue model.    | VIRTCHNL2_TXQ_MODEL_IN_ORDER_SINGLE    | 0,1                 | 1                 |
 | Out of order, split, TX queue model. | VIRTCHNL2_TXQ_MODEL_OUT_OF_ORDER_SPLIT | 0,1                 | 1                 |
 
-### TX Descriptor capabilities
+### TX Descriptor Capabilities
 
 <table>
 <colgroup>
@@ -7691,13 +7691,13 @@ queue descriptor fetch stride cross).</p>
 </tr>
 <tr class="odd">
 <th>Max number of context descriptors per SSO packet</th>
-<th><em><mark>max_ctxt_desc_per_sso_packet</mark></em></th>
+<th><em>max_ctxt_desc_per_sso_packet</em></th>
 <th></th>
 <th>1</th>
 </tr>
 <tr class="header">
 <th>Max number of context descriptors per LSO segment</th>
-<th><em><mark>max_ctxt_desc_per_lso_segment</mark></em></th>
+<th><em>max_ctxt_desc_per_lso_segment</em></th>
 <th></th>
 <th>1</th>
 </tr>
@@ -7705,7 +7705,7 @@ queue descriptor fetch stride cross).</p>
 <th><p>Max data buffers per SSO/LSO packet.</p>
 <p>Note : When equals to 18 SW can avoid any calculations or check for
 linearization for Linux.</p></th>
-<th><em><mark>max_sg_bufs_per_tx_pkt</mark></em></th>
+<th><em>max_sg_bufs_per_tx_pkt</em></th>
 <th>1 to 18</th>
 <th>10</th>
 </tr>
