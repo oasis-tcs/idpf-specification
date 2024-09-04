@@ -11764,26 +11764,26 @@ union virtchnl2_rx_desc {
 
 #endif /* _VIRTCHNL_LAN_DESC_H_ */
 ```
-# Appendix : Linux RDMA
+# Appendix : Linux* RDMA
 
-## North Side Interfaces and flows for Linux: 
+## North Side Interfaces and Flows for Linux: 
 This section is not part of the main spec and it is just an example implementation detail referred from the Linux support for RDMA driver.
 
-###	RDMA Aux drivers naming
+###	RDMA Aux Drivers Naming
 IDPF driver will create a Core and multiple vPort level Aux device instances for RDMA. The Core RDMA device driver will setup the Control Queues with RDMA FW and any other Interface level initialization and the Vport Aux device instance can be one to one with the LAN vport netdev instances. Although, not every vport must have an associated RDMA vport auxiliary device instance as discussed earlier. 
 ( Note: The LAN driver itself is also undergoing changes to create LAN netdevs as Aux device instances on the aux bus. Although RDMA vPort Aux device instances are not dependent on the LAN Aux Devices per Netdev and so the work can be done independently)  
 RDMA Aux devices will be named carrying the following key words in the name: IDPF, VENDOR ID, RDMA, TYPE OF the DEVICE (CORE or VPort), A Global ID 
 This allows for a unique vendor specific RDMA driver to be loaded along with IDPF driver.
 The Global unique ID, is requested from the OS and helps identify individual Aux driver instances.
-###	RDMA Driver bring up and teardown flows
+###	RDMA Driver Bring Up and Teardown Flows
 Bringup:
 1.	IDPF driver creates the RDMA Core Aux Device  Instance when the IDPF driver is granted the RDMA capability from the Device Control. IDPF driver fills out the Core Dev Info struct to be used by the RDMA Core Aux driver as part of creating the Aux device.
 2.	After the RDMA Core Aux device instance is created, the OS calls the probe for the corresponding device to load the driver if a driver is registered for the device. 
-3.	IDPF driver waits for  RDMA Core driver to call back vport_dev_ctrl()that is part of the core_ops with the status UP into the IDPF driver to indicate that RDMA Core driver is now ready to support any RDMA vport device driver load requests upon creation of the RDMA vport Aux Device.
+3.	IDPF driver waits for  RDMA Core driver to call back vport_dev_ctrl()that is part of the core_ops with the status UP into the IDPF driver to indicate that RDMA Core driver is now ready to support any RDMA vport device driver load requests upon creation of the RDMA vPort Aux Device.
 4.	IDPF driver has to still wait to create the RDMA vport Aux Device for the corresponding LAN vport netdev to be created and the Device Control indicating in the LAN Vport flags that an RDMA instance needs to created for this vport. So both the step 3 and 4 needs to happen for a given RDMA vport Aux device to be created.
-  (Two options :
-  1.	When LAN Aux vport devices are enabled, there is a choice to inform the IDPF Core (LAN) driver about the netdev and vport Info even when an RDMA vport device does not have to be created.)
-  2.	Other option is to inform only when RDMA vport device has to be created.)
+   Two options :
+   *	When LAN Aux vport devices are enabled, there is a choice to inform the IDPF Core (LAN) driver about the netdev and vport Info even when an RDMA vport device does not have to be created.)
+   *	Other option is to inform only when RDMA vport device has to be created.
 5.	All communication from RDMA vport driver goes to the Core RDMA driver using the handle provided by the IDPF driver in the idc_rdma_vport_dev_info as the Core RDMA Aux Device pointer.
 6.	Core Driver calls the IDPF driver with core_ops for sending any Opaque messages down to the Device control using virtchannel RDMA ops or for setting up the Queue vector mapping or requesting reset etc. 
 7.	IDPF driver can send events to the Core or the vPort RDMA Aux device such as Reset pending, MTU change etc.
@@ -11792,7 +11792,7 @@ Teardown Flow:
 1. When the RDMA core driver is de-registered/unbound, it must first issue a vport_dev_ctrl() callback to the IDPF driver with status DOWN in its driver remove(). 
 2. This is a blocking call and the IDPF driver deletes all the RDMA Vport auxiliary devices in response to it. 
 3. The RDMA core driver can then continue to de-initialize the core device in its driver remove().
-###	Reset flows
+###	Reset Flows
 When the RDMA Core Aux driver requests reset, it becomes blocking as the IDPF driver goes and destroys all the Aux RDMA vPort devices and ultimately the Core RDMA Aux device is deleted as well. After that it follows through with a Function level reset for the whole PCIE interface. Upon reset Completion of the PCIE interface, the RDMA Core device and the Vport devices are created afresh as described in the RDMA init flow.
 When a Reset  pending event is detected on the IDPF driver side due to the Device Control plane indicating that the Interface is being reset, IDPF driver must first inform the Core RDMA Aux driver that a reset is pending through an event so that RDMA Core driver stops accessing  the HW and then IDPF driver goes to remove all RDMA vport Aux devices and then finally destroying the Core RDMA Aux device as well.  
 ###	RDMA Driver Generic Data structures and Inter Driver Communication Ops 
@@ -11902,7 +11902,7 @@ struct idc_rdma_vport_auxiliary_drv {
 # Appendix : OEM Capabilities
  Vendor can define their own OEM specific capabilities and develop a vendor driver that is IDPF compliant.
  
- - Capability and Data structures
+ * Capability and Data structures
 
   The response from <span class="mark">VIRTCHNL2_OP_GET_CAPS will have the</span> device_type, cp_major_version, and cp_minor_version to indicate what device and the CP SW the driver is talking to.
   
@@ -11919,17 +11919,17 @@ struct idc_rdma_vport_auxiliary_drv {
   #define VIRTCHNL2_CAP_OEM_PUSHQ BIT(0) /* Push Queue */
   ```
 
-- Configuration
+* Configuration
 
-- Driver Configuration and Runtime flow Examples of OEM Capability:
-  1.  Push Queue configuration
+* Driver Configuration and Runtime flow Examples of OEM Capability:
+  -  Push Queue configuration
   **Push_Queue:** Upon learning the port-to-port availability and the device type, the driver may request Control plane to add device specific sequence that may request additional resources that are necessary for the device to setup the Push queue functionality.
   
 
-- Device and Control Plane Behavioral Model
+* Device and Control Plane Behavioral Model
 
-- Examples of OEM Capability:
-  1.  port-to-port:
+* Examples of OEM Capability:
+  -  port-to-port:
   
     The VIRTCHNL2_OP_P2P_REQUEST_RESOURCES can be an opcode defined above opcode 5000. This opcode processing on the CP will reserve enough resources for the incoming packets to be spread across the port-to-port queues. When the port-to-port offload is no longer needed, the driver may free up the associated NIC resources using the VIRTCHNL2_OP_P2P_RELEASE_RESOURCES command.
   
