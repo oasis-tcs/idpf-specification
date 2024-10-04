@@ -7620,6 +7620,13 @@ Virtchannel data structures for device configuration, vport configuration, queue
 <th></th>
 <th></th>
 </tr>
+<tr class="odd">
+<th>Number of left bit shifts to convert timestamp in tx completion descriptor to nanoseconds.</th>
+<th>tx_cmpl_tstamp_ns_s in struct virtchnl2_get_capabilities</th>
+<th>Hard Coded Default/Negotiable</th>
+<th>9(512ns)</th>
+<th></th>
+</tr>	
 </thead>
 <tbody>
 </tbody>
