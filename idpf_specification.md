@@ -9,6 +9,8 @@
 |0.91|2/28/2023|Updated virtchnl2 descriptor structure. <br /> Updated TX descriptor IDs in virtchnl2_lan_desc.h|
 |0.91|4/19/2023|Name updated to match the Oasis TC|
 
+"Review branch for Bo's team"
+
 # Introduction
 
 This document describes the host Interface, device behavior, setup, and configuration flows of a PCIE network function device. This device can be presented to an OS as a PCIe Physical function (PF) device or a virtual function (VF) device from a NIC or as a completely emulated device in Host SW. An IDPF device is OS and Vendor Agnostic. 
