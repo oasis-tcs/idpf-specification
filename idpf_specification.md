@@ -2184,7 +2184,7 @@ which descriptor Device should report completion to SW.
 
 The following rules apply to RS bit setting :
 
-- SW must keep a minimal gap of IECM_TX_RS_MIN_GAP descriptors between 2 descriptors that have their RS flag set.
+- SW must keep a minimal gap of IDPF_TX_RS_MIN_GAP descriptors between 2 descriptors that have their RS flag set.
 - The RS flag can be set only on the last Transmit Data Descriptor of a packet (single sent packet or TSO).
 
 In addition to reporting completions for descriptors marked as such by
@@ -2276,7 +2276,7 @@ descriptor.
   
 The following rules apply to RE bit setting :
 
-* SW must keep a minimal gap of IECM_TX_SPLITQ_RE_MIN_GAP descriptors between 2 descriptors that have their RE flag set.
+* SW must keep a minimal gap of IDPF_TX_SPLITQ_RE_MIN_GAP descriptors between 2 descriptors that have their RE flag set.
 * The RE flag can be set only on the last Transmit Data Descriptor of a packet (single sent packet or TSO).
 
 Note that the descriptor fetch completion functionality
@@ -2529,7 +2529,7 @@ Descriptor.</p>
 <p>Notes:</p>
 <ul>
 <li><blockquote>
-<p>SW must keep a minimal gap of IECM_TX_RS_MIN_GAP descriptors between
+<p>SW must keep a minimal gap of IDPF_TX_RS_MIN_GAP descriptors between
 2 descriptors with RE bit set.</p>
 </blockquote></li>
 </ul>
@@ -2792,7 +2792,7 @@ request).</p>
 <p><strong>Notes:</strong></p>
 <p>The RE flag can be set only on the last Transmit Data Descriptor of a
 message (i.e., a packet or TSO).</p>
-<p>SW must keep a minimal gap of IECM_TX_SPLITQ_RE_MIN_GAP descriptors
+<p>SW must keep a minimal gap of IDPF_TX_SPLITQ_RE_MIN_GAP descriptors
 between 2 descriptors with RE bit set.</p></th>
 </tr>
 <tr class="header">
@@ -3097,7 +3097,7 @@ violation of those rules might be detected as malicious driver behavior.
   2.  CS_EN is set to 1.
 
   Note that for for case #a and #b the most inner header checksum is calculated using the offsets as parsed by the Device parser. The *max_tx_hdr_generic_offloads* negotiated capability defines the maximal header length supported by the device for non-generic checksum/CRC offloads.
-* The total size of a single packet in host memory must be at least **IECM_TX_MIN_LEN** bytes and up to the *max_mtu*. This rule applies for single packet send as well as for an LSO segment.
+* The total size of a single packet in host memory must be at least **IDPF_TX_MIN_PKT_LEN** bytes and up to the *max_mtu*. This rule applies for single packet send as well as for an LSO segment.
 * The header length of an LSO packet should be at least *min_lso_header_len*.
 * Optionally, Packet can carry a context descriptor(s). In that case, all context descriptors of a packet must be placed before the data descriptors of the packet. 
   1.  Up to *max_ctxt_desc_per_sso_packet* context descriptors are allowed to be added to one SSO (Single Send Offload) message and up to *max_ctxt_desc_per_lso_segment* context descriptors are allowed to be added to one LSO (Large Send Offload) message.
@@ -3117,8 +3117,8 @@ violation of those rules might be detected as malicious driver behavior.
   7.  In case if the same field is present in more than 1 descriptor, the value of the field should be the same in all descriptors.
   8.  Any context-type information in all descriptors associated with a particular TX message are set consistently.
   9.  The TSO message header should not span on more than *max_hdr_buf_per_lso* buffers. (Max *max_hdr_buf_per_lso* Descriptors).
-* SW must keep a minimal gap of IECM_TX_RS_MIN_GAP descriptors between 2 descriptors that have their RS flag set(when set to zero, SW does not keep a gap).
-* SW must keep a minimal gap of IECM_TX_SPLITQ_RE_MIN_GAP descriptors between 2 descriptors that have their RE flag set(when set to zero , SW does not keep a gap).
+* SW must keep a minimal gap of IDPF_TX_RS_MIN_GAP descriptors between 2 descriptors that have their RS flag set(when set to zero, SW does not keep a gap).
+* SW must keep a minimal gap of IDPF_TX_SPLITQ_RE_MIN_GAP descriptors between 2 descriptors that have their RE flag set(when set to zero , SW does not keep a gap).
 * RE flag can be set only for queues that operate in “out of order ,split queue” model.
 * When using TSO message SW must follow the Descriptors order:
   1.  Single TSO context descriptor with the TSO bit set. 
@@ -7894,7 +7894,7 @@ Note : When equals to 18 SW can avoid any calculations or check for linearizatio
 <tr class="header">
 <th>Min spacing between 2 RS marked descriptors<br/>
 Note : this capability is a queue level capability</th>
-<th></th>
+<th>IDPF_TX_RS_MIN_GAP</th>
 <th></th>
 <th>0</th>
 <th></th>
