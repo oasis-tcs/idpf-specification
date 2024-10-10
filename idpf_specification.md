@@ -6053,31 +6053,56 @@ regular completion came.</th>
 </tbody>
 </table>
 
-## EDT (Earliest Departure Time) (WIP)
+## EDT (Earliest Departure Time)
 
-This feature enables Packet pacing hints to the device.
+This feature enables offloading Packet pacing hints to the device.
 
 - Device Interface
 
-The Driver fills out the Data descriptor with a hint to transmit a
-packet at a time in future. Field named SW_EDT in the Data descriptor
-(0xc) is used to specify the earliest time the packet should be
-launched.
+The Driver fills out the transmit data descriptor with a hint to transmit a packet at a time in future. Field named SW_EDT in the Data descriptor(0xc) is used to specify the earliest time the packet should be launched.
 
-A value of 0 in SW_EDT means the SW is not asking to delay the packet,
-the device may still launch the packet at a future time when the
-scheduling conditions are met.
+A value of 0 in SW_EDT means the SW is not asking to delay the packet, the device may still launch the packet at a future time when the scheduling conditions are met.
+
+In order to support SW requested packet pacing, the driver should configure Split Transmit queues and use flow Scheduling Descriptor format. The completions will be delayed and arrive out of order when the packet is actually scheduled by the device.
 
 - Capability and Data structures
 
-In order to support SW requested packet pacing, the driver should
-configure Split Transmit queues and use flow Scheduling Descriptor
-format. The completions will be delayed and arrive out of order when the
-packet actually is scheduled by the device.
+```C
+enum virtchnl2_cap_other {
+...
+    VIRTCHNL2_CAP_EDT                       = BIT_ULL(14),
+...
+}
 
-- Driver Configuration and Runtime flow (WIP)
+enum virtchnl2_op {
+...
+ VIRTCHNL2_OP_GET_EDT_CAPS                       = 525,
+...
+}
 
-- Device and Control Plane Behavioral Model (WIP)
+/**
+ * struct virtchnl2_edt_caps - Get EDT granularity and time horizon
+ * @tstamp_granularity_ns: Timestamp granularity in nanoseconds
+ * @time_horizon_ns: Total time window in nanoseconds
+ *
+ * Associated with VIRTCHNL2_OP_GET_EDT_CAPS.
+ */
+struct virtchnl2_edt_caps {
+        __le64 tstamp_granularity_ns;
+        __le64 time_horizon_ns;
+};
+VIRTCHNL2_CHECK_STRUCT_LEN(16, virtchnl2_edt_caps);
+```
+
+- Driver Configuration and Runtime flow
+
+The driver negotiates EDT offload capability with the device by setting VIRTCHNL2_CAP_EDT bit as part of negotiating the device level capabilities with the control plane. The control plane will set this bit in its response if the driver is allowed to offload EDT. If EDT offload capability is granted, the driver learns EDT specific parameters by sending a EDT specific capability request VIRTCHNL2_OP_GET_EDT_CAPS. The control plane provides timestamp granularity and time horizon value in its response. Time horizon value indicates the maximum time the device can hold the packet before it can be transmitted. This value can be passed to the OS stack so that it can decide to offload packet pacing to HW if the earliest departure time of a paced packet is within the time horizon supported by the device.
+
+At runtime, OS stack can decide to offload packet pacing to the device and passes the packet along with earliest departure time to the driver.  The driver fills in the TX timestamp provided by the OS stack in the flow scheduling transmit descriptor to offload pacing of that packet to the device. The driver validates that the timestamp is within the time horizon supported by the device. The format of the timestamp is a 24-bit value. The 23 LSBs represent absolute time in units of timestamp granularity. The MSB of the timestamp is used to indicate SW Timestamp overflow, meaning that the SW Timestamp is beyond the device's Time Horizon.
+
+- Device and Control Plane Behavioral Model
+
+The device uses Timing Wheel Scheduler that selects packets for transmission based on a Timestamp. The Timestamp in the flow scheduling transmit descriptor represents the earliest departure time of the packet, and the Timing Wheel Scheduler ensures that packets are not transmitted until the Absolute Time is greater than or equal to the packet’s Timestamp. The device and the hosts are synchronized so that all share a common time.
 
 ##  
 
