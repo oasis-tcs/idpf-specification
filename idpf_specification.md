@@ -31,7 +31,7 @@ None of the standard interfaces available in the market provide for all these ne
 
 ## IDPF Network Function Device (“Device”)
 
-This is an abstraction of a physical or emulated Network PCIE Device as seen by the driver. It is modeled as having internally a **data path** component that carries out Packet handling and a **control plane** component that is used to configure and monitor the operations of the data-path.  An IDPF Device has the same interface whether used as a Physical Function (PF) PCIe device, a Virtual Function (VF) device (when virtualization is used) , or a composed PCIe entity. It is also Operating-system agnostic, and does not impose assumptions on the implementation of conformant Devices.
+This is an abstraction of a physical or emulated Network PCIE Device as seen by the driver. It is modeled as having internally a **data path** component that carries out Packet handling and a **control plane** component that is used to configure and monitor the operations of the data-path.  An IDPF Device has the same interface whether used as a Physical Function (PF) PCIe device, a Virtual Function (VF) device (when virtualization is used), or a composed PCIe entity. It is also Operating-system agnostic, and does not impose assumptions on the implementation of conformant Devices.
 
 ![Figure 1 : Network Function Device Overview](Diagrams/network_function_device_overview.svg)
 
@@ -932,7 +932,7 @@ the “Packet Types negotiation” section of this document.</p></th>
 </tr>
 <tr class="odd">
 <th>6,7</th>
-<th><strong><mark>Length</mark></strong></th>
+<th><strong>Length</strong></th>
 <th>26</th>
 <th><table>
 <colgroup>
@@ -998,15 +998,15 @@ The table below details the contents of the Status field.
 <th>DD</th>
 <th>1b</th>
 <th><p><strong>Descriptor Done</strong></p>
-<p><mark>Descriptor done indication flag</mark></p></th>
+<p>Descriptor done indication flag></p></th>
 </tr>
 <tr class="header">
 <th>1</th>
 <th>EOP</th>
 <th>1b</th>
 <th><p><strong>End of Packet</strong></p>
-<p><mark>End of packet flag is set to 1b indicating that this descriptor
-is the last one of a packets</mark></p></th>
+<p>End of packet flag is set to 1b indicating that this descriptor
+is the last one of a packets</p></th>
 </tr>
 <tr class="odd">
 <th>2</th>
@@ -1032,7 +1032,7 @@ field as invalid</p></th>
 </tr>
 <tr class="odd">
 <th>4</th>
-<th><mark>CRCP</mark></th>
+<th>CRCP</th>
 <th>1b</th>
 <th><p><strong>CRC Posted</strong></p>
 <p>CRCP indicates that the Ethernet CRC is posted with data to the host
@@ -1049,7 +1049,7 @@ re-calculated after the packet modification. Original/re-calculated CRC
 should be part of device capability negotiation.</p></th>
 </tr>
 <tr class="header">
-<th><mark>5:7</mark></th>
+<th>5:7</th>
 <th>Reserved</th>
 <th>RSV</th>
 <th><p><strong>Reserved</strong></p>
@@ -1325,7 +1325,7 @@ is cleared.</p></th>
 </tr>
 <tr class="header">
 <th>11:6</th>
-<th><mark>RSV</mark></th>
+<th>RSV</th>
 <th>3b</th>
 <th><strong>Reserved</strong></th>
 </tr>
@@ -1336,8 +1336,8 @@ is cleared.</p></th>
 
 #### Flex RX Descriptors Write Format
 
-The "Flex" write back formats are used in the “In order, single queue
-model" and for "Out of order, split queue model".
+The "Flex" write back formats are used in the “In order single queue
+model" and for "Out of order split queue model".
 
 #### 16B RX Descriptors Write Format Flex
 
@@ -2117,19 +2117,19 @@ single queue and split queue models are as follows :
 - Field FlexiMD.0/BufferID in the first 16B of the descriptor holds the FlexiMD.0 field when "single queue model" and holds BufferID when “split queue model”.
 
 Regardless of queue model, the following fields in the descriptor can
-hold different values depending on the negotiated queue context : 
+hold different values depending on the negotiated queue context: 
 
 1.  Depending on negotiated queue context, the "Hash [23:16]/MirrorID/FlexiFlags1" field in the first 16B of the descriptor holds the MirrorID field or the Hash [23:16] or the FlexiFlags1 field.
-2.  Depending on negotiated queue context ,the “FlexiMD.1/Raw_CS/L2TAG1/RSCPayLen” field in the first 16B of the descriptor holds one of the following values :
-    1.  Holds the RSCPayLen for an RSC packet or the Raw csum for a non RSC packet.
-    2.  Holds the L2TAG1 field in case the tag is present in the RX descriptor (L2TAG1P flag is set) or holds the FlexiMD.1 field.
-    3.  Always holds the FlexiMD.1 field.
+2.  Depending on negotiated queue context ,the “FlexiMD.1/Raw_CS/L2TAG1/RSCPayLen” field in the first 16B of the descriptor holds one of the following values:
+    *  Holds the RSCPayLen for an RSC packet or the Raw csum for a non RSC packet.
+    *  Holds the L2TAG1 field in case the tag is present in the RX descriptor (L2TAG1P flag is set) or holds the FlexiMD.1 field.
+    *  Always holds the FlexiMD.1 field.
   Field "L2TAG1/FlexMD4" in the second 16B of the descriptor holds L2TAG1 if L2TAG1P is set and the “FlexiMD.1/Raw_CS/L2TAG1/RSCPayLen” field in the first 16B of the descriptor does not hold L2TAG1, Else, field holds FlexMD4.
 3.  Depending on negotiated queue context the "Hash [15:0]/FlexMD2" field in the first 16B of the descriptor holds the Hash [15:0] field or the FlexMD2.
 
 Field "L2TAG2/FlexMD2" in the second 16B of the descriptor holds L2TAG2
 if L2TAG2P is set,  
-Else , field holds FlexMD2.
+Else, field holds FlexMD2.
 
 ## TX Queues
 
@@ -2147,12 +2147,12 @@ device, describes how SW posts new TX packets for Device transmission,
 and describes how Device indicates to SW that it can reuse the buffers
 and descriptors for new packets.
 
-The mode of operation is a per queue configuration. each queue can be
+The mode of operation is a per queue configuration. Each queue can be
 configured to work in a different model:
 
-- In order , single queue model. This option is supported only when VIRTCHNL2_TXQ_MODEL_IN_ORDER_SINGLE feature is negotiated.
-- In order , split queue model. This option is supported only when VIRTCHNL2_TXQ_MODEL_IN_ORDER_SPLIT feature is negotiated.
-- Out of order , split queue model. This option is supported only when VIRTCHNL2_TXQ_MODEL_OUT_OF_ORDER_SPLIT feature is negotiated.
+- In order single queue model. This option is supported only when VIRTCHNL2_TXQ_MODEL_IN_ORDER_SINGLE feature is negotiated.
+- In order split queue model. This option is supported only when VIRTCHNL2_TXQ_MODEL_IN_ORDER_SPLIT feature is negotiated.
+- Out of order split queue model. This option is supported only when VIRTCHNL2_TXQ_MODEL_OUT_OF_ORDER_SPLIT feature is negotiated.
 
 The device must negotiate at least
 VIRTCHNL2_TXQ_MODEL_OUT_OF_ORDER_SPLIT or
@@ -3186,14 +3186,14 @@ model).<br />
 <br />
 2: Regular Packet completion.</p>
 <p>TX packet completion for a packet that its RS bit set in the last TX
-descriptor ( when the queue operates in "on of order , split queue" or
-in “in order, single queue” models) or for every packet ( when the queue
-operates in "out of order , split queue" model ).<br />
+descriptor ( when the queue operates in "on of order split queue" or
+in “in order single queue” models) or for every packet ( when the queue
+operates in "out of order split queue" model ).<br />
 <br />
 3: reserved.</p>
 <p>4: Descriptor fetch completion for a packet that has its RE bit set
 in the last TX descriptor( relevant only when the queue operates in "out
-of order , split queue" model ).<br />
+of order split queue" model ).<br />
 <br />
 5: reserved.</p>
 <p>6: "Buffer de allocate" markers.</p>
@@ -3222,14 +3222,14 @@ processed.</th>
 <tr class="odd">
 <th>Completion tag/TX head</th>
 <th>31:16</th>
-<th><p>For completion types 0 and 2 , this field points to TX queue
+<th><p>For completion types 0 and 2, this field points to TX queue
 offset of the descriptor that follows the last descriptor of the
 completed packet.</p>
 <p>Note the SW reaction should be the same for completion types 0 and
 2</p>
-<p>For completion type 1 , this field describes the Completion tag of
+<p>For completion type 1, this field describes the Completion tag of
 the packet or LSO.</p>
-<p>For completion type 4 , this field points to the TX queue offset of
+<p>For completion type 4, this field points to the TX queue offset of
 the descriptor that follows the RE marked descriptor.</p>
 <p>For completion type 6 , this field points to the TX queue offset of
 the last descriptor that its buffer should be deallocated .</p></th>
@@ -3269,7 +3269,7 @@ SW.</p>
 is set to zero .</p></th>
 </tr>
 <tr class="odd">
-<th><mark>Reserved</mark></th>
+<th>Reserved</th>
 <th>63:56</th>
 <th></th>
 </tr>
@@ -3278,7 +3278,7 @@ is set to zero .</p></th>
 </tbody>
 </table>
 
-<span class="mark">Unlike the “in order , single queue model” which
+<span class="mark">Unlike the “in order single queue model” which
 implements a descriptor done (DD) bit, for “in order split queue” and
 “out of order split queue” models (in which completion queue is used)
 ,software identifies new completion queue entries by comparing the
@@ -10750,16 +10750,16 @@ VIRTCHNL2_CHECK_STRUCT_LEN(552, virtchnl2_proto_hdrs);
 
 /**
  * struct virtchnl2_rule_action - struct representing single action for a flow
- * @action_type : see enum virtchnl2_action_types
- * @act_conf : union representing action depending on action_type.
- * @q_id : queue id to redirect the packets to.
- * @q_grp_id : queue group id to redirect the packets to.
+ * @action_type: see enum virtchnl2_action_types
+ * @act_conf: union representing action depending on action_type.
+ * @q_id: queue id to redirect the packets to.
+ * @q_grp_id: queue group id to redirect the packets to.
  * ctr_id : used for count action. If input value 0xFFFFFFFF control plane
  *          assigns a new counter and returns the counter ID to the driver. If
  *          input value is not 0xFFFFFFFF then it must be an existing counter
  *          given to the driver for an earlier flow. Then this flow will share
  *          the counter.
- * mark_id : Value used to mark the packets with. Used for mark action.
+ * mark_id: Value used to mark the packets with. Used for mark action.
  * reserved: Reserved for future use.
  */
 struct virtchnl2_rule_action {
@@ -10790,10 +10790,10 @@ VIRTCHNL2_CHECK_STRUCT_LEN(100, virtchnl2_rule_action_set);
 
 /**
  * struct virtchnl2_flow_rule
- * @proto_hdrs : array of protocol header buffers representing match criteria
- * @action_set : series of actions to be applied for given rule
- * @priority : rule priority.
- * @pad : padding for future extensions.
+ * @proto_hdrs: array of protocol header buffers representing match criteria
+ * @action_set: series of actions to be applied for given rule
+ * @priority: rule priority.
+ * @pad: padding for future extensions.
  */
 struct virtchnl2_flow_rule {
 	struct virtchnl2_proto_hdrs proto_hdrs;
@@ -10818,10 +10818,10 @@ enum virtchnl2_flow_rule_status {
 };
 
 /**
- * struct virtchnl2_flow_rule_info : structure representing single flow rule
- * @rule_id : rule_id associated with the flow_rule.
- * @rule_cfg : structure representing rule.
- * @status : status of rule programming. See enum virtchnl2_flow_rule_status.
+ * struct virtchnl2_flow_rule_info: structure representing single flow rule
+ * @rule_id: rule_id associated with the flow_rule.
+ * @rule_cfg: structure representing rule.
+ * @status: status of rule programming. See enum virtchnl2_flow_rule_status.
  */
 
 struct virtchnl2_flow_rule_info {
