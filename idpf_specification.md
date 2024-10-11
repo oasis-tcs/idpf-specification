@@ -31,7 +31,7 @@ None of the standard interfaces available in the market provide for all these ne
 
 ## IDPF Network Function Device (“Device”)
 
-This is an abstraction of a physical or emulated Network PCIE Device as seen by the driver. It is modeled as having internally a **data path** component that carries out Packet handling and a **control plane** component that is used to configure and monitor the operations of the data-path.  An IDPF Device has the same interface whether used as a Physical Function (PF) PCIe device, a Virtual Function (VF) device (when virtualization is used) , or a composed PCIe entity. It is also Operating-system agnostic, and does not impose assumptions on the implementation of conformant Devices.
+This is an abstraction of a physical or emulated Network PCIE Device as seen by the driver. It is modeled as having internally a **data path** component that carries out Packet handling and a **control plane** component that is used to configure and monitor the operations of the data-path.  An IDPF Device has the same interface whether used as a Physical Function (PF) PCIe device, a Virtual Function (VF) device (when virtualization is used), or a composed PCIe entity. It is also Operating-system agnostic, and does not impose assumptions on the implementation of conformant Devices.
 
 ![Figure 1 : Network Function Device Overview](Diagrams/network_function_device_overview.svg)
 
@@ -76,7 +76,7 @@ Each virtchannel message and the capabilities for which they are used and the fl
 * **Control Plane Agent (CP)**:This is a SW/FW/HW entity that is part of the device which communicates with the SW driver over the Mailbox using virtchannel in order for the SW Driver to learn about the capabilities, configure the device etc.
 * **Tx & RX Process, and Completion Descriptors**: The general pattern of communication between host-side Software and the device is that Software posts request Descriptors in the Host-to-Device Descriptor queue, and the Device posts responses and events in the associated Device-to-Host Descriptor queue. In particular for the reception (RX) and transmission (TX) of packets the process is as follows (note this is the general case, some nuances and optimizations are described in the relevant section)
 
-  1. **RX Process Overview**: Software prepares empty buffers in Host Memory (perhaps in VM’s Memory space if a VM is involved) to hold the data and headers of the frames when they are received.
+  * **RX Process Overview**: Software prepares empty buffers in Host Memory (perhaps in VM’s Memory space if a VM is involved) to hold the data and headers of the frames when they are received.
 
       Software Builds “RX Request” descriptors that point to these buffers and places them on a Host-to-device Descriptor queue called “RX Queue”.
     
@@ -86,7 +86,7 @@ Each virtchannel message and the capabilities for which they are used and the fl
     
       This completion Descriptor is typically placed in the Device-to-Host descriptor queue paired with the RX descriptor used by the relevant vPort, this queue is called the “RX Completion Queue". 
 
-  2. **TX Process Overview**: Software prepares buffers in host memory containing the data to be transmitted.
+  * **TX Process Overview**: Software prepares buffers in host memory containing the data to be transmitted.
 
       Software builds “TX request Descriptors” that point to these buffers, and places them on a Host-to-Device descriptor queue called “TX Descriptor queue”.
     
@@ -487,17 +487,17 @@ Device supports an asymmetric ratio of Rx Buffer queues to RX queues.
 For the Split-queue model RX buffer Queues can be used in groups where
 each group contains two RX buffer Queues, one with small buffers and one
 with big buffers. In case the received packet length is smaller than the
-small buffer , the whole packet is copied to a small buffer and in case
+small buffer, the whole packet is copied to a small buffer and in case
 the packet is bigger then small buffer the whole packet is copied to 1
 or more big buffers.
 
 In case header split offload is activated and the packet header is
-copied to a separate, dedicated buffer , the decision if to copy the
+copied to a separate, dedicated buffer, the decision if to copy the
 packet payload to a small buffer or to 1 or more big buffers is based on
 the packet payload length and not on the whole packet length (header and
 payload).
 
-RX queue to RX buffer queue/s association details :
+RX queue to RX buffer queue/s association details:
 
 - Each Rx Queue is associated to a single Rx Buffer Queue Group and in the usual case, Rx Buffer Queue Group will feed a set of Rx queues.
 - Rx Buffer Queue Group consists of one or two Rx Buffer Queues. On a given Rx Buffer queue, every buffer (or buffer pair, when header split is supported for the queue) points to a buffer (or buffer pair) of the same size.
@@ -549,7 +549,7 @@ enough space in the RX completion queue for any future descriptor(s)
 posted by SW (via Rx Buffer Queue) without assuming anything about the
 SW processing rate of entries.
 
-Note: SW should guarantee that there is a minimum free space of 128B in
+_**Note:_** SW should guarantee that there is a minimum free space of 128B in
 each completion queue to avoid the theoretical case in which Device
 wraps around the ring and overrides an entry that has not been read yet
 by SW.
@@ -644,7 +644,7 @@ Device while a "write format" descriptor is a descriptor written by the
 Device and read by SW.
 
 For both queue models, the read descriptor holds the buffers pointers.  
-For the “out of order, split queue” model, the read descriptors also
+For the “out of order split queue” model, the read descriptors also
 hold the unique buffer identifier (sent as is to packet completion) used
 for SW to associate the submitted packet buffers with the completed
 packet buffers.
@@ -652,7 +652,7 @@ packet buffers.
 For both queue models, the write descriptor holds some packet metadata
 fields delivered from the Device processing pipeline and some DMA
 related fields.  
-For the “out of order, split queue” model, the write back descriptor
+For the “out of order split queue” model, the write back descriptor
 also holds the completion queue "generation" bit and the buffer queue
 identifier (buffer queue identifier within the buffer queue group).
 
@@ -672,15 +672,15 @@ different queue context configurations.
 <thead>
 <tr class="header">
 <th colspan="4"><strong>Configuration</strong></th>
-<th colspan="2"><strong>Descriptors supported</strong></th>
+<th colspan="2"><strong>Descriptors Supported</strong></th>
 </tr>
 <tr class="odd">
-<th><strong>Queue model</strong></th>
+<th><strong>Queue Model</strong></th>
 <th><strong>Hsplit Enable</strong></th>
 <th><strong>RD Desc Len</strong></th>
 <th><strong>WR Desc Len</strong></th>
-<th><strong>Read format</strong></th>
-<th><strong>Write format</strong></th>
+<th><strong>Read Format</strong></th>
+<th><strong>Write Format</strong></th>
 </tr>
 <tr class="header">
 <th rowspan="2">Single queue model</th>
@@ -742,7 +742,7 @@ flex.
 
 #### 16B RX Descriptors Read Format for Single Q Model
 
-This is the read descriptor used when a queue operates in “In order,
+This is the read descriptor used when a queue operates in “In order
 single queue model.”  
 Descriptor length is 16B.
 
@@ -758,7 +758,7 @@ Descriptor fields layout:
 
 #### 32B RX Descriptors Read Format for Single Q Model
 
-This is the read descriptor used when the queue operates in “In order,
+This is the read descriptor used when the queue operates in “In order
 single queue model.”  
 Descriptor length is 32B.
 
@@ -771,7 +771,7 @@ descriptors described above.
 
 #### 16B RX Descriptors Read Format for Split Q Model
 
-This is the read descriptor used when queue operates in “Out of order,
+This is the read descriptor used when queue operates in “Out of order
 split queue model.”  
 Descriptor length is 16B.
 
@@ -784,7 +784,7 @@ Descriptor fields layout:
 
 #### 32B RX Descriptors Read Format for Split Q Model
 
-This is the read descriptor used when queue operates in “Out of order,
+This is the read descriptor used when queue operates in “Out of order
 split queue model.”  
 Descriptor length is 32B.
 
@@ -829,7 +829,7 @@ descriptors:
 
 #### 16B RX Descriptors Write Format Base
 
-This is the write descriptor used when the queue operates in “In order,
+This is the write descriptor used when the queue operates in “In order
 single queue model.”  
 Descriptor length is 16B.
 
@@ -889,7 +889,7 @@ matched Mirror Rule ID that directed the packet to this queue</th>
 <th>L2TAG1</th>
 <th>16b</th>
 <th>Extracted L2 VLAN Tag from the receive packet.<br />
-This field is valid if the L2TAG1P flag in this descriptor is set ,else
+This field is valid if the L2TAG1P flag in this descriptor is set, else
 field is invalid and set to zero.</th>
 </tr>
 <tr class="odd">
@@ -932,7 +932,7 @@ the “Packet Types negotiation” section of this document.</p></th>
 </tr>
 <tr class="odd">
 <th>6,7</th>
-<th><strong><mark>Length</mark></strong></th>
+<th><strong>Length</strong></th>
 <th>26</th>
 <th><table>
 <colgroup>
@@ -998,15 +998,15 @@ The table below details the contents of the Status field.
 <th>DD</th>
 <th>1b</th>
 <th><p><strong>Descriptor Done</strong></p>
-<p><mark>Descriptor done indication flag</mark></p></th>
+<p>Descriptor done indication flag</p></th>
 </tr>
 <tr class="header">
 <th>1</th>
 <th>EOP</th>
 <th>1b</th>
 <th><p><strong>End of Packet</strong></p>
-<p><mark>End of packet flag is set to 1b indicating that this descriptor
-is the last one of a packets</mark></p></th>
+<p>End of packet flag is set to 1b indicating that this descriptor
+is the last one of a packets</p></th>
 </tr>
 <tr class="odd">
 <th>2</th>
@@ -1032,7 +1032,7 @@ field as invalid</p></th>
 </tr>
 <tr class="odd">
 <th>4</th>
-<th><mark>CRCP</mark></th>
+<th>CRCP</th>
 <th>1b</th>
 <th><p><strong>CRC Posted</strong></p>
 <p>CRCP indicates that the Ethernet CRC is posted with data to the host
@@ -1049,7 +1049,7 @@ re-calculated after the packet modification. Original/re-calculated CRC
 should be part of device capability negotiation.</p></th>
 </tr>
 <tr class="header">
-<th><mark>5:7</mark></th>
+<th>5:7</th>
 <th>Reserved</th>
 <th>RSV</th>
 <th><p><strong>Reserved</strong></p>
@@ -2110,17 +2110,17 @@ format.</p></th>
 #### Flex RX Descriptors Notes
 
 The differences in the usage of flex descriptor formats between the
-single queue and split queue models are as follows :
+single queue and split queue models are as follows:
 
 - The split status field is valid only for the "split queue model" (In the single queue model this field is irrelevant and ignored by software.
 - RSC is enabled only for "split queue model" queue and therefore RSC related fields (RSC flag and RscSegLen) are valid only for this queue model.
 - Field FlexiMD.0/BufferID in the first 16B of the descriptor holds the FlexiMD.0 field when "single queue model" and holds BufferID when “split queue model”.
 
 Regardless of queue model, the following fields in the descriptor can
-hold different values depending on the negotiated queue context : 
+hold different values depending on the negotiated queue context: 
 
 1.  Depending on negotiated queue context, the "Hash [23:16]/MirrorID/FlexiFlags1" field in the first 16B of the descriptor holds the MirrorID field or the Hash [23:16] or the FlexiFlags1 field.
-2.  Depending on negotiated queue context ,the “FlexiMD.1/Raw_CS/L2TAG1/RSCPayLen” field in the first 16B of the descriptor holds one of the following values :
+2.  Depending on negotiated queue context,the “FlexiMD.1/Raw_CS/L2TAG1/RSCPayLen” field in the first 16B of the descriptor holds one of the following values:
     1.  Holds the RSCPayLen for an RSC packet or the Raw csum for a non RSC packet.
     2.  Holds the L2TAG1 field in case the tag is present in the RX descriptor (L2TAG1P flag is set) or holds the FlexiMD.1 field.
     3.  Always holds the FlexiMD.1 field.
@@ -2129,7 +2129,7 @@ hold different values depending on the negotiated queue context :
 
 Field "L2TAG2/FlexMD2" in the second 16B of the descriptor holds L2TAG2
 if L2TAG2P is set,  
-Else , field holds FlexMD2.
+Else, field holds FlexMD2.
 
 ## TX Queues
 
@@ -2150,9 +2150,9 @@ and descriptors for new packets.
 The mode of operation is a per queue configuration. each queue can be
 configured to work in a different model:
 
-- In order , single queue model. This option is supported only when VIRTCHNL2_TXQ_MODEL_IN_ORDER_SINGLE feature is negotiated.
-- In order , split queue model. This option is supported only when VIRTCHNL2_TXQ_MODEL_IN_ORDER_SPLIT feature is negotiated.
-- Out of order , split queue model. This option is supported only when VIRTCHNL2_TXQ_MODEL_OUT_OF_ORDER_SPLIT feature is negotiated.
+- In order single queue model. This option is supported only when VIRTCHNL2_TXQ_MODEL_IN_ORDER_SINGLE feature is negotiated.
+- In order split queue model. This option is supported only when VIRTCHNL2_TXQ_MODEL_IN_ORDER_SPLIT feature is negotiated.
+- Out of order split queue model. This option is supported only when VIRTCHNL2_TXQ_MODEL_OUT_OF_ORDER_SPLIT feature is negotiated.
 
 The device must negotiate at least
 VIRTCHNL2_TXQ_MODEL_OUT_OF_ORDER_SPLIT or
