@@ -3173,38 +3173,8 @@ TX queue ID within the completion queue owner space.</th>
 <tr class="header">
 <th>Completion Type</th>
 <th>13:11</th>
-<th><p>Completion entry type (this is a coding of completion types).</p>
-<p>0:  Regular packet completion triggered by a periodic timer.<br />
-This is relevant only when the queue operates in the "in order , split
-queue" model).<br />
-From the SW point of view , this completion is similar to a “Regular
-Packet completion” (Completion entry type 2) and should be treated the
-same.</p>
-<p>1:  Regular packet completion for a packet sent on the exception path
-(Relevant only when the queue operates in "out of order ,split queue"
-model).<br />
-<br />
-2: Regular Packet completion.</p>
-<p>TX packet completion for a packet that its RS bit set in the last TX
-descriptor ( when the queue operates in "on of order , split queue" or
-in “in order, single queue” models) or for every packet ( when the queue
-operates in "out of order , split queue" model ).<br />
-<br />
-3: reserved.</p>
-<p>4: Descriptor fetch completion for a packet that has its RE bit set
-in the last TX descriptor( relevant only when the queue operates in "out
-of order , split queue" model ).<br />
-<br />
-5: reserved.</p>
-<p>6: "Buffer de allocate" markers.</p>
-<p>Used to indicate to the SW to deallocate all buffers that are located
-before the tail pointer as delivered in "TX Head/Completion tag"
-field.</p>
-<p>This completion is used in live migration flows to de-allocate TX
-packet buffers of the lost packets (the ones that were not transmitted
-on the source and are not transmitted on the destination).</p>
-<p>Note: packet is referred to as an SSO (Single Send offload) packet or
-as the last segment of an LSO packet.</p></th>
+<th><p>Completion entry type (this is a coding of completion types, see table below).</p>
+</th>
 </tr>
 <tr class="odd">
 <th>Reserved</th>
@@ -3233,6 +3203,65 @@ the packet or LSO.</p>
 the descriptor that follows the RE marked descriptor.</p>
 <p>For completion type 6 , this field points to the TX queue offset of
 the last descriptor that its buffer should be deallocated .</p></th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+Completion entry type (Refering to row 2)
+
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 8%" />
+<col style="width: 75%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Value</strong></th>
+<th><strong>Description</strong></th>
+<th><strong>Comment</strong></th>
+</tr>
+<tr class="odd">
+<th>0</th>
+<th>Regular packet completion triggered by a periodic timer.</th>
+<th>This is relevant only when the queue operates in the "in order split queue" model).
+From the SW point of view, this completion is similar to a “Regular Packet completion” (Completion entry type 2) and should be treated the same.</th>
+</tr>
+<tr class="header">
+<th>1</th>
+<th>Regular packet completion for a packet sent on the exception path.</th>
+<th><p>(Relevant only when the queue operates in "out of order split queue" model).</p>
+</tr>
+<tr class="odd">
+<th>2</th>
+<th>Regular Packet completion.</th>
+<th>TX packet completion for a packet that its RS bit set in the last TX descriptor ( when the queue operates in "on of order split queue" or in “in order single queue” models) or for every packet (when the queue operates in "out of order split queue" model ).</th>
+</tr>
+<tr class="header">
+<th>3</th>
+<th>Reserved.</th>
+<th> </th>
+</tr>
+<tr class="odd">
+<th>4</th>
+<th>Descriptor fetch completion for a packet that has its RE bit set in the last TX descriptor.</th>
+<th>Relevant only when the queue operates in "out of order split queue" model.</th>
+</tr>
+<tr class="header">
+<th>5</th>
+<th>Reserved.</th>
+<th> </th>
+</tr>
+<tr class="odd">
+<th>6</th>
+<th>"Buffer de allocate" markers.</th>
+<th></p>Used to indicate to the SW to deallocate all buffers that are located before the tail pointer as delivered in "TX Head/Completion tag" field.<br />
+<br />
+<p>This completion is used in live migration flows to de-allocate TX packet buffers of the lost packets (the ones that were not transmitted on the source and are not transmitted on the destination).<br />
+<br />
+<p>Note: packet is referred to as an SSO (Single Send offload) packet or as the last segment of an LSO packet.</p></th>
 </tr>
 </thead>
 <tbody>
