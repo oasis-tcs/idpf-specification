@@ -6310,248 +6310,66 @@ The Driver negotiates with the device the capability to add/delete/query flow st
 - Just failure response. This needs to be enabled by setting an appropriate virtchannel flag in the virtchannel Descriptor.
 - Fence. This needs to be enabled by setting an appropriate virtchannel flag in the virtchannel Descriptor. Upon setting this flag on a request from the driver to the CP, CP responds to this particular request after the CP checks all other previous requests from the Interface on this mailbox where completed successfully or otherwise.
 
-- Capability and Data structures
+### Flow Add/Remove Capability and Data structures
+
 ```C
-
 #define VIRTCHNL2_CAP_FLOW_RULES BIT(16)
-
 ```
+
 If the device supports flow steering it responds with the capability supported in get_capability flow.
 
-<table>
-<colgroup>
-<col style="width: 2%" />
-<col style="width: 2%" />
-<col style="width: 94%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th></th>
-<th></th>
-<th><p>The two opcodes supported as of now are for adding and removing
-flow rules.</p>
-<p>A driver can keep a log of the flow rules added, to respond to the
+The two opcodes supported as of now are for adding and removing
+flow rules.
+A driver can keep a log of the flow rules added, to respond to the
 user queries regarding what flow rules are programmed or in future a
 QUERY_RULE opcode may be added into the virtchannel to get actual flow
-rules dumnped out of the device.</p>
+rules dumnped out of the device.
 
-<p>#define VIRTCHNL2_OP_ADD_FLOW_RULE 538</p>
-<p>#define VIRTCHNL2_OP_DEL_FLOW_RULE 539</p></th>
-
-</tr>
-</thead>
-<tbody>
-</tbody>
-</table>
+```C
+#define VIRTCHNL2_OP_ADD_FLOW_RULE 538
+#define VIRTCHNL2_OP_DEL_FLOW_RULE 539
+```
 
 Actions Supported:
 
-<table>
-<colgroup>
-<col style="width: 2%" />
-<col style="width: 2%" />
-<col style="width: 94%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th></th>
-<th></th>
-<th>#define VIRTCHNL2_ACTION_DROP 1</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>#define VIRTCHNL2_ACTION_PASSTHRU 2</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>#define VIRTCHNL2_ACTION_QUEUE 3</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>#define VIRTCHNL2_ACTION_Q_GROUP 4</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>#define VIRTCHNL2_ACTION_MARK 5</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>#define VIRTCHNL2_ACTION_COUNT 6</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>struct virtchnl2_proto_hdr {</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>/* see VIRTCHNL2_PROTO_HDR_TYPE */</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>__le32 type;</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>__le32 pad;</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>/**</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>* binary buffer in network order for specific header type.</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>* For example, if type = VIRTCHNL2_PROTO_HDR_IPV4, a IPv4</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>* header is expected to be copied into the buffer.</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>*/</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>u8 buffer_spec[64];</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>/* binary buffer for bit-mask applied to specific header type
-*/</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>u8 buffer_mask[64];</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>};</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>struct virtchnl2_proto_hdrs {</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th><p>/* As a packet may contain multiple headers of same type, this
-defines the encap level */</p>
-<p>u8 tunnel_level;</p>
-<p>/* count = 0 is for a raw packet format, 1 &lt;= is when specifying
-the match key using proto_hdr format. */</p></th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>__le32 count;</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>union {</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>struct virtchnl2_proto_hdr</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>proto_hdr[VIRTCHNL2_MAX_NUM_PROTO_HDRS];</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>struct {</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>__le16 pkt_len;</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>u8 spec[VIRTCHNL2_MAX_SIZE_RAW_PACKET];</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>u8 mask[VIRTCHNL2_MAX_SIZE_RAW_PACKET];</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>} raw;</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>};</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>};</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th></th>
-</tr>
-</thead>
-<tbody>
-</tbody>
-</table>
+```C
+#define VIRTCHNL2_ACTION_DROP 1
+#define VIRTCHNL2_ACTION_PASSTHRU 2
+#define VIRTCHNL2_ACTION_QUEUE 3
+#define VIRTCHNL2_ACTION_Q_GROUP 4
+#define VIRTCHNL2_ACTION_MARK 5
+#define VIRTCHNL2_ACTION_COUNT 6
+struct virtchnl2_proto_hdr {
+/* see VIRTCHNL2_PROTO_HDR_TYPE */
+__le32 type;
+__le32 pad;
+/**
+* binary buffer in network order for specific header type.
+* For example, if type = VIRTCHNL2_PROTO_HDR_IPV4, a IPv4
+* header is expected to be copied into the buffer.
+*/
+u8 buffer_spec[64];
+/* binary buffer for bit-mask applied to specific header type
+*/
+u8 buffer_mask[64];
+}
+struct virtchnl2_proto_hdrs {
+/* As a packet may contain multiple headers of same type, this
+defines the encap level */
+u8 tunnel_level;
+/* count = 0 is for a raw packet format, 1 &lt;= is when specifying
+the match key using proto_hdr format. */
+__le32 count;
+union {
+struct virtchnl2_proto_hdr proto_hdr[VIRTCHNL2_MAX_NUM_PROTO_HDRS];
+struct {
+__le16 pkt_len;
+u8 spec[VIRTCHNL2_MAX_SIZE_RAW_PACKET];
+u8 mask[VIRTCHNL2_MAX_SIZE_RAW_PACKET];
+} raw;
+}
+}
+```
 
 ### Configuration
 
