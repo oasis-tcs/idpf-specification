@@ -8466,7 +8466,7 @@ VIRTCHNL2_CAP_OEM</th>
 
 ### 
 
-# Virtchannel Header File/s (TBD after 1.0)
+# Virtchannel Header File/s
 
 # virtchannel2.h
 
