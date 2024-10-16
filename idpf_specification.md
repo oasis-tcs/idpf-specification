@@ -6165,11 +6165,141 @@ The device uses Timing Wheel Scheduler that selects packets for transmission bas
 
 ##  
 
-## Flow Steering (WIP)
+## Flow Steering
 
-This feature enables flow steering to a queue or queue group or form dropping certain flows using exact match or wild card match filters on the device. It can be used for implementing tenant ACLs as well as long as the CP supports this feature for a given Driver interface.
+Flow steering capability is an advanced capability provided by a device using stateful tables in the device to achieve better load balancing or flow pinning of flows to the CPU cores by classifying the flows into specific DMA queues. It’s a feature that is used in place of RSS or in addition to RSS as an advancement. The default behavior assumed by the device when both are enabled is to fall back to RSS for queue selection when flow steering ule does not exist for a given flow. The flow rule may not exist because there is no more space in the device to add a flow rule for the flow or the driver does not chose to add a flow steering rule for such a flow.
+The Device level flow steering capability request is made by IDPF driver through get_capabilities virtchannel command by setting VIRTCHNL2_CAP_FlOW_STEER bit in the capability bitmap. If the device supports flow steering capability for this interface the response from Device Control still has the VIRTCHNL2_CAP_FLOW_STEER bit set in the capability bitmap.
 
-- Device Interface
+### Flow Steering Sub Capabilities
+The feature can be enabled as three different sub capabilities.
+1.	Inline flow steering support with implicit Rx queue
+2.	Inline flow steering support with explicit Rx queue 
+3.	Sideband Flow steering support using virtchannel messages
+
+Each vPort will learn using vPort flags what capabilities it has with respect to flow steering as this can be controlled at a vport level.  
+Following VPORT flags get set by the Device Control as a response to create vport based on the 
+configured policy for the vPorts on the Device Control side.
+
+```C
+enum virtchnl2_vport_flags {
+	…
+	VIRTCHNL2_VPORT_INLINE_FLOW_STEER	= BIT(1),
+	VIRTCHNL2_VPORT_INLINE_FLOW_STEER_RXQ	= BIT(2),
+	VIRTCHNL2_VPORT_SIDEBAND_FLOW_STEER	= BIT(3),
+             …
+}
+```
+
+Device Control could allow all 3 capabilities or any combination for a Vport. Apart from this a few new fields are defined in the create_vPort message padding area to provide some information for the IDPF driver regarding Flow director  support.
+
+```C
+struct virtchnl2_create_vport {
+	…
+__le64 inline_flow_types;
+__le64 sideband_flow_types;
+__le32 sideband_flow_actions;
+__le32 flow_steer_max_rules;
+…
+}
+```
+
+Flow Steer Max Rules: 
+Flow_steer_max_rules allowed by the device per vport are across all flow types and all flow steering capabilities for that vport.
+
+Flow Types:
+
+```C
+enum virtchnl2_flow_types {
+ 	VIRTCHNL2_FLOW_IPV4_UDP		= BIT(1),
+ 	VIRTCHNL2_FLOW_IPV4_SCTP	       = BIT(2),
+ 	VIRTCHNL2_FLOW_IPV4_OTHER	= BIT(3),
+	VIRTCHNL2_FLOW_IPV4_AH		= BIT(4),
+	VIRTCHNL2_FLOW_IPV4_ESP		= BIT(5),
+	VIRTCHNL2_FLOW_IPV4_AH_ESP	= BIT(6),
+	VIRTCHNL2_FLOW_IPV6_TCP		= BIT(7),
+	VIRTCHNL2_FLOW_IPV6_UDP		= BIT(8),
+	VIRTCHNL2_FLOW_IPV6_SCTP	= BIT(9),
+	VIRTCHNL2_FLOW_IPV6_OTHER	= BIT(10),
+ 	VIRTCHNL2_FLOW_IPV6_AH		= BIT(11),
+ 	VIRTCHNL2_FLOW_IPV6_ESP		= BIT(12),
+ 	VIRTCHNL2_FLOW_IPV6_AH_ESP	= BIT(13),
+…
+}
+```
+
+sideband_flow_steer_flow_types (bitmask), is like rss_flow_type and lets the driver know which flow types are allowed for configuring sideband filter rules. This does not give any indication on the input set (match fields) used for a given flow type which is configured by the Device Control Plane. So, if a driver tries to program a rule with match fields for a given flow type that is not configured by Device Control; device Control will respond with failure to add the rule.
+Note: A flow type is way to identify certain sequence of headers in each packet such as IPv4_TCP flow type, typically a device may allow a flow type to be interpreted in a tunnel agnostic fashion, so a packet with IPv4_TCP over Vxlan may still be considered as the same flow type as non-tunneled TCP_IPv4 packet.
+
+inline_Flow_Steer_flow_types (bit mask), this is also like rss_flow_type and lets the driver know which flow types are allowed for configuring inline filter rules, again this does not give any indication on the input set allowed and that is configured by the Device Control Plane.
+sideband_flow_steer_action_types (bit mask only applicable to sideband)
+
+```C
+enum virtchnl2_action_types {
+	VIRTCHNL2_ACTION_DROP		= BIT(0),
+	VIRTCHNL2_ACTION_PASSTHRU	= BIT(1),
+	VIRTCHNL2_ACTION_QUEUE		= BIT(2),
+	VIRTCHNL2_ACTION_Q_GROUP	= BIT(3),
+	VIRTCHNL2_ACTION_MARK		= BIT(4),
+	VIRTCHNL2_ACTION_COUNT		= BIT(5),
+};
+```
+
+Note: Inline flow steering assumes an input set and filter rule that is derived from the packet header content as a flow match based on the Device Control plane configuration. This is not configurable by the driver. The only action allowed with Inline flow steer is queue action.
+
+In case of Inline flow steering rules, when sending a packet that should program a  flow rule in the device, the Context descriptor must set the FILT_AU_EN bit to Enabled, the Rx Queue used for forwarding is programmed as part of the Tx queue configuration as peer_rx_queue_id.
+
+Inline Flow steering with Explicit queue is supported using fields (TBD) from the TX Context Descriptor (Rx queue that needs to be used as forwarding action.) as part of Flex fields. 
+In case of Inline flow steering rules, when sending a packet that should remove a  flow rule from the device, the Context descriptor must set the FILT_AU_EVICT bit to remove the filter.
+
+```C
+//Flow Steering Vitrchannel Commands
+	VIRTCHNL2_OP_FLOW_RULE_CHECK			= 550,
+	VIRTCHNL2_OP_FLOW_RULE_ADD			= 551,
+	VIRTCHNL2_OP_FLOW_RULE_GET			= 552,
+	VIRTCHNL2_OP_FLOW_RULE_DEL			= 553,
+	VIRTCHNL2_OP_FLOW_RULE_IDS_GET			= 554,
+	VIRTCHNL2_OP_FLOW_RULE_BY_IDS_DEL		= 555,
+```
+
+### Flow Steering flows
+#### Init Flow
+a.	After the Device level capability negotiation as described in the Flow Steering Capability section, the driver does vport creation.
+b.	As part of response for create_vport, the driver learns the vport level flow steering sub capabilities granted by the Device Control.
+c.	The driver also learns about number of filters (overall for this vport) and flow types supported from this device per sub capability. The driver also learns about the actions supported by the device for Sideband flow steering. All this info helps the driver in doing a sw check before adding any rules into the device.
+d.	The driver ultimately enables the Inline or sideband flow steering based on SW Control knobs after the Device capabilities granted per vport are learnt. So even if the device gives the capability the SW administrator can chose not to enable the feature. 
+#### Runtime flow
+a.	Filter Add flow for Sideband filters.
+i.	Driver prepares a virtchannel command struct based on VIRTCHNL2_OP_FLOW_RULE_ADD data structure definitions. This can be done two different ways using raw packet content or using sequence of protocol headers with fields to be matched.
+1.	Raw packet format specifies a raw packet with field values that need to be matched and a mask of the same size specifying which are the bits to be matched from the packet.
+2.	With the Sequence of protocol header with fields, one has to construct an array of protocol Header names and a 64 byte max header content with an accompanying mask to specify the relevant bits and bytes to be matched in the filter. 
+One must specify headers in the packet starting from a given tunnel level from where to start matching the fields . 0 being the outer most tunnel level. If all the fields to be matched are say in tunnel level 2 from outer most, the filter specification can just set the tunnel level to 2 and specify protocol hrds in level 2. If fields from level 1 and 2 are to be matched then one has to specify all protocols in both he levels that are allowed in the packet and if there is no match in a particular protocol hdr that can be specified by leaving the mask for that header to be empty and the Device control will ignore definition of fields or the size of the hdr etc for that protocol.
+Again each protocol hdr can be longer that 64 bytes, but this will provide for matching fields in a protocol hrd as deep as 64 bytes.
+Also a count field is filled by the driver to say the number of protocols in the array. 
+			Driver must also prepare the action specification array to specify the actions that must happen upon the filter match in the device. Number of actions should be filled out as action count and a structure that specifies the different action details.   Each action definition will pick one of the following actions: queue, queue_group, mark, count, passthrough or drop. Drop and passthrough will be specified as single actions by themselves with no accompanying data. Other actions will have data to go along such as queue_id etc.  
+			Driver must also specify the vPort_id for which the filter is being added.
+ii.	Driver sends the command over mailbox and gets a response from the Device Control if the rules was added or not. If not added it gets the right error depending on the filter input set supported or not or if the filter space on the device is completely occupied etc.
+Open: Do we need a way to configure if the completetion status Error/success should be reported by Device Control or not? Should we use flags for this? Right now the usage of flag is not spelled out.
+			The definition assumes a response is always received and carried an ID (flow_rule_Id) for the filter added by the device Control in the Device.	
+b.	Filter Add flow for Inline filters and implicit RX Queue
+i.	Driver sets the Peer_rx_qeueue_id filed in the TX Configuration vrtchannel command to specify the Rx queue which would be used for forwarding action with the inline filter that gets added as part of Tx packet send.
+ii.	Driver sets meta data (FILT_AU_EN) in the TX Context descriptor to indicate to HW to add a Flow steering rule and derive the Input set from the packet based on the Configuration on the device side.
+iii.	If a filter rule add fails, in some cases the Device can send a receive descriptor with error. 
+iv.	Dummy packets or standard TX packets can be used to add a filter in the Device. A dummy packet is specified by marking DUMMY bit in the Tx Context Descriptor and the Device discards the packet after programming the rule. The validity of packet headers is not considered as long as there is information for parsing of headers by the device present in the packet. Also, the fields that identify a flow for a given packet type should be populated.
+Open: Do we need a configuration option for this or not, or atleast an ability to learn if we will get an error receive Descriptor.
+c.	Filter add flow for Inline filters and explicit RX queue (TBD: To define the exact fields layout for the RX queue information in the Tx context descriptor)
+d.	Filter remove flow for sideband filters
+i.	Driver prepares a virtchannel command struct based on VIRTCHNL2_OP_DEL_FLOW_RULE data structure definition.
+ii.	The driver must fill out the flow_rule_id as returned by Control plane during filter add in the delete command along with vport_id from which this filter needs to be removed.
+e.	Filter remove flow for Inline filters and implicit or explicit RX queue
+i.	The driver must Send a packet with hdr containing relevant fields to help remove a  flow rule from the device. The Context descriptor with the packet must set the FILT_AU_EVICT bit to remove the filter. The packet could be for example a FIN or RST packet that is going out in case of TCP based flows. In case of UDP any last packet of the UDP flow can set the EVICT bit to remove the filter. 
+ii.	Dummy packets can be used as well to Evict a filter from the Device. A dummy packet is specified by marking DUMMY bit in the Tx Context Descriptor and the Device discards the packet after programming the rule. The validity of packet headers is not considered as long as there is information for parsing of headers by the device present in the packet. Also, the fields that identify a flow for a given packet type should be populated.
+iii.	Filter check for sideband filters
+
+#### Reset flow
+The driver can chose to hold state of programmed flows in the Device and clear the flow info stored in SW as part of Device reset, or use the SW copy of flow Steer rules to repopulate the Device with flow rules after Device reset.
+
+
+### Device Interface
 
 The Driver negotiates with the device the capability to add/delete/query flow steering filter rules over the mailbox. The response from the device can be negotiated as well using virtchannel flags
 
@@ -6420,15 +6550,15 @@ the match key using proto_hdr format. */</p></th>
 </tbody>
 </table>
 
-- Configuration
+### Configuration
 
 Device, if it can support flow Steering, will allocate certain flow Steering table resources to be used by the SW as requested by the driver. A get_flow_steering_capability data structure will be defined to learn about the device's detailed capability. The number of rules supported, match kind etc.
 
-- Driver Configuration and Runtime flow
+### Driver Configuration and Runtime flow
 
 A driver can add flow_rules after the device is initialized. A device can fail a rule add for various reasons. A response is asynchronously provided by the device.
 
-- Device and Control Plane Behavioral Model
+
 
 ## Inline Crypto Offload (TBD after 1.0)
 
