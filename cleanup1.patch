@@ -1,0 +1,151 @@
+commit 00e2461683a92e6849124e764abefe7d0bcadd70
+Author: Anjali Singhai Jain <singhai.anjali55@gmail.com>
+Date:   Wed Oct 16 07:01:06 2024 -0700
+
+    Cleaned up the WIP sections and marked them
+    appropriately to either be included in 1.0 release
+    or to be part of later releases.
+
+diff --git a/idpf_specification.md b/idpf_specification.md
+index 229f096..933cc6d 100644
+--- a/idpf_specification.md
++++ b/idpf_specification.md
+@@ -5132,7 +5132,7 @@ struct virtchnl2_queue_group_id qg_ids[1];
+ };
+ ```
+ 
+-- Events (WIP)
++- Events
+ 
+ Events are asynchronous messages that are sent from the NIC to the driver. The NIC may choose to send these events anytime once the mailbox is operational.
+ 
+@@ -5140,13 +5140,13 @@ Following are the events that the driver is interested in:
+ 
+ **VIRTCHNL2_EVENT_LINK_CHANGE - Sent when the link is up or down**
+ 
+-**VIRTCHNL2_EVENT_START_RESET_ADI - Sent when the ADI is reset has been initiated**
++**VIRTCHNL2_EVENT_START_RESET_ADI (TBD after 1.0) - Sent when the ADI is reset has been initiated**
+ 
+-**VIRTCHNL2_EVENT_FINISH_RESET_ADI - Sent when the ADI reset was completed**
++**VIRTCHNL2_EVENT_FINISH_RESET_ADI (TBD after 1.0) - Sent when the ADI reset was completed**
+ 
+ - The ADIs dont have physical function but their config space is emulated by the PF driver. These events are used by the PF driver to bring up the ADIs out of their reset
+ 
+-**VIRTCHNL2_EVENT_UPDATE_STATS (TBD) - Sent when there is an update to be raised immediately**
++**VIRTCHNL2_EVENT_UPDATE_STATS - Sent when there is an update to be raised immediately**
+ 
+ ```C
+     struct virtchnl2_event {
+@@ -5213,8 +5213,12 @@ this PF.
+ 
+ # Standard Offloads
+ 
+-- Multiple Default vPorts (WIP)
+-- Container Dedicated Queues (WIP)
++- Multiple Default vPorts
++IDPF driver can support multiple vPorts if the Device allows to do so. There are two ways the device can communicate to the driver that vPorts need to be created.
++ 1. Init Time
++	At Init time the driver is informed as a response to VIRTCHNL2_OP_GET_CAPS opcode from the driver that it needs to create n number of vports. The value n can be 0 or more. The vport creation and configuration flow is the same for all vports. This is described in the vport creation and configuration flow section.
++ 2. Run Time (TBD after 1.0)
++	This flow needs to be done as part of ADI and Subfunction creation and will be added after 1.0 of the Spec.
+ 
+ All offloads (standard or advanced) are negotiated. This gives a device
+ the opportunity to opt out of supporting a particular offload.
+@@ -5388,7 +5392,7 @@ promiscuous mode and as a result the driver should be able to send and
+ receive packets with any unicast or multicast addresses based on
+ configuration.
+ 
+-## L2 Tag Insertion Offload (WIP)
++## L2 Tag Insertion Offload (TBD after 1.0)
+ 
+ - Device Interface
+ 
+@@ -5645,7 +5649,7 @@ Example
+ 
+ ![TSO](Diagrams/tso.png)
+ 
+-## L2 Tag Strip Offload (WIP)
++## L2 Tag Strip Offload (TBD after 1.0)
+ 
+ - Device Interface
+ 
+@@ -5746,11 +5750,6 @@ __le32 csum_caps;
+ 
+ }
+ ```
+-- Configuration: (WIP)
+-
+-- Driver Configuration and Runtime flow (WIP)
+-
+-- Device and Control Plane Behavioral Model (WIP)
+ 
+ ## RSS (Receive Side Scaling)
+ 
+@@ -6011,7 +6010,7 @@ When RSC is enabled, the receive flow in the device is as follows:
+ - At some point, it will be time to close the context.
+ - The device writes the packet header to host memory (to the header buffer associated with the first packet buffer) and completes all buffers associated with the RSC context consecutively on the receive queue. Note that the buffers may or may not have been consecutive on the Rx Buffer Queue.
+ 
+-## Double Completion (WIP)
++## Double Completion (TBD after 1.0)
+ 
+ - Device Interface
+ - Capability and Data structures
+@@ -6431,9 +6430,7 @@ A driver can add flow_rules after the device is initialized. A device can fail a
+ 
+ - Device and Control Plane Behavioral Model
+ 
+-TBD
+-
+-## Inline Crypto Offload (WIP)
++## Inline Crypto Offload (TBD after 1.0)
+ 
+ - Device Interface
+ 
+@@ -6443,13 +6440,13 @@ The Driver negotiates with the device the capability to add/delete Security Cont
+ - Just failure response. This needs to be enabled by setting an appropriate virtchannel flag in the virtchannel Descriptor.
+ - Fence. This needs to be enabled by setting an appropriate virtchannel flag in the virtchannel Descriptor. Upon setting this flag on a request from the driver to the CP, CP responds to this particular request after the CP checks all other previous requests from the Interface on this mailbox where completed successfully or otherwise.
+ 
+-- Capability and Data structures (WIP)
++- Capability and Data structures
+ 
+-- Configuration (WIP)
++- Configuration
+ 
+-- Driver Configuration and Runtime flow (WIP)
++- Driver Configuration and Runtime flow
+ 
+-- Device and Control Plane Behavioral Model (WIP)
++- Device and Control Plane Behavioral Model
+ 
+ ## RDMA Capability
+ 
+@@ -6715,9 +6712,9 @@ enablement flow to be performed by IDPF PF driver:
+ 2. **Optional step** - After device capabilities are discovered by the IDPF driver, it can proceed and enable its VFs and back them up with the resources. For this purpose, the PF driver will send "VIRTCHNL_OP_SET_SRIOV_VFS” opcode 118 VirtChnl command to create a specified number of VFs. Following this command, CP will create default mailbox Queue Pairs, MSIx vectors etc. for each one of the VFs in order to provide them the ability to load their drivers and start their own device configuration.
+ 3. After these PF driver initialization steps, IDPF driver can be loaded on enabled VFs and start its own initialization flow, using its assigned Mailbox queue pairs. See more details in [<u>Driver Initialization</u>](#8cwea2t0qd3s).
+ 
+-## S-IOV (WIP)
++## ADI (TBD after 1.0)
+ 
+-S-IOV is an advanced virtualization capability provided by the device to some of its functions ( for now only PF), it is a much lighter weight virtualization as compared to SR-IOV and does provide a huge fan out.
++ADI/S-IOV (Scalabale - IO Virtualization) is an advanced virtualization capability provided by the device to some of its functions ( for now only PF), it is a much lighter weight virtualization as compared to SR-IOV and does provide a huge fan out.
+ 
+ - Device Interface
+ 
+@@ -6737,7 +6734,7 @@ S-IOV is an advanced virtualization capability provided by the device to some of
+ 
+ ## 
+ 
+-## CRC Strip/No-strip offload: (WIP)
++## CRC Strip/No-strip offload: (TBD after 1.0)
+ 
+ Note: Also negotiate if the CRC provided is updated when the Device
+ makes modification to the packet or the wire side CRC.
+@@ -8469,7 +8466,7 @@ VIRTCHNL2_CAP_OEM</th>
+ 
+ ### 
+ 
+-# Virtchannel Header File/s (WIP)
++# Virtchannel Header File/s (TBD after 1.0)
+ 
+ # virtchannel2.h
+ 
