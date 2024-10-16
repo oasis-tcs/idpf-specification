@@ -6330,7 +6330,7 @@ rules dumnped out of the device.
 #define VIRTCHNL2_OP_DEL_FLOW_RULE 539
 ```
 
-Actions Supported:
+Actions and related Data structures :
 
 ```C
 #define VIRTCHNL2_ACTION_DROP 1
@@ -6339,6 +6339,7 @@ Actions Supported:
 #define VIRTCHNL2_ACTION_Q_GROUP 4
 #define VIRTCHNL2_ACTION_MARK 5
 #define VIRTCHNL2_ACTION_COUNT 6
+
 struct virtchnl2_proto_hdr {
 /* see VIRTCHNL2_PROTO_HDR_TYPE */
 __le32 type;
