@@ -8,6 +8,7 @@
 |0.91|2/14/2023|vport Attributes flow to be described|
 |0.91|2/28/2023|Updated virtchnl2 descriptor structure. <br /> Updated TX descriptor IDs in virtchnl2_lan_desc.h|
 |0.91|4/19/2023|Name updated to match the Oasis TC|
+|1.0|10/17/2024|Spec version updated to 1.0|
 
 # Introduction
 
