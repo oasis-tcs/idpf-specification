@@ -5198,34 +5198,33 @@ This flow is triggered by the driver itself as part of driver load/unload or oth
 
 ### Asynchronous VFR/FLR
 
-In this case, XLR happens asynchronously to the driver, usually triggered by Device, OS or any other source described above. In this case the driver is expected to detect XLR condition and start polling till function is back to normal working state and then to start re-initialization process.
+In this case, XLR happens asynchronously to the driver, usually triggered by Device, OS or any other source described above. The driver is expected to detect XLR condition and start polling till function is back to normal working state and then to start re-initialization process.
 
-Expected driver flow in this case is:
+Driver flow:
 
 - When the driver detects “TX timeout” on its data TX queues or it detects that its Mailbox TX Queue ENA bit and/or LEN bit in PF/<span class="mark">VF_ARQLEN. ARQENABLE</span> is cleared, the driver is expected to assume XLR and check if its PF/VFGEN_RSTAT register is not in “PFR/VFR_ACTIVE” state (10b).
 - Following XLR detection, the driver is expected to avoid sending new data or control transactions to the device, poll for PF/VFGEN_RSTAT register to get back into “PFR/VFR_COMPLETED” state and then to re-initialize itself.
 
-***Note***: Despite the fact that VF located IDPF devices operate
-completely independently and does not require any initialization or
-involvement from PF located IDPF, Function Level Reset triggered on PF
+***Note***: Despite the fact that VF IDPF devices operate
+completely independently and do not require any initialization or
+involvement from PF IDPF; Function Level Reset triggered on PF
 device will automatically trigger VF Level resets for all VFs mapped to
 this PF.
 
-
 #### MMIO Space non-accessible condition: 
-The other Async reset flow that needs to be detected by the driver in case the Device MMIO space is not accessible for some period of time.
+The other Async reset flow that needs to be detected by the IDPF driver is the case when the Device MMIO space is not accessible for some period of time.
 
 When MMIO space is not accessible, the device will generate an SError to the system upon MMIO access by the driver or any SW.
 
-When the Device needs to inform the the PFs and VFs, it needs to clear the ATQLEN and ENA field for the PFs and also the SRIOV VFs  
-In complaince with SRIOV Specification, the VF interfaces are removed when PF interfaces are in reset because of VF_ENABLE bit being cleared in PCI Config space of the PF, at which point the Host OS removes the VF interface triggering a VF driver unload.
+IMPORTANT Note: When the Device needs to inform the PFs and VFs, it needs to clear the ATQLEN and ENA field for the PFs and also the SRIOV VFs.
+In compliance with SRIOV Specification, the VF interfaces are removed when PF interfaces are in reset because of VF_ENABLE bit being cleared in PCI Config space of the PF, at which point the Host OS removes the VF interface triggering a VF driver unload.
 
-The Mailbox interrupt is triggered by Device Control (just for the PFs) for letting driver know that a reset is going to occur soon. Driver must check ATQLEN and ENA field in ATQ** register as the first thing in the Mailbox interrupt service routine and if any of the fields are cleared it should then just arm the Interrupt and should stop accessing any MMIO space and wait for another Mailbox interrupt to occur or a timeout to happen. 
+When tne device needs to go to MMIO space not accessible situation, the Mailbox interrupt is triggered by Device Control (just for the PFs) for letting driver know that a reset is going to occur soon. Driver must check ATQLEN and ENA field in ATQ** register as the first thing in the Mailbox interrupt service routine and if any of the fields are cleared it should then just arm the Interrupt and should stop accessing any MMIO space and wait for another Mailbox interrupt to occur or a timeout to happen. 
 	
 	IMPORTANT NOTE: Since in the Async reset flow, the driver immediately starts to poll on PFGEN_RSTAT or VFGEN_RSTAT register to see if it is coming out of reset, driver must set a different state to know this it cannot poll on PFGEN_RSTAT or VFGEN_RSTAT register till it receives the second interrupt or timeout happens.
 
 	
-	IMPORTN NOTE: The assumption for MSIX vector is its Auto clear and does not require driver to read any register. Also the watchdog timer which gets fired on the IMC side before corer is actually triggered is started after the PF drivers are notified and is large enough that the time spent by the drivers doing couple of register access in the Mailbox Interrupt routine are well below the watchdog  value. For example watchdog timer value is in 100s of millisecond and the registers access is at best in microseconds.
+	IMPORTN NOTE: The assumption for MSIX vector is its Auto clear and does not require driver to read any register. Also the watchdog timer which gets fired on the Device Control side before such a reset is actually triggered is started after the PF drivers are notified and is large enough that the time spent by the drivers doing couple of register access in the Mailbox Interrupt routine are well below the watchdog value. For example watchdog timer value is in 100s of millisecond and the registers access is at best in microseconds.
 
 Device Control will trigger another mailbox interrupt for PFs/VFs once the reset is done, to indicate that they can now read PFGEN_RSTAT/VFGEN_RSTAT registers. Please note this interrupt will not have any virtchnl payload either as the rings won’t be configured by the driver.  Upon reception of this interrupt, the IDPF will follow the normal reset state machine for recovery as described earlier. (PFGEN_RSTAT/VFGEN_RSTAT 1) state= Reset_in_progress -> Reset_Completed -> Active).
 
@@ -5233,10 +5232,10 @@ The driver waits for the second interrupt to occur to come out of reset for a gi
 
 Again both the reset interrupt mechanism and the timeout mechanism is an extension present as a common flow, a device may never trigger this interrupt for both PF or VF  and just rely on the non-graceful detection through ARQLEN and ARQLEN.ENA bit being clear check in the timer task.
 
-3.	FLR MMIO HW access synchronization issue not dealt correctly in the driver
-	Another issue that we recently discovered is that when the Linux OS triggers FLR on a PF and VF on any of the complexes, and the driver tries to access MMIO space, different PCIE Errors are triggered on Xeon (HW Error) vs ARM (Sync Abort) cores if the access is within reset duration of the FLR being triggered from the PCIE Config space. This is due to a standard flow for PCIE Devices where the MMIO access is removed during FLR for a short duration.
+#### FLR MMIO HW access synchronization condition:
+When the Linux OS triggers FLR on a PF and VF, and the driver tries to access MMIO space, different PCIE Errors are triggered on Xeon (HW Error) vs ARM (Sync Abort) cores if the access is within reset duration of the FLR being triggered from the PCIE Config space. This is due to a standard flow for PCIE Devices where the MMIO access is removed during FLR for a short duration.
 
-	To deal with this correctly we need to add another extension to the driver only for function level reset triggered by the OS/hypervisor.  In case of linux, the driver will subscribe for reset detection event through OS callbacks in the driver, this will give an early detection for the driver when a reset is going to happen so the driver does not touch the MMIO space after its notified. After the reset is done, the driver gets a different callback to know that it is out of reset and now driver can start rebuilding and accessing MMIO space by following the PFGEN_RSTAT/VFGEN_RSTAT state machine to get Active state.
+	To deal with this correctly the driver needs to enable callbacks only for function level reset triggered by the OS/hypervisor.  In case of linux, the driver must subscribe for reset detection event through OS callbacks in the driver, this will give an early detection for the driver when a reset is going to happen so the driver does not touch the MMIO space after its notified. After the reset is done, the driver gets a different callback to know that it is out of reset and now driver can start rebuilding and accessing MMIO space by following the PFGEN_RSTAT/VFGEN_RSTAT state machine to get Active state.
 
 	In case of windows and ESX, there is no OS/hypervisor triggering FLR through config space, instead the driver is asked to trigger a PFR or VFR so the driver is always in the loop and since this is not an FLR driver can use the PFGEN_RSTAT/VFGEN_RSTAT access flow to know when it is out of reset without having to avoid MMIO access for some duration.
 
