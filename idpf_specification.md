@@ -8154,30 +8154,30 @@ Note : Non generic checksum offload is a checksum offload that is executed using
 </tr>
 <tr class="odd">
 <th>Minimum RX buffer size supported for single queue model.</th>
-<th>IDPF_RX_BUF_2048</mark></th>
-<th>Hard coded default</th>
-<th>2K</th>
+<th></th>
+<th></th>
+<th>128</th>
 <th> Multiple of 128B </th>
 </tr>
 <tr class="header">
 <th>Minimum “large RX buffer” size supported for split queue model.th>
-<th>IDPF_RX_BUF_4096</th>
-<th>Hard coded default</th>
-<th>4K</th>
+<th></th>
+<th></th>
+<th>128</th>
 <th>Multiple of 128B</th>
 </tr>
 <tr class="odd">
 <th>Minimum “small RX buffer” size supported for split queue model.</th>
-<th>IDPF_RX_BUF_2048</th>
-<th>Hard coded default</th>
-<th>2K</th>
+<th></th>
+<th></th>
+<th>128</th>
 <th>Multiple of 128B</th>
 </tr>
 <tr class="header">
 <th>Minimum “RX header buffer” size supported for header split.<br/>
 Relevant for both single and split queue models.</th>
-<th>IDPF_HDR_BUF_SIZE</th>
-<th>Hard coded default</th>
+<th></th>
+<th></th>
 <th>256</th>
 <th>Multiple of 64B</th>
 </tr>
