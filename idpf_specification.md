@@ -8,6 +8,7 @@
 |0.91|2/14/2023|vport attributes flow to be described|
 |0.91|2/28/2023|Updated virtchnl2 descriptor structure. <br /> Updated TX descriptor IDs in virtchnl2_lan_desc.h|
 |0.91|4/19/2023|Name updated to match the Oasis TC|
+|1.0|10/17/2024|Spec version updated to 1.0|
 
 # Introduction
 
@@ -31,7 +32,7 @@ None of the standard interfaces available in the market provide for all these ne
 
 ## IDPF Network Function Device (“Device”)
 
-This is an abstraction of a physical or emulated network PCIe device as seen by the driver. It is modeled as having internally a **data path** component that carries out packet handling and a **control plane** component that is used to configure and monitor the operations of the data-path.  An IDPF device has the same interface whether used as a PF PCIe device, a VF device (when virtualization is used), or a composed PCIe entity. It is also OS agnostic, and does not impose assumptions on the implementation of conformant devices.
+This is an abstraction of a physical or emulated network PCIe device as seen by the driver. It is modeled as having internally a **data path** component that carries out packet handling and a **control plane** component that is used to configure and monitor the operations of the data-path.  An IDPF device has the same interface whether used as a Physical Function (PF) PCIe device, a Virtual Function (VF) device (when virtualization is used), or a composed PCIe entity. It is also operating system agnostic, and does not impose assumptions on the implementation of conformant devices.
 
 ![Figure 1 : Network Function Device Overview](Diagrams/network_function_device_overview.svg)
 
@@ -76,7 +77,7 @@ Each virtchannel message and the capabilities for which they are used, as well a
 * **Control Plane Agent (CPA)**: This is a SW/FW/HW entity that is part of the device and communicates with the SW driver over the Mailbox using virtchannel in order for the SW Driver to learn about the capabilities, configure the device, etc.
 * **Tx & RX Process, and Completion Descriptors**: The general pattern of communication between host-side Software and the device is that Software posts request Descriptors in the Host-to-Device Descriptor queue, and the Device posts responses and events in the associated Device-to-Host Descriptor queue. In particular for the reception (RX) and transmission (TX) of packets the process is as follows (note this is the general case, some nuances and optimizations are described in the relevant section)
 
-  1. **RX Process Overview**: Software prepares empty buffers in Host Memory (perhaps in VM’s Memory space if a VM is involved) to hold the data and headers of the frames when they are received.
+  * **RX Process Overview**: Software prepares empty buffers in Host Memory (perhaps in VM’s Memory space if a VM is involved) to hold the data and headers of the frames when they are received.
 
       Software Builds “RX Request” descriptors that point to these buffers and places them on a Host-to-device Descriptor queue called “RX Queue”.
     
@@ -86,7 +87,7 @@ Each virtchannel message and the capabilities for which they are used, as well a
     
       This completion Descriptor is typically placed in the Device-to-Host descriptor queue paired with the RX descriptor used by the relevant vPort, this queue is called the “RX Completion Queue". 
 
-  2. **TX Process Overview**: Software prepares buffers in host memory containing the data to be transmitted.
+  * **TX Process Overview**: Software prepares buffers in host memory containing the data to be transmitted.
 
       Software builds “TX request Descriptors” that point to these buffers, and places them on a Host-to-Device descriptor queue called “TX Descriptor queue”.
     
@@ -488,7 +489,7 @@ For the split-queue model, RX buffer queues can be used in groups where
 each group contains two RX buffer queues: one with small buffers and one
 with big buffers. If the received packet length is smaller than the
 small buffer, the whole packet is copied to a small buffer. If
-the packet is bigger than a small buffer the whole packet is copied to 1
+the packet is bigger than a small buffer, the whole packet is copied to one
 or more big buffers.
 
 If header split offload is activated and the packet header is
@@ -549,9 +550,9 @@ enough space in the RX completion queue for any future descriptor(s)
 posted by SW (via RX buffer queue) without assuming anything about the
 SW processing rate of entries.
 
-Note: SW should guarantee that there is a minimum free space of 128B in
+Note: SW should guarantee there is a minimum of 128B of free space in
 each completion queue to avoid the theoretical case in which the device
-wraps around the ring and overrides an entry that has not been read yet
+wraps around the ring and overrides an entry that has not yet been read 
 by SW.
 
 The device does not inform SW directly of the availability of descriptors in
@@ -644,7 +645,7 @@ Device while a "write format" descriptor is a descriptor written by the
 Device and read by SW.
 
 For both queue models, the read descriptor holds the buffers pointers.  
-For the “out of order, split queue” model, the read descriptors also
+For the “out of order split queue” model, the read descriptors also
 hold the unique buffer identifier (sent as is to packet completion) used
 for SW to associate the submitted packet buffers with the completed
 packet buffers.
@@ -652,7 +653,7 @@ packet buffers.
 For both queue models, the write descriptor holds some packet metadata
 fields delivered from the Device processing pipeline and some DMA
 related fields.  
-For the “out of order, split queue” model, the write back descriptor
+For the “out of order split queue” model, the write back descriptor
 also holds the completion queue "generation" bit and the buffer queue
 identifier (buffer queue identifier within the buffer queue group).
 
@@ -672,15 +673,15 @@ different queue context configurations.
 <thead>
 <tr class="header">
 <th colspan="4"><strong>Configuration</strong></th>
-<th colspan="2"><strong>Descriptors supported</strong></th>
+<th colspan="2"><strong>Descriptors Supported</strong></th>
 </tr>
 <tr class="odd">
-<th><strong>Queue model</strong></th>
+<th><strong>Queue Model</strong></th>
 <th><strong>Hsplit Enable</strong></th>
 <th><strong>RD Desc Len</strong></th>
 <th><strong>WR Desc Len</strong></th>
-<th><strong>Read format</strong></th>
-<th><strong>Write format</strong></th>
+<th><strong>Read Format</strong></th>
+<th><strong>Write Format</strong></th>
 </tr>
 <tr class="header">
 <th rowspan="2">Single queue model</th>
@@ -742,7 +743,7 @@ flex.
 
 #### 16B RX Descriptors Read Format for Single Q Model
 
-This is the read descriptor used when a queue operates in “In order,
+This is the read descriptor used when a queue operates in “In order
 single queue model.”  
 Descriptor length is 16B.
 
@@ -758,7 +759,7 @@ Descriptor fields layout:
 
 #### 32B RX Descriptors Read Format for Single Q Model
 
-This is the read descriptor used when the queue operates in “In order,
+This is the read descriptor used when the queue operates in “In order
 single queue model.”  
 Descriptor length is 32B.
 
@@ -771,7 +772,7 @@ descriptors described above.
 
 #### 16B RX Descriptors Read Format for Split Q Model
 
-This is the read descriptor used when queue operates in “Out of order,
+This is the read descriptor used when queue operates in “Out of order
 split queue model.”  
 Descriptor length is 16B.
 
@@ -784,7 +785,7 @@ Descriptor fields layout:
 
 #### 32B RX Descriptors Read Format for Split Q Model
 
-This is the read descriptor used when queue operates in “Out of order,
+This is the read descriptor used when queue operates in “Out of order
 split queue model.”  
 Descriptor length is 32B.
 
@@ -829,7 +830,7 @@ descriptors:
 
 #### 16B RX Descriptors Write Format Base
 
-This is the write descriptor used when the queue operates in “In order,
+This is the write descriptor used when the queue operates in “In order
 single queue model.”  
 Descriptor length is 16B.
 
@@ -889,7 +890,7 @@ matched Mirror Rule ID that directed the packet to this queue</th>
 <th>L2TAG1</th>
 <th>16b</th>
 <th>Extracted L2 VLAN Tag from the receive packet.<br />
-This field is valid if the L2TAG1P flag in this descriptor is set ,else
+This field is valid if the L2TAG1P flag in this descriptor is set, else
 field is invalid and set to zero.</th>
 </tr>
 <tr class="odd">
@@ -932,7 +933,7 @@ the “Packet Types negotiation” section of this document.</p></th>
 </tr>
 <tr class="odd">
 <th>6,7</th>
-<th><strong><mark>Length</mark></strong></th>
+<th><strong>Length</strong></th>
 <th>26</th>
 <th><table>
 <colgroup>
@@ -998,15 +999,15 @@ The table below details the contents of the Status field.
 <th>DD</th>
 <th>1b</th>
 <th><p><strong>Descriptor Done</strong></p>
-<p><mark>Descriptor done indication flag</mark></p></th>
+<p>Descriptor done indication flag</p></th>
 </tr>
 <tr class="header">
 <th>1</th>
 <th>EOP</th>
 <th>1b</th>
 <th><p><strong>End of Packet</strong></p>
-<p><mark>End of packet flag is set to 1b indicating that this descriptor
-is the last one of a packets</mark></p></th>
+<p>End of packet flag is set to 1b indicating that this descriptor
+is the last one of a packets</p></th>
 </tr>
 <tr class="odd">
 <th>2</th>
@@ -1032,7 +1033,7 @@ field as invalid</p></th>
 </tr>
 <tr class="odd">
 <th>4</th>
-<th><mark>CRCP</mark></th>
+<th>CRCP</th>
 <th>1b</th>
 <th><p><strong>CRC Posted</strong></p>
 <p>CRCP indicates that the Ethernet CRC is posted with data to the host
@@ -1049,7 +1050,7 @@ re-calculated after the packet modification. Original/re-calculated CRC
 should be part of device capability negotiation.</p></th>
 </tr>
 <tr class="header">
-<th><mark>5:7</mark></th>
+<th>5:7</th>
 <th>Reserved</th>
 <th>RSV</th>
 <th><p><strong>Reserved</strong></p>
@@ -1325,7 +1326,7 @@ is cleared.</p></th>
 </tr>
 <tr class="header">
 <th>11:6</th>
-<th><mark>RSV</mark></th>
+<th>RSV</th>
 <th>3b</th>
 <th><strong>Reserved</strong></th>
 </tr>
@@ -1336,8 +1337,8 @@ is cleared.</p></th>
 
 #### Flex RX Descriptors Write Format
 
-The "Flex" write back formats are used in the “In order, single queue
-model" and for "Out of order, split queue model".
+The "Flex" write back formats are used in the “In order single queue
+model" and for "Out of order split queue model".
 
 #### 16B RX Descriptors Write Format Flex
 
@@ -2124,10 +2125,12 @@ hold different values depending on the negotiated queue context:
     1.  Holds the RSCPayLen for an RSC packet or the Raw csum for a non RSC packet.
     2.  Holds the L2TAG1 field in case the tag is present in the RX descriptor (L2TAG1P flag is set) or holds the FlexiMD.1 field.
     3.  Always holds the FlexiMD.1 field.
-  Field "L2TAG1/FlexMD4" in the second 16B of the descriptor holds L2TAG1 if L2TAG1P is set and the “FlexiMD.1/Raw_CS/L2TAG1/RSCPayLen” field in the first 16B of the descriptor does not hold L2TAG1. Otherwise, field holds FlexMD4.
+
+    The Field "L2TAG1/FlexMD4" in the second 16B of the descriptor holds L2TAG1 if L2TAG1P is set, and the “FlexiMD.1/Raw_CS/L2TAG1/RSCPayLen” field in the first 16B of the descriptor does not hold L2TAG1. Otherwise, the field holds FlexMD4.
+
 3.  Depending on negotiated queue context the "Hash [15:0]/FlexMD2" field in the first 16B of the descriptor holds the Hash [15:0] field or the FlexMD2.
 
-Field "L2TAG2/FlexMD2" in the second 16B of the descriptor holds L2TAG2 if L2TAG2P is set.  
+The field "L2TAG2/FlexMD2" in the second 16B of the descriptor holds L2TAG2 if L2TAG2P is set.
 Otherwise, the field holds FlexMD2.
 
 ## TX Queues
@@ -2146,12 +2149,12 @@ device, describes how SW posts new TX packets for Device transmission,
 and describes how Device indicates to SW that it can reuse the buffers
 and descriptors for new packets.
 
-The mode of operation is a per queue configuration. each queue can be
+The mode of operation is a per queue configuration. Each queue can be
 configured to work in a different model:
 
-- In order , single queue model. This option is supported only when VIRTCHNL2_TXQ_MODEL_IN_ORDER_SINGLE feature is negotiated.
-- In order , split queue model. This option is supported only when VIRTCHNL2_TXQ_MODEL_IN_ORDER_SPLIT feature is negotiated.
-- Out of order , split queue model. This option is supported only when VIRTCHNL2_TXQ_MODEL_OUT_OF_ORDER_SPLIT feature is negotiated.
+- In order single queue model. This option is supported only when VIRTCHNL2_TXQ_MODEL_IN_ORDER_SINGLE feature is negotiated.
+- In order split queue model. This option is supported only when VIRTCHNL2_TXQ_MODEL_IN_ORDER_SPLIT feature is negotiated.
+- Out of order split queue model. This option is supported only when VIRTCHNL2_TXQ_MODEL_OUT_OF_ORDER_SPLIT feature is negotiated.
 
 The device must negotiate at least
 VIRTCHNL2_TXQ_MODEL_OUT_OF_ORDER_SPLIT or
@@ -2183,7 +2186,7 @@ which descriptor Device should report completion to SW.
 
 The following rules apply to RS bit setting :
 
-- SW must keep a minimal gap of IECM_TX_RS_MIN_GAP descriptors between 2 descriptors that have their RS flag set.
+- SW must keep a minimal gap of IDPF_TX_RS_MIN_GAP descriptors between 2 descriptors that have their RS flag set.
 - The RS flag can be set only on the last Transmit Data Descriptor of a packet (single sent packet or TSO).
 
 In addition to reporting completions for descriptors marked as such by
@@ -2275,7 +2278,7 @@ descriptor.
   
 The following rules apply to RE bit setting :
 
-* SW must keep a minimal gap of IECM_TX_SPLITQ_RE_MIN_GAP descriptors between 2 descriptors that have their RE flag set.
+* SW must keep a minimal gap of IDPF_TX_SPLITQ_RE_MIN_GAP descriptors between 2 descriptors that have their RE flag set.
 * The RE flag can be set only on the last Transmit Data Descriptor of a packet (single sent packet or TSO).
 
 Note that the descriptor fetch completion functionality
@@ -2528,7 +2531,7 @@ Descriptor.</p>
 <p>Notes:</p>
 <ul>
 <li><blockquote>
-<p>SW must keep a minimal gap of IECM_TX_RS_MIN_GAP descriptors between
+<p>SW must keep a minimal gap of IDPF_TX_RS_MIN_GAP descriptors between
 2 descriptors with RE bit set.</p>
 </blockquote></li>
 </ul>
@@ -2791,7 +2794,7 @@ request).</p>
 <p><strong>Notes:</strong></p>
 <p>The RE flag can be set only on the last Transmit Data Descriptor of a
 message (i.e., a packet or TSO).</p>
-<p>SW must keep a minimal gap of IECM_TX_SPLITQ_RE_MIN_GAP descriptors
+<p>SW must keep a minimal gap of IDPF_TX_SPLITQ_RE_MIN_GAP descriptors
 between 2 descriptors with RE bit set.</p></th>
 </tr>
 <tr class="header">
@@ -3096,7 +3099,7 @@ violation of those rules might be detected as malicious driver behavior.
   2.  CS_EN is set to 1.
 
   Note that for for case #a and #b the most inner header checksum is calculated using the offsets as parsed by the Device parser. The *max_tx_hdr_generic_offloads* negotiated capability defines the maximal header length supported by the device for non-generic checksum/CRC offloads.
-* The total size of a single packet in host memory must be at least **IECM_TX_MIN_LEN** bytes and up to the *max_mtu*. This rule applies for single packet send as well as for an LSO segment.
+* The total size of a single packet in host memory must be at least **IDPF_TX_MIN_PKT_LEN** bytes and up to the *max_mtu*. This rule applies for single packet send as well as for an LSO segment.
 * The header length of an LSO packet should be at least *min_lso_header_len*.
 * Optionally, Packet can carry a context descriptor(s). In that case, all context descriptors of a packet must be placed before the data descriptors of the packet. 
   1.  Up to *max_ctxt_desc_per_sso_packet* context descriptors are allowed to be added to one SSO (Single Send Offload) message and up to *max_ctxt_desc_per_lso_segment* context descriptors are allowed to be added to one LSO (Large Send Offload) message.
@@ -3116,8 +3119,8 @@ violation of those rules might be detected as malicious driver behavior.
   7.  In case if the same field is present in more than 1 descriptor, the value of the field should be the same in all descriptors.
   8.  Any context-type information in all descriptors associated with a particular TX message are set consistently.
   9.  The TSO message header should not span on more than *max_hdr_buf_per_lso* buffers. (Max *max_hdr_buf_per_lso* Descriptors).
-* SW must keep a minimal gap of IECM_TX_RS_MIN_GAP descriptors between 2 descriptors that have their RS flag set(when set to zero, SW does not keep a gap).
-* SW must keep a minimal gap of IECM_TX_SPLITQ_RE_MIN_GAP descriptors between 2 descriptors that have their RE flag set(when set to zero , SW does not keep a gap).
+* SW must keep a minimal gap of IDPF_TX_RS_MIN_GAP descriptors between 2 descriptors that have their RS flag set(when set to zero, SW does not keep a gap).
+* SW must keep a minimal gap of IDPF_TX_SPLITQ_RE_MIN_GAP descriptors between 2 descriptors that have their RE flag set(when set to zero , SW does not keep a gap).
 * RE flag can be set only for queues that operate in “out of order ,split queue” model.
 * When using TSO message SW must follow the Descriptors order:
   1.  Single TSO context descriptor with the TSO bit set. 
@@ -3185,14 +3188,14 @@ model).<br />
 <br />
 2: Regular Packet completion.</p>
 <p>TX packet completion for a packet that its RS bit set in the last TX
-descriptor ( when the queue operates in "on of order , split queue" or
-in “in order, single queue” models) or for every packet ( when the queue
-operates in "out of order , split queue" model ).<br />
+descriptor ( when the queue operates in "on of order split queue" or
+in “in order single queue” models) or for every packet ( when the queue
+operates in "out of order split queue" model ).<br />
 <br />
 3: reserved.</p>
 <p>4: Descriptor fetch completion for a packet that has its RE bit set
 in the last TX descriptor( relevant only when the queue operates in "out
-of order , split queue" model ).<br />
+of order split queue" model ).<br />
 <br />
 5: reserved.</p>
 <p>6: "Buffer de allocate" markers.</p>
@@ -3221,17 +3224,76 @@ processed.</th>
 <tr class="odd">
 <th>Completion tag/TX head</th>
 <th>31:16</th>
-<th><p>For completion types 0 and 2 , this field points to TX queue
+<th><p>For completion types 0 and 2, this field points to TX queue
 offset of the descriptor that follows the last descriptor of the
 completed packet.</p>
 <p>Note the SW reaction should be the same for completion types 0 and
 2</p>
-<p>For completion type 1 , this field describes the Completion tag of
+<p>For completion type 1, this field describes the Completion tag of
 the packet or LSO.</p>
-<p>For completion type 4 , this field points to the TX queue offset of
+<p>For completion type 4, this field points to the TX queue offset of
 the descriptor that follows the RE marked descriptor.</p>
 <p>For completion type 6 , this field points to the TX queue offset of
 the last descriptor that its buffer should be deallocated .</p></th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+Completion entry type (Refering to row 2)
+
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 8%" />
+<col style="width: 75%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Value</strong></th>
+<th><strong>Description</strong></th>
+<th><strong>Comment</strong></th>
+</tr>
+<tr class="odd">
+<th>0</th>
+<th>Regular packet completion triggered by a periodic timer.</th>
+<th>This is relevant only when the queue operates in the "in order split queue" model).
+From the SW point of view, this completion is similar to a “Regular Packet completion” (Completion entry type 2) and should be treated the same.</th>
+</tr>
+<tr class="header">
+<th>1</th>
+<th>Regular packet completion for a packet sent on the exception path.</th>
+<th><p>(Relevant only when the queue operates in "out of order split queue" model).</p>
+</tr>
+<tr class="odd">
+<th>2</th>
+<th>Regular Packet completion.</th>
+<th>TX packet completion for a packet that its RS bit set in the last TX descriptor ( when the queue operates in "on of order split queue" or in “in order single queue” models) or for every packet (when the queue operates in "out of order split queue" model ).</th>
+</tr>
+<tr class="header">
+<th>3</th>
+<th>Reserved.</th>
+<th> </th>
+</tr>
+<tr class="odd">
+<th>4</th>
+<th>Descriptor fetch completion for a packet that has its RE bit set in the last TX descriptor.</th>
+<th>Relevant only when the queue operates in "out of order split queue" model.</th>
+</tr>
+<tr class="header">
+<th>5</th>
+<th>Reserved.</th>
+<th> </th>
+</tr>
+<tr class="odd">
+<th>6</th>
+<th>"Buffer de allocate" markers.</th>
+<th></p>Used to indicate to the SW to deallocate all buffers that are located before the tail pointer as delivered in "TX Head/Completion tag" field.<br />
+<br />
+<p>This completion is used in live migration flows to de-allocate TX packet buffers of the lost packets (the ones that were not transmitted on the source and are not transmitted on the destination).<br />
+<br />
+<p>Note: packet is referred to as an SSO (Single Send offload) packet or as the last segment of an LSO packet.</p></th>
 </tr>
 </thead>
 <tbody>
@@ -3268,7 +3330,7 @@ SW.</p>
 is set to zero .</p></th>
 </tr>
 <tr class="odd">
-<th><mark>Reserved</mark></th>
+<th>Reserved</th>
 <th>63:56</th>
 <th></th>
 </tr>
@@ -3277,7 +3339,7 @@ is set to zero .</p></th>
 </tbody>
 </table>
 
-<span class="mark">Unlike the “in order , single queue model” which
+<span class="mark">Unlike the “in order single queue model” which
 implements a descriptor done (DD) bit, for “in order split queue” and
 “out of order split queue” models (in which completion queue is used)
 ,software identifies new completion queue entries by comparing the
@@ -5071,7 +5133,7 @@ struct virtchnl2_queue_group_id qg_ids[1];
 };
 ```
 
-- Events (WIP)
+- Events
 
 Events are asynchronous messages that are sent from the NIC to the driver. The NIC may choose to send these events anytime once the mailbox is operational.
 
@@ -5079,13 +5141,13 @@ Following are the events that the driver is interested in:
 
 **VIRTCHNL2_EVENT_LINK_CHANGE - Sent when the link is up or down**
 
-**VIRTCHNL2_EVENT_START_RESET_ADI - Sent when the ADI is reset has been initiated**
+**VIRTCHNL2_EVENT_START_RESET_ADI (TBD after 1.0) - Sent when the ADI is reset has been initiated**
 
-**VIRTCHNL2_EVENT_FINISH_RESET_ADI - Sent when the ADI reset was completed**
+**VIRTCHNL2_EVENT_FINISH_RESET_ADI (TBD after 1.0) - Sent when the ADI reset was completed**
 
 - The ADIs dont have physical function but their config space is emulated by the PF driver. These events are used by the PF driver to bring up the ADIs out of their reset
 
-**VIRTCHNL2_EVENT_UPDATE_STATS (TBD) - Sent when there is an update to be raised immediately**
+**VIRTCHNL2_EVENT_UPDATE_STATS - Sent when there is an update to be raised immediately**
 
 ```C
     struct virtchnl2_event {
@@ -5133,27 +5195,59 @@ This flow is triggered by the driver itself as part of driver load/unload or oth
 - Before Triggering XLR, the state of device visible to IDPF driver in PF/VFGEN_RSTAT register to is expected to be “PF/VFR_ACTIVE” state (10b).
 - The IDPF triggers XFR: PF setting PFGEN_CTRL.PFSWR (XLR is triggered immediately) or VF sending the “VIRTCHNL_OP_RESET_VF” command, which is executed by Host Management after delay.
 - Following this, Device will automatically clear PF/VFGEN_RSTAT register to “PF/VFR_INPROGRESS” state (00b), while the driver will start polling the PF/VFGEN_RSTAT register to get back into “PF/VFR_COMPLETED” state (01b), meaning that hardware PF/VF device is initialized to its default state.
-- After it happens the PF/VF XIO is ready for re-initialization. As part of the initialization and execution of the first command in the initialization sequence “GetVersion” virtChnl command, Host Management will set PF/VFGEN_RSTAT register back to “PF/VFR_ACTIVE” state (10b).
+- After it happens the PF/VF Driver is ready for re-initialization. As part of the initialization and execution of the first command in the initialization sequence “GetVersion” virtChnl command, Host Management will set PF/VFGEN_RSTAT register back to “PF/VFR_ACTIVE” state (10b).
 
-### Asynchronous VFR
+### Asynchronous VFR/FLR
 
-In this case, XLR happens asynchronously to the driver, usually triggered by Device, OS or any other source described above. In this case the driver is expected to detect XLR condition and start polling till function is back to normal working state and then to start re-initialization process.
+In this case, XLR happens asynchronously to the driver, usually triggered by Device, OS or any other source described above. The driver is expected to detect XLR condition and start polling till function is back to normal working state and then to start re-initialization process.
 
-Expected driver flow in this case is:
+Driver flow:
 
-- When the driver detects “TX timeout” on its data TX queues or it detects that its Mailbox TX Queue “enable” bit in PF/<span class="mark">VF_ATQLEN. ATQENABLE</span> is cleared, the driver is expected to assume XLR and check if its PF/VFGEN_RSTAT register is not in “PFR/VFR_ACTIVE” state (10b).
+- When the driver detects “TX timeout” on its data TX queues or it detects that its Mailbox TX Queue ENA bit and/or LEN bit in PF/<span class="mark">VF_ARQLEN. ARQENABLE</span> is cleared, the driver is expected to assume XLR and check if its PF/VFGEN_RSTAT register is not in “PFR/VFR_ACTIVE” state (10b).
 - Following XLR detection, the driver is expected to avoid sending new data or control transactions to the device, poll for PF/VFGEN_RSTAT register to get back into “PFR/VFR_COMPLETED” state and then to re-initialize itself.
 
-***Note***: Despite the fact that VF located IDPF devices operate
-completely independently and does not require any initialization or
-involvement from PF located IDPF, Function Level Reset triggered on PF
+***Note***: Despite the fact that VF IDPF devices operate
+completely independently and do not require any initialization or
+involvement from PF IDPF; Function Level Reset triggered on PF
 device will automatically trigger VF Level resets for all VFs mapped to
 this PF.
 
+#### MMIO Space non-accessible condition: 
+The other Async reset flow that needs to be detected by the IDPF driver is the case when the Device MMIO space is not accessible for some period of time.
+
+When MMIO space is not accessible, the device will generate an SError to the system upon MMIO access by the driver or any SW.
+
+IMPORTANT Note: When the Device needs to inform the PFs and VFs, it needs to clear the ATQLEN and ENA field for the PFs and also the SRIOV VFs.
+In compliance with SRIOV Specification, the VF interfaces are removed when PF interfaces are in reset because of VF_ENABLE bit being cleared in PCI Config space of the PF, at which point the Host OS removes the VF interface triggering a VF driver unload.
+
+When tne device needs to go to MMIO space not accessible situation, the Mailbox interrupt is triggered by Device Control (just for the PFs) for letting driver know that a reset is going to occur soon. Driver must check ATQLEN and ENA field in ATQ** register as the first thing in the Mailbox interrupt service routine and if any of the fields are cleared it should then just arm the Interrupt and should stop accessing any MMIO space and wait for another Mailbox interrupt to occur or a timeout to happen. 
+	
+	IMPORTANT NOTE: Since in the Async reset flow, the driver immediately starts to poll on PFGEN_RSTAT or VFGEN_RSTAT register to see if it is coming out of reset, driver must set a different state to know this it cannot poll on PFGEN_RSTAT or VFGEN_RSTAT register till it receives the second interrupt or timeout happens.
+
+	
+	IMPORTN NOTE: The assumption for MSIX vector is its Auto clear and does not require driver to read any register. Also the watchdog timer which gets fired on the Device Control side before such a reset is actually triggered is started after the PF drivers are notified and is large enough that the time spent by the drivers doing couple of register access in the Mailbox Interrupt routine are well below the watchdog value. For example watchdog timer value is in 100s of millisecond and the registers access is at best in microseconds.
+
+Device Control will trigger another mailbox interrupt for PFs/VFs once the reset is done, to indicate that they can now read PFGEN_RSTAT/VFGEN_RSTAT registers. Please note this interrupt will not have any virtchnl payload either as the rings won’t be configured by the driver.  Upon reception of this interrupt, the IDPF will follow the normal reset state machine for recovery as described earlier. (PFGEN_RSTAT/VFGEN_RSTAT 1) state= Reset_in_progress -> Reset_Completed -> Active).
+
+The driver waits for the second interrupt to occur to come out of reset for a given period. The safe timeout value which still leaves a possibility of recovery by the device is TBD seconds. If the second interrupt does arrive within the timeout period, the driver should move to a state indicating it cannot communicate with the device to be on the safe side. 
+
+Again both the reset interrupt mechanism and the timeout mechanism is an extension present as a common flow, a device may never trigger this interrupt for both PF or VF  and just rely on the non-graceful detection through ARQLEN and ARQLEN.ENA bit being clear check in the timer task.
+
+#### FLR MMIO HW access synchronization condition:
+When the Linux OS triggers FLR on a PF and VF, and the driver tries to access MMIO space, different PCIE Errors are triggered on Xeon (HW Error) vs ARM (Sync Abort) cores if the access is within reset duration of the FLR being triggered from the PCIE Config space. This is due to a standard flow for PCIE Devices where the MMIO access is removed during FLR for a short duration.
+
+	To deal with this correctly the driver needs to enable callbacks only for function level reset triggered by the OS/hypervisor.  In case of linux, the driver must subscribe for reset detection event through OS callbacks in the driver, this will give an early detection for the driver when a reset is going to happen so the driver does not touch the MMIO space after its notified. After the reset is done, the driver gets a different callback to know that it is out of reset and now driver can start rebuilding and accessing MMIO space by following the PFGEN_RSTAT/VFGEN_RSTAT state machine to get Active state.
+
+	In case of windows and ESX, there is no OS/hypervisor triggering FLR through config space, instead the driver is asked to trigger a PFR or VFR so the driver is always in the loop and since this is not an FLR driver can use the PFGEN_RSTAT/VFGEN_RSTAT access flow to know when it is out of reset without having to avoid MMIO access for some duration.
+
 # Standard Offloads
 
-- Multiple Default vPorts (WIP)
-- Container Dedicated Queues (WIP)
+- Multiple Default vPorts
+IDPF driver can support multiple vPorts if the Device allows to do so. There are two ways the device can communicate to the driver that vPorts need to be created.
+ 1. Init Time
+	At Init time the driver is informed as a response to VIRTCHNL2_OP_GET_CAPS opcode from the driver that it needs to create n number of vports. The value n can be 0 or more. The vport creation and configuration flow is the same for all vports. This is described in the vport creation and configuration flow section.
+ 2. Run Time (TBD after 1.0)
+	This flow needs to be done as part of ADI and Subfunction creation and will be added after 1.0 of the Spec.
 
 All offloads (standard or advanced) are negotiated. This gives a device
 the opportunity to opt out of supporting a particular offload.
@@ -5327,7 +5421,7 @@ promiscuous mode and as a result the driver should be able to send and
 receive packets with any unicast or multicast addresses based on
 configuration.
 
-## L2 Tag Insertion Offload (WIP)
+## L2 Tag Insertion Offload (TBD after 1.0)
 
 - Device Interface
 
@@ -5584,7 +5678,7 @@ Example
 
 ![TSO](Diagrams/tso.png)
 
-## L2 Tag Strip Offload (WIP)
+## L2 Tag Strip Offload (TBD after 1.0)
 
 - Device Interface
 
@@ -5685,11 +5779,6 @@ __le32 csum_caps;
 
 }
 ```
-- Configuration: (WIP)
-
-- Driver Configuration and Runtime flow (WIP)
-
-- Device and Control Plane Behavioral Model (WIP)
 
 ## RSS (Receive Side Scaling)
 
@@ -5950,7 +6039,7 @@ When RSC is enabled, the receive flow in the device is as follows:
 - At some point, it will be time to close the context.
 - The device writes the packet header to host memory (to the header buffer associated with the first packet buffer) and completes all buffers associated with the RSC context consecutively on the receive queue. Note that the buffers may or may not have been consecutive on the Rx Buffer Queue.
 
-## Double Completion (WIP)
+## Double Completion (TBD after 1.0)
 
 - Device Interface
 - Capability and Data structures
@@ -6052,302 +6141,271 @@ regular completion came.</th>
 </tbody>
 </table>
 
-## EDT (Earliest Departure Time) (WIP)
+## EDT (Earliest Departure Time)
 
-This feature enables Packet pacing hints to the device.
+This feature enables offloading Packet pacing hints to the device.
 
 - Device Interface
 
-The Driver fills out the Data descriptor with a hint to transmit a
-packet at a time in future. Field named SW_EDT in the Data descriptor
-(0xc) is used to specify the earliest time the packet should be
-launched.
+The Driver fills out the transmit data descriptor with a hint to transmit a packet at a time in future. Field named SW_EDT in the Data descriptor(0xc) is used to specify the earliest time the packet should be launched.
 
-A value of 0 in SW_EDT means the SW is not asking to delay the packet,
-the device may still launch the packet at a future time when the
-scheduling conditions are met.
+A value of 0 in SW_EDT means the SW is not asking to delay the packet, the device may still launch the packet at a future time when the scheduling conditions are met.
+
+In order to support SW requested packet pacing, the driver should configure Split Transmit queues and use flow Scheduling Descriptor format. The completions will be delayed and arrive out of order when the packet is actually scheduled by the device.
 
 - Capability and Data structures
 
-In order to support SW requested packet pacing, the driver should
-configure Split Transmit queues and use flow Scheduling Descriptor
-format. The completions will be delayed and arrive out of order when the
-packet actually is scheduled by the device.
+```C
+enum virtchnl2_cap_other {
+...
+    VIRTCHNL2_CAP_EDT                       = BIT_ULL(14),
+...
+}
 
-- Driver Configuration and Runtime flow (WIP)
+enum virtchnl2_op {
+...
+ VIRTCHNL2_OP_GET_EDT_CAPS                       = 525,
+...
+}
 
-- Device and Control Plane Behavioral Model (WIP)
+/**
+ * struct virtchnl2_edt_caps - Get EDT granularity and time horizon
+ * @tstamp_granularity_ns: Timestamp granularity in nanoseconds
+ * @time_horizon_ns: Total time window in nanoseconds
+ *
+ * Associated with VIRTCHNL2_OP_GET_EDT_CAPS.
+ */
+struct virtchnl2_edt_caps {
+        __le64 tstamp_granularity_ns;
+        __le64 time_horizon_ns;
+};
+VIRTCHNL2_CHECK_STRUCT_LEN(16, virtchnl2_edt_caps);
+```
+
+- Driver Configuration and Runtime flow
+
+The driver negotiates EDT offload capability with the device by setting VIRTCHNL2_CAP_EDT bit as part of negotiating the device level capabilities with the control plane. The control plane will set this bit in its response if the driver is allowed to offload EDT. If EDT offload capability is granted, the driver learns EDT specific parameters by sending a EDT specific capability request VIRTCHNL2_OP_GET_EDT_CAPS. The control plane provides timestamp granularity and time horizon value in its response. Time horizon value indicates the maximum time the device can hold the packet before it can be transmitted. This value can be passed to the OS stack so that it can decide to offload packet pacing to HW if the earliest departure time of a paced packet is within the time horizon supported by the device.
+
+At runtime, OS stack can decide to offload packet pacing to the device and passes the packet along with earliest departure time to the driver.  The driver fills in the TX timestamp provided by the OS stack in the flow scheduling transmit descriptor to offload pacing of that packet to the device. The driver validates that the timestamp is within the time horizon supported by the device. The format of the timestamp is a 24-bit value. The 23 LSBs represent absolute time in units of timestamp granularity. The MSB of the timestamp is used to indicate SW Timestamp overflow, meaning that the SW Timestamp is beyond the device's Time Horizon.
+
+- Device and Control Plane Behavioral Model
+
+The device uses Timing Wheel Scheduler that selects packets for transmission based on a Timestamp. The Timestamp in the flow scheduling transmit descriptor represents the earliest departure time of the packet, and the Timing Wheel Scheduler ensures that packets are not transmitted until the Absolute Time is greater than or equal to the packet’s Timestamp. The device and the hosts are synchronized so that all share a common time.
 
 ##  
 
-## Flow Steering (WIP)
+## Flow Steering
 
-This feature enables flow steering to a queue or queue group or form dropping certain flows using exact match or wild card match filters on the device. It can be used for implementing tenant ACLs as well as long as the CP supports this feature for a given Driver interface.
+Flow steering capability is an advanced capability provided by a device using stateful tables in the device to achieve better load balancing or flow pinning of flows to the CPU cores by classifying the flows into specific DMA queues. It’s a feature that is used in place of RSS or in addition to RSS as an advancement. The default behavior assumed by the device when both are enabled is to fall back to RSS for queue selection when flow steering ule does not exist for a given flow. The flow rule may not exist because there is no more space in the device to add a flow rule for the flow or the driver does not chose to add a flow steering rule for such a flow.
+The Device level flow steering capability request is made by IDPF driver through get_capabilities virtchannel command by setting VIRTCHNL2_CAP_FlOW_STEER bit in the capability bitmap. If the device supports flow steering capability for this interface the response from Device Control still has the VIRTCHNL2_CAP_FLOW_STEER bit set in the capability bitmap.
 
-- Device Interface
+### Flow Steering Sub Capabilities
+The feature can be enabled as three different sub capabilities.
+1.	Inline flow steering support with implicit Rx queue
+2.	Inline flow steering support with explicit Rx queue 
+3.	Sideband Flow steering support using virtchannel messages
 
-The Driver negotiates with the device the capability to add/delete/query flow steering filter rules over the mailbox. The response from the device can be negotiated as well using virtchannel flags
+Each vPort will learn using vPort flags what capabilities it has with respect to flow steering as this can be controlled at a vport level.  
+Following VPORT flags get set by the Device Control as a response to create vport based on the 
+configured policy for the vPorts on the Device Control side.
+
+```C
+enum virtchnl2_vport_flags {
+	…
+	VIRTCHNL2_VPORT_INLINE_FLOW_STEER	= BIT(1),
+	VIRTCHNL2_VPORT_INLINE_FLOW_STEER_RXQ	= BIT(2),
+	VIRTCHNL2_VPORT_SIDEBAND_FLOW_STEER	= BIT(3),
+             …
+}
+```
+
+Device Control could allow all 3 capabilities or any combination for a Vport. Apart from this a few new fields are defined in the create_vPort message padding area to provide some information for the IDPF driver regarding Flow director  support.
+
+```C
+struct virtchnl2_create_vport {
+	…
+__le64 inline_flow_types;
+__le64 sideband_flow_types;
+__le32 sideband_flow_actions;
+__le32 flow_steer_max_rules;
+…
+}
+```
+
+Flow Steer Max Rules: 
+Flow_steer_max_rules allowed by the device per vport are across all flow types and all flow steering capabilities for that vport.
+
+Flow Types:
+
+```C
+enum virtchnl2_flow_types {
+ 	VIRTCHNL2_FLOW_IPV4_UDP		= BIT(1),
+ 	VIRTCHNL2_FLOW_IPV4_SCTP	       = BIT(2),
+ 	VIRTCHNL2_FLOW_IPV4_OTHER	= BIT(3),
+	VIRTCHNL2_FLOW_IPV4_AH		= BIT(4),
+	VIRTCHNL2_FLOW_IPV4_ESP		= BIT(5),
+	VIRTCHNL2_FLOW_IPV4_AH_ESP	= BIT(6),
+	VIRTCHNL2_FLOW_IPV6_TCP		= BIT(7),
+	VIRTCHNL2_FLOW_IPV6_UDP		= BIT(8),
+	VIRTCHNL2_FLOW_IPV6_SCTP	= BIT(9),
+	VIRTCHNL2_FLOW_IPV6_OTHER	= BIT(10),
+ 	VIRTCHNL2_FLOW_IPV6_AH		= BIT(11),
+ 	VIRTCHNL2_FLOW_IPV6_ESP		= BIT(12),
+ 	VIRTCHNL2_FLOW_IPV6_AH_ESP	= BIT(13),
+…
+}
+```
+
+sideband_flow_steer_flow_types (bitmask), is like rss_flow_type and lets the driver know which flow types are allowed for configuring sideband filter rules. This does not give any indication on the input set (match fields) used for a given flow type which is configured by the Device Control Plane. So, if a driver tries to program a rule with match fields for a given flow type that is not configured by Device Control; device Control will respond with failure to add the rule.
+Note: A flow type is way to identify certain sequence of headers in each packet such as IPv4_TCP flow type, typically a device may allow a flow type to be interpreted in a tunnel agnostic fashion, so a packet with IPv4_TCP over Vxlan may still be considered as the same flow type as non-tunneled TCP_IPv4 packet.
+
+inline_Flow_Steer_flow_types (bit mask), this is also like rss_flow_type and lets the driver know which flow types are allowed for configuring inline filter rules, again this does not give any indication on the input set allowed and that is configured by the Device Control Plane.
+sideband_flow_steer_action_types (bit mask only applicable to sideband)
+
+```C
+enum virtchnl2_action_types {
+	VIRTCHNL2_ACTION_DROP		= BIT(0),
+	VIRTCHNL2_ACTION_PASSTHRU	= BIT(1),
+	VIRTCHNL2_ACTION_QUEUE		= BIT(2),
+	VIRTCHNL2_ACTION_Q_GROUP	= BIT(3),
+	VIRTCHNL2_ACTION_MARK		= BIT(4),
+	VIRTCHNL2_ACTION_COUNT		= BIT(5),
+};
+```
+
+Note: Inline flow steering assumes an input set and filter rule that is derived from the packet header content as a flow match based on the Device Control plane configuration. This is not configurable by the driver. The only action allowed with Inline flow steer is queue action.
+
+In case of Inline flow steering rules, when sending a packet that should program a  flow rule in the device, the Context descriptor must set the FILT_AU_EN bit to Enabled, the Rx Queue used for forwarding is programmed as part of the Tx queue configuration as peer_rx_queue_id.
+
+Inline Flow steering with Explicit queue is supported using fields (TBD) from the TX Context Descriptor (Rx queue that needs to be used as forwarding action.) as part of Flex fields. 
+In case of Inline flow steering rules, when sending a packet that should remove a  flow rule from the device, the Context descriptor must set the FILT_AU_EVICT bit to remove the filter.
+
+```C
+//Flow Steering Vitrchannel Commands
+	VIRTCHNL2_OP_FLOW_RULE_CHECK			= 550,
+	VIRTCHNL2_OP_FLOW_RULE_ADD			= 551,
+	VIRTCHNL2_OP_FLOW_RULE_GET			= 552,
+	VIRTCHNL2_OP_FLOW_RULE_DEL			= 553,
+	VIRTCHNL2_OP_FLOW_RULE_IDS_GET			= 554,
+	VIRTCHNL2_OP_FLOW_RULE_BY_IDS_DEL		= 555,
+```
+
+### Flow Steering flows
+#### Init Flow
+1. After the Device level capability negotiation as described in the Flow Steering Capability section, the driver does vport creation.
+2. As part of response for create_vport, the driver learns the vport level flow steering sub capabilities granted by the Device Control.
+3. The driver also learns about number of filters (overall for this vport) and flow types supported from this device per sub capability. The driver also learns about the actions supported by the device for Sideband flow steering. All this info helps the driver in doing a sw check before adding any rules into the device.
+4. The driver ultimately enables the Inline or sideband flow steering based on SW Control knobs after the Device capabilities granted per vport are learnt. So even if the device gives the capability the SW administrator can chose not to enable the feature. 
+#### Runtime flow
+#####	Filter Add flow for Sideband filters.
+1. Driver prepares a virtchannel command struct based on VIRTCHNL2_OP_FLOW_RULE_ADD data structure definitions. This can be done two different ways using raw packet content or using sequence of protocol headers with fields to be matched.
+	- Raw packet format specifies a raw packet with field values that need to be matched and a mask of the same size specifying which are the bits to be matched from the packet.
+    - With the Sequence of protocol header with fields, one has to construct an array of protocol Header names and a 64 byte max header content with an accompanying mask to specify the relevant bits and bytes to be matched in the filter.
+
+	One must specify headers in the packet starting from a given tunnel level from where to start matching the fields . 0 being the outer most tunnel level. If all the fields to be matched are say in tunnel level 2 from outer most, the filter specification can just set the tunnel level to 2 and specify protocol hrds in level 2. If fields from level 1 and 2 are to be matched then one has to specify all protocols in both he levels that are allowed in the packet and if there is no match in a particular protocol hdr that can be specified by leaving the mask for that header to be empty and the Device control will ignore definition of fields or the size of the hdr etc for that protocol.
+
+	Again each protocol hdr can be longer that 64 bytes, but this will provide for matching fields in a protocol hrd as deep as 64 bytes.
+	Also a count field is filled by the driver to say the number of protocols in the array. 
+	
+	Driver must also prepare the action specification array to specify the actions that must happen upon the filter match in the device. Number of actions should be filled out as action count and a structure that specifies the different action details.   Each action definition will pick one of the following actions: queue, queue_group, mark, count, passthrough or drop. Drop and passthrough will be specified as single actions by themselves with no accompanying data. Other actions will have data to go along such as queue_id etc.
+
+	Driver must also specify the vPort_id for which the filter is being added.
+2. Driver sends the command over mailbox and gets a response from the Device Control if the rules was added or not. If not added it gets the right error depending on the filter input set supported or not or if the filter space on the device is completely occupied etc.
+
+	The definition assumes a response is always received and carries an ID (flow_rule_Id) for the filter added by the device Control in the Device.	
+##### Filter Add flow for Inline filters and implicit RX Queue
+1. Driver sets the Peer_rx_qeueue_id filed in the TX Configuration vrtchannel command to specify the Rx queue which would be used for forwarding action with the inline filter that gets added as part of Tx packet send.
+2. Driver sets meta data (FILT_AU_EN) in the TX Context descriptor to indicate to HW to add a Flow steering rule and derive the Input set from the packet based on the Configuration on the device side.
+3. If a filter rule add fails, in some cases the Device can send a receive descriptor with error. 
+4. Dummy packets or standard TX packets can be used to add a filter in the Device. A dummy packet is specified by marking DUMMY bit in the Tx Context Descriptor and the Device discards the packet after programming the rule. The validity of packet headers is not considered as long as there is information for parsing of headers by the device present in the packet. Also, the fields that identify a flow for a given packet type should be populated.
+##### Filter add flow for Inline filters and explicit RX queue 
+	(TBD after 1.0): To define the exact fields layout for the RX queue information in the Tx context descriptor
+##### Filter remove flow for sideband filters
+1.	Driver prepares a virtchannel command struct based on VIRTCHNL2_OP_DEL_FLOW_RULE data structure definition.
+2.	The driver must fill out the flow_rule_id as returned by Control plane during filter add in the delete command along with vport_id from which this filter needs to be removed.
+##### Filter remove flow for Inline filters and implicit or explicit RX queue
+1. The driver must Send a packet with hdr containing relevant fields to help remove a  flow rule from the device. The Context descriptor with the packet must set the FILT_AU_EVICT bit to remove the filter. The packet could be for example a FIN or RST packet that is going out in case of TCP based flows. In case of UDP any last packet of the UDP flow can set the EVICT bit to remove the filter.
+2. Dummy packets can be used as well to Evict a filter from the Device. A dummy packet is specified by marking DUMMY bit in the Tx Context Descriptor and the Device discards the packet after programming the rule. The validity of packet headers is not considered as long as there is information for parsing of headers by the device present in the packet. Also, the fields that identify a flow for a given packet type should be populated.
+#### Filter check for sideband filters (TBD after 1.0)
+#### Reset flow
+The driver can chose to hold state of programmed flows in the Device and clear the flow info stored in SW as part of Device reset, or use the SW copy of flow Steer rules to repopulate the Device with flow rules after Device reset.
+
+
+### Device Interface
+
+The Driver negotiates with the device the capability to add/delete/query flow steering filter rules over the mailbox. The response from the device can be negotiated as well as using virtchannel flags
 
 - All responses: success or failure. This is the default setting for all virtchannel requests from the driver to CP.
 - Just failure response. This needs to be enabled by setting an appropriate virtchannel flag in the virtchannel Descriptor.
 - Fence. This needs to be enabled by setting an appropriate virtchannel flag in the virtchannel Descriptor. Upon setting this flag on a request from the driver to the CP, CP responds to this particular request after the CP checks all other previous requests from the Interface on this mailbox where completed successfully or otherwise.
 
-- Capability and Data structures
+### Flow Add/Remove Capability and Data structures
+
 ```C
-
 #define VIRTCHNL2_CAP_FLOW_RULES BIT(16)
-
 ```
+
 If the device supports flow steering it responds with the capability supported in get_capability flow.
 
-<table>
-<colgroup>
-<col style="width: 2%" />
-<col style="width: 2%" />
-<col style="width: 94%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th></th>
-<th></th>
-<th><p>The two opcodes supported as of now are for adding and removing
-flow rules.</p>
-<p>A driver can keep a log of the flow rules added, to respond to the
+The two opcodes supported as of now are for adding and removing
+flow rules.
+A driver can keep a log of the flow rules added, to respond to the
 user queries regarding what flow rules are programmed or in future a
 QUERY_RULE opcode may be added into the virtchannel to get actual flow
-rules dumnped out of the device.</p>
+rules dumnped out of the device.
 
-<p>#define VIRTCHNL2_OP_ADD_FLOW_RULE 538</p>
-<p>#define VIRTCHNL2_OP_DEL_FLOW_RULE 539</p></th>
+```C
+#define VIRTCHNL2_OP_ADD_FLOW_RULE 538
+#define VIRTCHNL2_OP_DEL_FLOW_RULE 539
+```
 
-</tr>
-</thead>
-<tbody>
-</tbody>
-</table>
+Actions and related Data structures :
 
-Actions Supported:
+```C
+#define VIRTCHNL2_ACTION_DROP 1
+#define VIRTCHNL2_ACTION_PASSTHRU 2
+#define VIRTCHNL2_ACTION_QUEUE 3
+#define VIRTCHNL2_ACTION_Q_GROUP 4
+#define VIRTCHNL2_ACTION_MARK 5
+#define VIRTCHNL2_ACTION_COUNT 6
 
-<table>
-<colgroup>
-<col style="width: 2%" />
-<col style="width: 2%" />
-<col style="width: 94%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th></th>
-<th></th>
-<th>#define VIRTCHNL2_ACTION_DROP 1</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>#define VIRTCHNL2_ACTION_PASSTHRU 2</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>#define VIRTCHNL2_ACTION_QUEUE 3</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>#define VIRTCHNL2_ACTION_Q_GROUP 4</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>#define VIRTCHNL2_ACTION_MARK 5</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>#define VIRTCHNL2_ACTION_COUNT 6</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>struct virtchnl2_proto_hdr {</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>/* see VIRTCHNL2_PROTO_HDR_TYPE */</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>__le32 type;</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>__le32 pad;</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>/**</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>* binary buffer in network order for specific header type.</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>* For example, if type = VIRTCHNL2_PROTO_HDR_IPV4, a IPv4</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>* header is expected to be copied into the buffer.</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>*/</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>u8 buffer_spec[64];</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>/* binary buffer for bit-mask applied to specific header type
-*/</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>u8 buffer_mask[64];</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>};</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>struct virtchnl2_proto_hdrs {</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th><p>/* As a packet may contain multiple headers of same type, this
-defines the encap level */</p>
-<p>u8 tunnel_level;</p>
-<p>/* count = 0 is for a raw packet format, 1 &lt;= is when specifying
-the match key using proto_hdr format. */</p></th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>__le32 count;</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th></th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>union {</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>struct virtchnl2_proto_hdr</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>proto_hdr[VIRTCHNL2_MAX_NUM_PROTO_HDRS];</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>struct {</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>__le16 pkt_len;</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>u8 spec[VIRTCHNL2_MAX_SIZE_RAW_PACKET];</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>u8 mask[VIRTCHNL2_MAX_SIZE_RAW_PACKET];</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>} raw;</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th>};</th>
-</tr>
-<tr class="header">
-<th></th>
-<th></th>
-<th>};</th>
-</tr>
-<tr class="odd">
-<th></th>
-<th></th>
-<th></th>
-</tr>
-</thead>
-<tbody>
-</tbody>
-</table>
+struct virtchnl2_proto_hdr {
+/* see VIRTCHNL2_PROTO_HDR_TYPE */
+__le32 type;
+__le32 pad;
+/**
+* binary buffer in network order for specific header type.
+* For example, if type = VIRTCHNL2_PROTO_HDR_IPV4, a IPv4
+* header is expected to be copied into the buffer.
+*/
+u8 buffer_spec[64];
+/* binary buffer for bit-mask applied to specific header type
+*/
+u8 buffer_mask[64];
+}
+struct virtchnl2_proto_hdrs {
+/* As a packet may contain multiple headers of same type, this
+defines the encap level */
+u8 tunnel_level;
+/* count = 0 is for a raw packet format, 1 &lt;= is when specifying
+the match key using proto_hdr format. */
+__le32 count;
+union {
+struct virtchnl2_proto_hdr proto_hdr[VIRTCHNL2_MAX_NUM_PROTO_HDRS];
+struct {
+__le16 pkt_len;
+u8 spec[VIRTCHNL2_MAX_SIZE_RAW_PACKET];
+u8 mask[VIRTCHNL2_MAX_SIZE_RAW_PACKET];
+} raw;
+}
+}
+```
 
-- Configuration
+### Configuration
 
 Device, if it can support flow Steering, will allocate certain flow Steering table resources to be used by the SW as requested by the driver. A get_flow_steering_capability data structure will be defined to learn about the device's detailed capability. The number of rules supported, match kind etc.
 
-- Driver Configuration and Runtime flow
-
-A driver can add flow_rules after the device is initialized. A device can fail a rule add for various reasons. A response is asynchronously provided by the device.
-
-- Device and Control Plane Behavioral Model
-
-TBD
-
-## Inline Crypto Offload (WIP)
+## Inline Crypto Offload (TBD after 1.0)
 
 - Device Interface
 
@@ -6357,13 +6415,13 @@ The Driver negotiates with the device the capability to add/delete Security Cont
 - Just failure response. This needs to be enabled by setting an appropriate virtchannel flag in the virtchannel Descriptor.
 - Fence. This needs to be enabled by setting an appropriate virtchannel flag in the virtchannel Descriptor. Upon setting this flag on a request from the driver to the CP, CP responds to this particular request after the CP checks all other previous requests from the Interface on this mailbox where completed successfully or otherwise.
 
-- Capability and Data structures (WIP)
+- Capability and Data structures
 
-- Configuration (WIP)
+- Configuration
 
-- Driver Configuration and Runtime flow (WIP)
+- Driver Configuration and Runtime flow
 
-- Device and Control Plane Behavioral Model (WIP)
+- Device and Control Plane Behavioral Model
 
 ## RDMA Capability
 
@@ -6629,9 +6687,9 @@ enablement flow to be performed by IDPF PF driver:
 2. **Optional step** - After device capabilities are discovered by the IDPF driver, it can proceed and enable its VFs and back them up with the resources. For this purpose, the PF driver will send "VIRTCHNL_OP_SET_SRIOV_VFS” opcode 118 VirtChnl command to create a specified number of VFs. Following this command, CP will create default mailbox Queue Pairs, MSIx vectors etc. for each one of the VFs in order to provide them the ability to load their drivers and start their own device configuration.
 3. After these PF driver initialization steps, IDPF driver can be loaded on enabled VFs and start its own initialization flow, using its assigned Mailbox queue pairs. See more details in [<u>Driver Initialization</u>](#8cwea2t0qd3s).
 
-## S-IOV (WIP)
+## ADI (TBD after 1.0)
 
-S-IOV is an advanced virtualization capability provided by the device to some of its functions ( for now only PF), it is a much lighter weight virtualization as compared to SR-IOV and does provide a huge fan out.
+ADI/S-IOV (Scalabale - IO Virtualization) is an advanced virtualization capability provided by the device to some of its functions ( for now only PF), it is a much lighter weight virtualization as compared to SR-IOV and does provide a huge fan out.
 
 - Device Interface
 
@@ -6651,7 +6709,7 @@ S-IOV is an advanced virtualization capability provided by the device to some of
 
 ## 
 
-## CRC Strip/No-strip offload: (WIP)
+## CRC Strip/No-strip offload: (TBD after 1.0)
 
 Note: Also negotiate if the CRC provided is updated when the Device
 makes modification to the packet or the wire side CRC.
@@ -7619,6 +7677,13 @@ Virtchannel data structures for device configuration, vport configuration, queue
 <th></th>
 <th></th>
 </tr>
+<tr class="odd">
+<th>Number of left bit shifts to convert timestamp in tx completion descriptor to nanoseconds.</th>
+<th>tx_cmpl_tstamp_ns_s in struct virtchnl2_get_capabilities</th>
+<th>Hard Coded Default/Negotiable</th>
+<th>9(512ns)</th>
+<th></th>
+</tr>	
 </thead>
 <tbody>
 </tbody>
@@ -7886,7 +7951,7 @@ Note : When equals to 18 SW can avoid any calculations or check for linearizatio
 <tr class="header">
 <th>Min spacing between 2 RS marked descriptors<br/>
 Note : this capability is a queue level capability</th>
-<th></th>
+<th>IDPF_TX_RS_MIN_GAP</th>
 <th></th>
 <th>0</th>
 <th></th>
@@ -8376,7 +8441,7 @@ VIRTCHNL2_CAP_OEM</th>
 
 ### 
 
-# Virtchannel Header File/s (WIP)
+# Virtchannel Header File/s
 
 # virtchannel2.h
 
@@ -10717,16 +10782,16 @@ VIRTCHNL2_CHECK_STRUCT_LEN(552, virtchnl2_proto_hdrs);
 
 /**
  * struct virtchnl2_rule_action - struct representing single action for a flow
- * @action_type : see enum virtchnl2_action_types
- * @act_conf : union representing action depending on action_type.
- * @q_id : queue id to redirect the packets to.
- * @q_grp_id : queue group id to redirect the packets to.
+ * @action_type: see enum virtchnl2_action_types
+ * @act_conf: union representing action depending on action_type.
+ * @q_id: queue id to redirect the packets to.
+ * @q_grp_id: queue group id to redirect the packets to.
  * ctr_id : used for count action. If input value 0xFFFFFFFF control plane
  *          assigns a new counter and returns the counter ID to the driver. If
  *          input value is not 0xFFFFFFFF then it must be an existing counter
  *          given to the driver for an earlier flow. Then this flow will share
  *          the counter.
- * mark_id : Value used to mark the packets with. Used for mark action.
+ * mark_id: Value used to mark the packets with. Used for mark action.
  * reserved: Reserved for future use.
  */
 struct virtchnl2_rule_action {
@@ -10757,10 +10822,10 @@ VIRTCHNL2_CHECK_STRUCT_LEN(100, virtchnl2_rule_action_set);
 
 /**
  * struct virtchnl2_flow_rule
- * @proto_hdrs : array of protocol header buffers representing match criteria
- * @action_set : series of actions to be applied for given rule
- * @priority : rule priority.
- * @pad : padding for future extensions.
+ * @proto_hdrs: array of protocol header buffers representing match criteria
+ * @action_set: series of actions to be applied for given rule
+ * @priority: rule priority.
+ * @pad: padding for future extensions.
  */
 struct virtchnl2_flow_rule {
 	struct virtchnl2_proto_hdrs proto_hdrs;
@@ -10785,10 +10850,10 @@ enum virtchnl2_flow_rule_status {
 };
 
 /**
- * struct virtchnl2_flow_rule_info : structure representing single flow rule
- * @rule_id : rule_id associated with the flow_rule.
- * @rule_cfg : structure representing rule.
- * @status : status of rule programming. See enum virtchnl2_flow_rule_status.
+ * struct virtchnl2_flow_rule_info: structure representing single flow rule
+ * @rule_id: rule_id associated with the flow_rule.
+ * @rule_cfg: structure representing rule.
+ * @status: status of rule programming. See enum virtchnl2_flow_rule_status.
  */
 
 struct virtchnl2_flow_rule_info {
