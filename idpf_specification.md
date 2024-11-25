@@ -6196,7 +6196,7 @@ The device uses Timing Wheel Scheduler that selects packets for transmission bas
 
 ## Flow Steering
 
-Flow steering capability is an advanced capability provided by a device using stateful tables in the device to achieve better load balancing or flow pinning of flows to the CPU cores by classifying the flows into specific DMA queues. It’s a feature that is used in place of RSS or in addition to RSS as an advancement. The default behavior assumed by the device when both are enabled is to fall back to RSS for queue selection when flow steering ule does not exist for a given flow. The flow rule may not exist because there is no more space in the device to add a flow rule for the flow or the driver does not chose to add a flow steering rule for such a flow.
+Flow steering capability is an advanced capability provided by a device using stateful tables in the device to achieve better load balancing or flow pinning of flows to the CPU cores by classifying the flows into specific DMA queues. It’s a feature that is used in place of RSS or in addition to RSS as an advancement. The default behavior assumed by the device when both are enabled is to fall back to RSS for queue selection when flow steering rule does not exist for a given flow. The flow rule may not exist because there is no more space in the device to add a flow rule for the flow or the driver does not chose to add a flow steering rule for such a flow.
 The Device level flow steering capability request is made by IDPF driver through get_capabilities virtchannel command by setting VIRTCHNL2_CAP_FlOW_STEER bit in the capability bitmap. If the device supports flow steering capability for this interface the response from Device Control still has the VIRTCHNL2_CAP_FLOW_STEER bit set in the capability bitmap.
 
 ### Flow Steering Sub Capabilities
@@ -6256,11 +6256,11 @@ enum virtchnl2_flow_types {
 }
 ```
 
-sideband_flow_steer_flow_types (bitmask), is like rss_flow_type and lets the driver know which flow types are allowed for configuring sideband filter rules. This does not give any indication on the input set (match fields) used for a given flow type which is configured by the Device Control Plane. So, if a driver tries to program a rule with match fields for a given flow type that is not configured by Device Control; device Control will respond with failure to add the rule.
+sideband_flow_types (bitmask), is like rss_flow_type and lets the driver know which flow types are allowed for configuring sideband filter rules. This does not give any indication on the input set (match fields) used for a given flow type which is configured by the Device Control Plane. So, if a driver tries to program a rule with match fields for a given flow type that is not configured by Device Control; device Control will respond with failure to add the rule.
 Note: A flow type is way to identify certain sequence of headers in each packet such as IPv4_TCP flow type, typically a device may allow a flow type to be interpreted in a tunnel agnostic fashion, so a packet with IPv4_TCP over Vxlan may still be considered as the same flow type as non-tunneled TCP_IPv4 packet.
 
-inline_Flow_Steer_flow_types (bit mask), this is also like rss_flow_type and lets the driver know which flow types are allowed for configuring inline filter rules, again this does not give any indication on the input set allowed and that is configured by the Device Control Plane.
-sideband_flow_steer_action_types (bit mask only applicable to sideband)
+inline_flow_types (bit mask), this is also like rss_flow_type and lets the driver know which flow types are allowed for configuring inline filter rules, again this does not give any indication on the input set allowed and that is configured by the Device Control Plane.
+sideband_flow_actions (bit mask only applicable to sideband)
 
 ```C
 enum virtchnl2_action_types {
@@ -6304,7 +6304,7 @@ In case of Inline flow steering rules, when sending a packet that should remove 
 
 	One must specify headers in the packet starting from a given tunnel level from where to start matching the fields . 0 being the outer most tunnel level. If all the fields to be matched are say in tunnel level 2 from outer most, the filter specification can just set the tunnel level to 2 and specify protocol hrds in level 2. If fields from level 1 and 2 are to be matched then one has to specify all protocols in both he levels that are allowed in the packet and if there is no match in a particular protocol hdr that can be specified by leaving the mask for that header to be empty and the Device control will ignore definition of fields or the size of the hdr etc for that protocol.
 
-	Again each protocol hdr can be longer that 64 bytes, but this will provide for matching fields in a protocol hrd as deep as 64 bytes.
+	Again each protocol hdr can be longer that 64 bytes, but this will provide for matching fields in a protocol hdr as deep as 64 bytes.
 	Also a count field is filled by the driver to say the number of protocols in the array. 
 	
 	Driver must also prepare the action specification array to specify the actions that must happen upon the filter match in the device. Number of actions should be filled out as action count and a structure that specifies the different action details.   Each action definition will pick one of the following actions: queue, queue_group, mark, count, passthrough or drop. Drop and passthrough will be specified as single actions by themselves with no accompanying data. Other actions will have data to go along such as queue_id etc.
@@ -6321,7 +6321,7 @@ In case of Inline flow steering rules, when sending a packet that should remove 
 ##### Filter add flow for Inline filters and explicit RX queue 
 	(TBD after 1.0): To define the exact fields layout for the RX queue information in the Tx context descriptor
 ##### Filter remove flow for sideband filters
-1.	Driver prepares a virtchannel command struct based on VIRTCHNL2_OP_DEL_FLOW_RULE data structure definition.
+1.	Driver prepares a virtchannel command struct based on VIRTCHNL2_OP_FLOW_RULE_DEL data structure definition.
 2.	The driver must fill out the flow_rule_id as returned by Control plane during filter add in the delete command along with vport_id from which this filter needs to be removed.
 ##### Filter remove flow for Inline filters and implicit or explicit RX queue
 1. The driver must Send a packet with hdr containing relevant fields to help remove a  flow rule from the device. The Context descriptor with the packet must set the FILT_AU_EVICT bit to remove the filter. The packet could be for example a FIN or RST packet that is going out in case of TCP based flows. In case of UDP any last packet of the UDP flow can set the EVICT bit to remove the filter.
@@ -6338,72 +6338,6 @@ The Driver negotiates with the device the capability to add/delete/query flow st
 - All responses: success or failure. This is the default setting for all virtchannel requests from the driver to CP.
 - Just failure response. This needs to be enabled by setting an appropriate virtchannel flag in the virtchannel Descriptor.
 - Fence. This needs to be enabled by setting an appropriate virtchannel flag in the virtchannel Descriptor. Upon setting this flag on a request from the driver to the CP, CP responds to this particular request after the CP checks all other previous requests from the Interface on this mailbox where completed successfully or otherwise.
-
-### Flow Add/Remove Capability and Data structures
-
-```C
-#define VIRTCHNL2_CAP_FLOW_RULES BIT(16)
-```
-
-If the device supports flow steering it responds with the capability supported in get_capability flow.
-
-The two opcodes supported as of now are for adding and removing
-flow rules.
-A driver can keep a log of the flow rules added, to respond to the
-user queries regarding what flow rules are programmed or in future a
-QUERY_RULE opcode may be added into the virtchannel to get actual flow
-rules dumnped out of the device.
-
-```C
-#define VIRTCHNL2_OP_ADD_FLOW_RULE 538
-#define VIRTCHNL2_OP_DEL_FLOW_RULE 539
-```
-
-Actions and related Data structures :
-
-```C
-#define VIRTCHNL2_ACTION_DROP 1
-#define VIRTCHNL2_ACTION_PASSTHRU 2
-#define VIRTCHNL2_ACTION_QUEUE 3
-#define VIRTCHNL2_ACTION_Q_GROUP 4
-#define VIRTCHNL2_ACTION_MARK 5
-#define VIRTCHNL2_ACTION_COUNT 6
-
-struct virtchnl2_proto_hdr {
-/* see VIRTCHNL2_PROTO_HDR_TYPE */
-__le32 type;
-__le32 pad;
-/**
-* binary buffer in network order for specific header type.
-* For example, if type = VIRTCHNL2_PROTO_HDR_IPV4, a IPv4
-* header is expected to be copied into the buffer.
-*/
-u8 buffer_spec[64];
-/* binary buffer for bit-mask applied to specific header type
-*/
-u8 buffer_mask[64];
-}
-struct virtchnl2_proto_hdrs {
-/* As a packet may contain multiple headers of same type, this
-defines the encap level */
-u8 tunnel_level;
-/* count = 0 is for a raw packet format, 1 &lt;= is when specifying
-the match key using proto_hdr format. */
-__le32 count;
-union {
-struct virtchnl2_proto_hdr proto_hdr[VIRTCHNL2_MAX_NUM_PROTO_HDRS];
-struct {
-__le16 pkt_len;
-u8 spec[VIRTCHNL2_MAX_SIZE_RAW_PACKET];
-u8 mask[VIRTCHNL2_MAX_SIZE_RAW_PACKET];
-} raw;
-}
-}
-```
-
-### Configuration
-
-Device, if it can support flow Steering, will allocate certain flow Steering table resources to be used by the SW as requested by the driver. A get_flow_steering_capability data structure will be defined to learn about the device's detailed capability. The number of rules supported, match kind etc.
 
 ## Inline Crypto Offload (TBD after 1.0)
 
@@ -8154,30 +8088,30 @@ Note : Non generic checksum offload is a checksum offload that is executed using
 </tr>
 <tr class="odd">
 <th>Minimum RX buffer size supported for single queue model.</th>
-<th>IDPF_RX_BUF_2048</mark></th>
-<th>Hard coded default</th>
-<th>2K</th>
+<th></th>
+<th></th>
+<th>128</th>
 <th> Multiple of 128B </th>
 </tr>
 <tr class="header">
 <th>Minimum “large RX buffer” size supported for split queue model.th>
-<th>IDPF_RX_BUF_4096</th>
-<th>Hard coded default</th>
-<th>4K</th>
+<th></th>
+<th></th>
+<th>128</th>
 <th>Multiple of 128B</th>
 </tr>
 <tr class="odd">
 <th>Minimum “small RX buffer” size supported for split queue model.</th>
-<th>IDPF_RX_BUF_2048</th>
-<th>Hard coded default</th>
-<th>2K</th>
+<th></th>
+<th></th>
+<th>128</th>
 <th>Multiple of 128B</th>
 </tr>
 <tr class="header">
 <th>Minimum “RX header buffer” size supported for header split.<br/>
 Relevant for both single and split queue models.</th>
-<th>IDPF_HDR_BUF_SIZE</th>
-<th>Hard coded default</th>
+<th></th>
+<th></th>
 <th>256</th>
 <th>Multiple of 64B</th>
 </tr>
