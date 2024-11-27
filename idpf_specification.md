@@ -435,12 +435,9 @@ This section describes the different RX queue modes supported by this specificat
 The mode of operation is a per queue configuration. Each queue can be configured to work in a different model:
 
 * In order single queue model. 
-  This option is supported only when VIRTCHNL2_CAP_RXQ_MODEL_SINGLE feature is negotiated. 
 * Out of order split queue model.
-  This option is supported only when VIRTCHNL2_CAP_RXQ_MODEL_SPLIT feature is negotiated. 
 
-The device must negotiate at least one of the features above.
-
+The queue model is negotiated at the time of creating a vport and configured as part of the transmit and receive queue configuration flow.
 The minimal and maximal buffers sizes that are supported by Device are negotiable Device capabilities.
 The possible values and default values (in the absence of negotiation) of those capabilities are described in the RX packet/buffer sub-section under the Device capabilities section.
 
@@ -537,10 +534,6 @@ stride” is set to 32, Device:
 
 The descriptor fetch reporting on buffer stride is support writeback
 reporting for buffer queue descriptor fetch (on stride cross).
-
-The Head writeback reporting for buffer queue descriptor fetch (stride
-cross) is supported only when VIRTCHNL2_CAP_RX_SPLITQ_HEAD_WB feature is
-negotiated.
 
 ### RX Completion Queues
 
@@ -3626,11 +3619,10 @@ To enforce a rate change, software should:
 1.  Set the GLINT_DYN_CTL.ITR_INDX field to the relevant ITR. When GLINT_DYN_CTL.ITR_INDX is set to 0x3 the rate programming update is disabled.
 2.  Set the GLINT_DYN_CTL.INTERVAL to the desired interval.
 
-Based on negotiation, the rate change can be done b<u>y</u> using the
+Based on negotiation, the rate change can be done by using the
 following options:
 
 * Piggybacked to an interrupt enablement operation done using GLINT_DYN_CTL (i.e. when setting the INTENA flag).
-* This option is supported only when VIRTCHNL2_CAP_INTR_ADAPT_WITH_INTENA feature is negotiated.
 * SW can use this option only when operation occurs when interrupt is disabled (and not when interrupt is in NO_INT_MODE).
 * When using this option SW must clear the GLINT.INTENA_MSK flag.
 * As an individual operation using GLINT_DYN_CTL without interrupt enablement. (i.e. without setting the INTENA flag).
@@ -3662,17 +3654,11 @@ Based on negotiation, the SW interrupt can be done be using the
 following options:
 
 * Piggybacked to an interrupt enablement operation using GLINT_DYN_CTL (i.e. when setting the INTENA flag).
-  - This option is supported only when VIRTCHNL2_CAP_INTR_SW_INTR_WITH_INTENA feature is negotiated.
   - SW can use this option only when operation occurs when interrupt is disabled or when interrupt is in NO_INT_MODE.
   - When using this option SW must clear the GLINT.INTENA_MSK flag.
 * As an individual operation using GLINT_DYN_CTL.
-  - This option is supported only when VIRTCHNL2_CAP_INTR_SW_INTR_INDV feature is negotiated.
   - SW must not use this option when the interrupt is in NO_INT_MODE.
   - When using this option SW must set the GLINT.INTENA_MSK flag.
-
-When neither VIRTCHNL2_CAP_INTR_SW_INTR_INDV nor
-VIRTCHNL2_CAP_INTR_SW_INTR_WITH_INTENA are negotiated, dynamic rate
-change is not supported.
 
 ## Interrupt Initialization 
 
