@@ -6487,7 +6487,14 @@ Flow here is for first the driver to learn what Device capabilities are being gr
 7. A driver will do the Initialization of the Device PHC. Depending on the CPU complex trust level this capability may or may not be given to the driver instance by the Device Control. The opcode used for setting of the Device clock indirectly is VIRTCHNL2_OP_PTP_SET_DEVICE_CLK_TIME.   
 8. If the access is a direct access for setting the clock, then the Driver may have to adjust both the Device PHC clock as well as the Phy clock if the the Device PHC and Phy clock are not automatically synchornized. If done over mailbox the Device Control needs to do the same.  
 9. At this point the driver registers a PTP clock device with the SW stack for PTP runtime callbacks.
-10. A driver may also configure a separate dedicated mailbox (secondary mailbox) for doing the indirect access such as for Tx Timestamping, adjusting the Device PHC etc. The way the Device control indicates to the driver to use a dedicated secondary mailbox or not is again through the PTP capability negotiation data structures setting the flag (secondary_mbx) for driver to do the right setup. After the initial capability exchange over the default mailbox, if the Device Control suggests using a secondary mailbox, the driver sets up a secondary mailbox using the default mailbox and then switches to use secondary mailbox for any PTP related operations.
+10. A driver may also configure a separate dedicated mailbox(secondary mailbox) for doing the indirect access to enable features such as Tx Timestamping, adjusting the Device PHC etc. The CP indicates to the driver to use a dedicated secondary mailbox or not through the PTP capability negotiation data structure by setting the mbx_q_index field.  After the initial capability exchange over the default mailbox, if the CP suggests using a secondary mailbox, the driver sets up a secondary mailbox using the default mailbox and then switches to use secondary mailbox for any PTP related operations. If CP supports allocation of PF/VF secondary MBXs dedicated for PTP, mbx_q_index will hold a non-zero value. If mbx_q_index is non-zero, driver should follow these steps to allocate and use secondary MBX queue for PTP.
+    - Reserve one additional vector for the secondary mailbox from the global vectors alocated using ALLOC_VECTORS.
+    - Send ADD_QUEUES request to CP to allocate new PF/VF MBX TX and RX queues meant for PTP handling. The driver should pass mbx_q_index received in the PTP_GET_CAPS response as mbx_q_index and vport id as 0xffff.
+    - Send CONFIG_TX_QUEUES to configure the secondary mailbox TX queue returned in the ADD_QUEUES response.
+    - Send CONFIG_RX_QUEUES to configure the secondary mailbox RX queue returned in the ADD_QUEUES response.
+    - Send ENABLE_QUEUES to enable the secondary mailbox TX and RX queues.
+    - Send MAP_QUEUE_VECTOR to map the secondary mailbox RX queue with the vector reserved for the secondary mailbox.
+    - All the Runtime flows for PTP are sent and received over this secondary mailbox.
 
 #### Runtime Flows
 Runtime flows are triggered by the stack and are dependent on what the system and the CPU Complex is being used for. If a system and the CPU Complex is used for Tenant hosting it may only have the Cross timestamping runtime flow. Whereas if a system and the CPU complex attached to the Device is used for Infrastructure SW hosting then it may be used for adjusting the Device PHC directly or indirectly.  
@@ -9523,6 +9530,7 @@ VIRTCHNL2_CHECK_STRUCT_VAR_LEN(112, virtchnl2_config_rx_queues, qinfo);
  * @num_tx_complq: Number of Tx completion queues
  * @num_rx_q:  Number of Rx queues
  * @num_rx_bufq:  Number of Rx buffer queues
+ * @mbx_q_index: Mailbox queue index for allocation
  * @pad: Padding for future extensions
  * @chunks: Chunks of contiguous queues
  *
@@ -9531,6 +9539,9 @@ VIRTCHNL2_CHECK_STRUCT_VAR_LEN(112, virtchnl2_config_rx_queues, qinfo);
  * structure is used to specify the number of each type of queues.
  * CP responds with the same structure with the actual number of queues assigned
  * followed by num_chunks of virtchnl2_queue_chunk structures.
+ * ADD_QUEUES is used to add mailbox queues when mbx_q_index is not zero. To add
+ * MBX queues, num_tx_q and num_rx_q should be set to 1, and num_tx_complq and
+ * num_rx_bufq should be 0.
  *
  * Associated with VIRTCHNL2_OP_ADD_QUEUES.
  */
@@ -9540,7 +9551,8 @@ struct virtchnl2_add_queues {
 	__le16 num_tx_complq;
 	__le16 num_rx_q;
 	__le16 num_rx_bufq;
-	u8 pad[4];
+	u8 mbx_q_index;
+	u8 pad[3];
 	struct virtchnl2_queue_reg_chunks chunks;
 };
 VIRTCHNL2_CHECK_STRUCT_VAR_LEN(56, virtchnl2_add_queues, chunks.chunks);
@@ -10480,8 +10492,8 @@ VIRTCHNL2_CHECK_STRUCT_VAR_LEN(32, virtchnl2_ptp_get_vport_tx_tstamp_caps,
  * @base_incval: The default timer frequency increment value
  * @peer_mbx_q_id: ID of the PTP Device Control daemon queue
  * @peer_id: Peer ID for PTP Device Control daemon
- * @secondary_mbx: Indicates to the driver that it should create a secondary
- *		   mailbox to inetract with control plane for PTP
+ * @mbx_q_index: Mailbox queue index reserved for PTP out of all MBX queues
+ *		 reserved for PF/VF to interact with CP
  * @pad: Padding for future extensions
  * @clk_offsets: Main timer and PHY registers offsets
  * @cross_time_offsets: Cross time registers offsets
@@ -10489,13 +10501,13 @@ VIRTCHNL2_CHECK_STRUCT_VAR_LEN(32, virtchnl2_ptp_get_vport_tx_tstamp_caps,
  *
  * PF/VF sends this message to negotiate PTP capabilities. CP updates bitmap
  * with supported features and fulfills appropriate structures.
- * If Device Control recommends primary MBX for PTP: secondary_mbx is set to false.
- * If Device control recommends secondary MBX for PTP: secondary_mbx is set to true.
- * Control plane has 2 MBX and the driver has 1 or 2 MBX, send_to_peer_driver
- * opcode must be be used to send a message when ptp_peer_mb_q_id is valid using 
- * ptp_peer_mb_q_id and ptp_peer_id.
- * If the Device does not require send_to peer_driver opcode: peer_mbx_q_id holds
- * invalid value (0xFFFF) and the driver can simply use send_to_pf opcode.
+ * If CP uses primary MBX for PTP: peer_mbx_q_id holds invalid value (0xFFFF).
+ * If CP supports allocation of PF/VF secondary MBX dedicated
+ * for PTP, mbx_q_index will hold a non-zero value. If mbx_q_index is
+ * non-zero, driver should allocate secondary MBX queue for PTP. Driver
+ * should send ADD_QUEUES command and pass PTP mbx_q_index as mbx_q_index
+ * and qtype VIRTCHNL2_QUEUE_TYPE_MBX_TX/RX to inform Control Daemon to
+ * allocate new PF/VF MBX queues meant for PTP handling.
  *
  * Associated with VIRTCHNL2_OP_PTP_GET_CAPS.
  */
@@ -10505,7 +10517,7 @@ struct virtchnl2_ptp_get_caps {
 	__le64 base_incval;
 	__le16 peer_mbx_q_id;
 	u8 peer_id;
-	u8 secondary_mbx;
+	u8 mbx_q_index;
 	u8 pad[4];
 
 	struct virtchnl2_ptp_clk_reg_offsets clk_offsets;
