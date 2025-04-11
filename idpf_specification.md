@@ -8536,11 +8536,8 @@ enum virtchnl2_op {
 	VIRTCHNL2_OP_FLOW_RULE_IDS_GET			        = 554,
 	VIRTCHNL2_OP_FLOW_RULE_BY_IDS_DEL		        = 555,
 
-#ifdef NOT_FOR_UPSTREAM
-	VIRTCHNL2_OP_GET_OEM_CAPS		                = 4999,
-#endif /* NOT_FOR_UPSTREAM */
 #ifndef EXTERNAL_RELEASE
-
+	VIRTCHNL2_OP_GET_OEM_CAPS		                = 4999,
 	/* All OEM specific opcodes start at higher offset. This will allow
 	 * OEMs to use the virtchannel header with old opcodes and their own
 	 * specific opcodes. All opcodes and
@@ -8746,29 +8743,12 @@ enum virtchnl2_flow_types {
 	VIRTCHNL2_FLOW_IPV6_AH_ESP	= BIT(13),
 };
 
-#ifdef NOT_FOR_UPSTREAM
-/**
- * VIRTCHNL2_OEM_CAPS
- * OEM capability flags
- * The chipset is detected at runtime, and the capability flags will be
- * selected according to this identification.
- */
-#define VIRTCHNL2_CAP_OEM_P2P			BIT(0)
-/* Other OEM specific caps */
-
 /* Underlying device type */
 enum virtchl2_device_type {
-	VIRTCHNL2_MEV_DEVICE			= 0,
-	VIRTCHNL2_MEV_TS_DEVICE			= 1,
+	VIRTCHNL2_UNSPECIFIED			= 0,
+	/* Value 1 - 4 are allocated to existing devices */
+    /* All other Device Type values are avaiable for allocation */
 };
-
-#endif /* NOT_FOR_UPSTREAM */
-#ifndef EXTERNAL_RELEASE
-/**
- * HLV CP/HMA returns device type as 0
- * INTEL CP/HMA returns device type as 1
- */
-#endif
 
 /**
  * enum virtchnl2_txq_sched_mode - Transmit Queue Scheduling Modes
@@ -8868,12 +8848,6 @@ enum virtchnl2_event_codes {
  * @VIRTCHNL2_QUEUE_TYPE_RX_BUFFER: RX buffer queue type
  * @VIRTCHNL2_QUEUE_TYPE_CONFIG_TX: Config TX queue type
  * @VIRTCHNL2_QUEUE_TYPE_CONFIG_RX: Config RX queue type
-#ifdef NOT_FOR_UPSTREAM
- * @VIRTCHNL2_QUEUE_TYPE_P2P_TX: P2P TX queue type
- * @VIRTCHNL2_QUEUE_TYPE_P2P_RX: P2P RX queue type
- * @VIRTCHNL2_QUEUE_TYPE_P2P_TX_COMPLETION: P2P TX completion queue type
- * @VIRTCHNL2_QUEUE_TYPE_P2P_RX_BUFFER: P2P RX buffer queue type
-#endif
  * @VIRTCHNL2_QUEUE_TYPE_MBX_TX: TX mailbox queue type
  * @VIRTCHNL2_QUEUE_TYPE_MBX_RX: RX mailbox queue type
  *
@@ -8889,14 +8863,7 @@ enum virtchnl2_queue_type {
 	VIRTCHNL2_QUEUE_TYPE_RX_BUFFER		= 3,
 	VIRTCHNL2_QUEUE_TYPE_CONFIG_TX		= 4,
 	VIRTCHNL2_QUEUE_TYPE_CONFIG_RX		= 5,
-#ifdef NOT_FOR_UPSTREAM
-	VIRTCHNL2_QUEUE_TYPE_P2P_TX		= 6,
-	VIRTCHNL2_QUEUE_TYPE_P2P_RX		= 7,
-	VIRTCHNL2_QUEUE_TYPE_P2P_TX_COMPLETION	= 8,
-	VIRTCHNL2_QUEUE_TYPE_P2P_RX_BUFFER	= 9,
-#else
 	/* Queue types 6, 7, 8, 9 are reserved */
-#endif /* NOT_FOR_UPSTREAM */
 	VIRTCHNL2_QUEUE_TYPE_MBX_TX		= 10,
 	VIRTCHNL2_QUEUE_TYPE_MBX_RX		= 11,
 };
@@ -8967,11 +8934,6 @@ enum virtchnl2_queue_group_type {
 	VIRTCHNL2_QUEUE_GROUP_MBX		= 2,
 	VIRTCHNL2_QUEUE_GROUP_CONFIG		= 3,
 };
-
-#ifdef NOT_FOR_UPSTREAM
-/* 0x100 and on is for OEM */
-#define VIRTCHNL2_QUEUE_GROUP_P2P		0x100
-#endif /* NOT_FOR_UPSTREAM */
 
 /* Protocol header type within a packet segment. A segment consists of one or
  * more protocol headers that make up a logical group of protocol headers. Each
@@ -9085,17 +9047,6 @@ struct virtchnl2_edt_caps {
 VIRTCHNL2_CHECK_STRUCT_LEN(16, virtchnl2_edt_caps);
 #endif /* VIRTCHNL2_EDT_SUPPORT */
 
-#ifdef NOT_FOR_UPSTREAM
-/**
- * struct virtchnl2_oem_caps - Get OEM capabilities
- * @oem_caps: See VIRTCHNL2_OEM_CAPS definitions
- */
-struct virtchnl2_oem_caps {
-	__le64 oem_caps;
-};
-VIRTCHNL2_CHECK_STRUCT_LEN(8, virtchnl2_oem_caps);
-#endif /* NOT_FOR_UPSTREAM */
-
 /**
  * struct virtchnl2_version_info - Version information
  * @major: Major version
@@ -9147,7 +9098,7 @@ VIRTCHNL2_CHECK_STRUCT_LEN(8, virtchnl2_version_info);
  * @max_adis: Max number of ADIs
  * @oem_cp_ver_major: CP major version number
  * @oem_cp_ver_minor: CP minor version number
- * @device_type: See enum virtchl2_device_type
+ * @device_type: A magic number used to indetify the Network device for debug only; should never be used for any logic check in the standard driver
  * @min_sso_packet_len: Min packet length supported by device for single
  *			segment offload
  * @max_hdr_buf_per_lso: Max number of header buffers that can be used for
@@ -9265,18 +9216,13 @@ VIRTCHNL2_CHECK_STRUCT_VAR_LEN(40, virtchnl2_queue_reg_chunks, chunks);
  * @VIRTCHNL2_VPORT_INLINE_FLOW_STEER_RXQ: Inline flow steering enabled
  * with explicit Rx queue action
  * @VIRTCHNL2_VPORT_SIDEBAND_FLOW_STEER: Sideband flow steering enabled
-#ifdef NOT_FOR_UPSTREAM
- * @VIRTCHNL2_VPORT_PORT2PORT_PORT: Port2port port flag
-#endif
  */
 enum virtchnl2_vport_flags {
 	VIRTCHNL2_VPORT_UPLINK_PORT		= BIT(0),
 	VIRTCHNL2_VPORT_INLINE_FLOW_STEER	= BIT(1),
 	VIRTCHNL2_VPORT_INLINE_FLOW_STEER_RXQ	= BIT(2),
 	VIRTCHNL2_VPORT_SIDEBAND_FLOW_STEER	= BIT(3),
-#ifdef NOT_FOR_UPSTREAM
-	VIRTCHNL2_VPORT_PORT2PORT_PORT		= BIT(15),
-#endif /* NOT_FOR_UPSTREAM */
+	/* BIT(4) is reserved */
 };
 
 #ifndef LINUX_SUPPORT
@@ -11046,10 +10992,6 @@ static inline const char *virtchnl2_op_str(__le32 v_opcode)
 		return "VIRTCHNL2_OP_FLOW_RULE_IDS_GET";
 	case VIRTCHNL2_OP_FLOW_RULE_CHECK:
 		return "VIRTCHNL2_OP_FLOW_RULE_CHECK";
-#ifdef NOT_FOR_UPSTREAM
-	case VIRTCHNL2_OP_GET_OEM_CAPS:
-		return "VIRTCHNL2_OP_GET_OEM_CAPS";
-#endif /* NOT_FOR_UPSTREAM */
 	default:
 		return "Unsupported (update virtchnl2.h)";
 	}
@@ -11336,11 +11278,6 @@ virtchnl2_vc_validate_vf_msg(struct virtchnl2_version_info *ver, u32 v_opcode,
 		valid_len = sizeof(struct virtchnl2_edt_caps);
 		break;
 #endif /* VIRTCHNL2_EDT_SUPPORT */
-#ifdef NOT_FOR_UPSTREAM
-	case VIRTCHNL2_OP_GET_OEM_CAPS:
-		valid_len = sizeof(struct virtchnl2_oem_caps);
-		break;
-#endif /* NOT_FOR_UPSTREAM */
 #ifdef VIRTCHNL2_IWARP
 	case VIRTCHNL2_OP_RDMA:
 		/* These messages are opaque to us and will be validated in
@@ -12721,7 +12658,7 @@ struct idc_rdma_vport_auxiliary_drv {
 
 - Driver Configuration and Runtime flow Examples of OEM Capability:
   1.  Push Queue configuration
-  **Push_Queue:** Upon learning the port-to-port availability and the device type, the driver may request Control plane to add device specific sequence that may request additional resources that are necessary for the device to setup the Push queue functionality.
+  **Push_Queue:** Upon learning the push queue availability and the device type, the driver may request Control plane to add device specific sequence that may request additional resources that are necessary for the device to setup the Push queue functionality.
   
 
 - Device and Control Plane Behavioral Model
