@@ -6508,9 +6508,9 @@ If a system is used for a Grandmaster Independent clock for the PTP network Doma
 ##### Tx Timestamping Flow (given to drivers that are trusted (not tenant) drivers.)
 Note: This Tx timestamping capability is for a 2-step timestamping device where the Tx timestamp is returned to the SW driver and not copied in the packet. In a 1-step timestamping device, a new capability should be defined and added to PTP subcapabilities, in which case the device can also copy the Tx timestamp into the outgoing packet and not just return the value to the SW driver.  
 1. In this case if the Device control plane grants the direct or indirect access for Tx timestamp as part of PTP sub capabilities negotiation, then driver must do some addition calls to Device Control for uplink vports using VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP_CAPS opcode .  
-2. The driver learns about the number of latches, the latch indices and the nansecond bits in timestamp field per Uplink vport as part of the above opcode response. If the access granted is direct access, the driver also learns about the register offsets of the latches in the PCIe MMIO space.  
+2. The driver learns about the number of latches, the latch indices and the nansecond bits in timestamp field per Uplink vport as part of the above opcode response. If the access granted is direct access, the driver also learns about the register offsets of the latches as well as readiness indicator map address (the map is a 64-bit register indicating if the Tx timestamp has been updated by HW after Tx) in the PCIe MMIO space.  
 3. When a packet comes down with a PTP HW Tx timestamping request as part of packet meta data from the stack then the driver must enable the Tx timestamping bits in the Tx descriptor and specify one of the free/unused latch ID per uplink vport to be used for timestamping of this Tx packet by the HW.    
-4. At some point when the packet completion for both buffer and the Tx descriptor is received, then the driver can read the Tx timestamp directly or indirectly over the mailbox. Note: Here the packet buffer completion is assumed to happen very close to packet scheduling on the wire by the Device with no buffering of the packet after that point in the Device. The opcode used for indirect Tx timestamping reading is VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP.    
+4. At some point when the packet completion for both buffer and the Tx descriptor is received, then the driver can read the Tx timestamp directly (after checking it's readiness using the map above) or indirectly over the mailbox. Note: Here the packet buffer completion is assumed to happen very close to packet scheduling on the wire by the Device with no buffering of the packet after that point in the Device. The opcode used for indirect Tx timestamping reading is VIRTCHNL2_OP_PTP_GET_VPORT_TX_TSTAMP.    
 5. When reading the timestamp over mailbox, occasionally the driver can combine the request to get the Device PHC time as well along with the Tx timestamp instead of requesting just the timestamp by setting  get_devtime_with_txtstmp flag. This is just an optimization to avoid having two mailbox request and cause jitter.  
 6. The driver can now return the latch ID to the per Uplink vport free pool, to be used for another PTP timestamping packet.  
 7. The driver reports the Tx timestamp along with Device PHC time extension to make it a full 64 bit value to the SW stack as part of packet completion flow.    
@@ -10410,7 +10410,8 @@ VIRTCHNL2_CHECK_STRUCT_LEN(16, virtchnl2_ptp_tx_tstamp_latch_caps);
  * @num_latches: Total number of latches
  * @tstamp_ns_lo_bit: First bit for nanosecond part of the timestamp
  * @tstamp_ns_hi_bit: Last bit for nanosecond part of the timestamp
- * @pad: Padding for future tstamp granularity extensions
+ * @readiness_offset_l: Tx tstamp readiness bitmap low register offset
+ * @readiness_offset_h: Tx tstamp readiness bitmap high register offset
  * @tstamp_latches: Capabilities of Tx timestamp entries
  *
  * PF/VF sends this message to negotiate the Tx timestamp latches for each
@@ -10423,7 +10424,8 @@ struct virtchnl2_ptp_get_vport_tx_tstamp_caps {
 	__le16 num_latches;
 	u8 tstamp_ns_lo_bit;
 	u8 tstamp_ns_hi_bit;
-	u8 pad[8];
+	__le32 readiness_offset_l;
+	__le32 readiness_offset_h;
 
 	struct virtchnl2_ptp_tx_tstamp_latch_caps tstamp_latches[STRUCT_VAR_LEN];
 };
