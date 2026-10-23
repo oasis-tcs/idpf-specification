@@ -6821,284 +6821,248 @@ layer</th>
 </tr>
 <tr class="odd">
 <th>24</th>
-<th>IPV6_EH_HOP</th>
-<th></th>
-<th>IPv6 Hop-by-Hop Extension Header</th>
-</tr>
-<tr class="header">
-<th>25</th>
-<th>IPV6_EH_ROUTE</th>
-<th></th>
-<th>IPv6 Routing Extension Header</th>
-</tr>
-<tr class="odd">
-<th>26</th>
-<th>IPV6_EH_DST</th>
-<th></th>
-<th>IPv6 Destination Option Extension Header</th>
-</tr>
-<tr class="header">
-<th>27</th>
 <th>UDP</th>
 <th>YES</th>
 <th>UDP header</th>
 </tr>
 <tr class="odd">
-<th>28</th>
+<th>25</th>
 <th>TCP</th>
 <th>YES</th>
 <th>TCP Header</th>
 </tr>
 <tr class="header">
-<th>29</th>
+<th>26</th>
 <th>SCTP</th>
 <th>YES</th>
 <th>SCTP header</th>
 </tr>
 <tr class="odd">
-<th>30</th>
+<th>27</th>
 <th>ICMP</th>
 <th>YES</th>
 <th>ICMP header</th>
 </tr>
 <tr class="header">
-<th>31</th>
+<th>28</th>
 <th>ICMPV6</th>
 <th>YES</th>
 <th>ICMPv6 Header</th>
 </tr>
 <tr class="odd">
-<th>32</th>
+<th>29</th>
 <th>IGMP</th>
 <th></th>
 <th>IGMP Header</th>
 </tr>
 <tr class="header">
-<th>33</th>
+<th>30</th>
 <th>AH</th>
 <th></th>
 <th>AH Header</th>
 </tr>
 <tr class="odd">
-<th>34</th>
+<th>31</th>
 <th>ESP</th>
 <th></th>
 <th>ESP Header</th>
 </tr>
 <tr class="header">
-<th>35</th>
+<th>32</th>
 <th>IKE</th>
 <th></th>
 <th>ESP IKE Header</th>
 </tr>
 <tr class="odd">
-<th>36</th>
+<th>33</th>
 <th>NATT_KEEP</th>
 <th></th>
 <th>NAT-T Keep Alive</th>
 </tr>
 <tr class="header">
-<th>37</th>
-<th>PSP</th>
-<th></th>
-<th>PSP Security Protocol</th>
-</tr>
-<tr class="odd">
-<th>38</th>
+<th>34</th>
 <th>PAY</th>
 <th>YES</th>
 <th>Payloads of all types. This protocol ID shall be the last entry for
 all packet types</th>
 </tr>
 <tr class="header">
-<th>39</th>
+<th>35</th>
 <th>L2TPV2</th>
 <th></th>
 <th>L2TPv2 Header</th>
 </tr>
 <tr class="odd">
-<th>40</th>
+<th>36</th>
 <th>L2TPV2_CONTROL</th>
 <th></th>
 <th>L2TPv2 Control Header</th>
 </tr>
 <tr class="header">
-<th>41</th>
+<th>37</th>
 <th>L2TPV3</th>
 <th></th>
 <th>L2TPv3 Header</th>
 </tr>
 <tr class="odd">
-<th>42</th>
+<th>38</th>
 <th>GTP</th>
 <th></th>
 <th>Generic GTP Header, no GTPC/GTPU distinction is given</th>
 </tr>
 <tr class="header">
-<th>43</th>
+<th>39</th>
 <th>GTP_EH</th>
 <th></th>
 <th>Generic GTP Extension Header</th>
 </tr>
 <tr class="odd">
-<th>44</th>
+<th>40</th>
 <th>GTPCV2</th>
 <th></th>
 <th>GTPCv2, TEID not present</th>
 </tr>
 <tr class="header">
-<th>45</th>
+<th>41</th>
 <th>GTPC_TEID</th>
 <th></th>
 <th>GTPC v1 or V2 with TEID present</th>
 </tr>
 <tr class="odd">
-<th>46</th>
+<th>42</th>
 <th>GTPU</th>
 <th></th>
 <th>Generic GTP-U Header</th>
 </tr>
 <tr class="header">
-<th>47</th>
+<th>43</th>
 <th>GTPU_UL</th>
 <th></th>
 <th>GTP-U Header, Uplink direction</th>
 </tr>
 <tr class="odd">
-<th>48</th>
+<th>44</th>
 <th>GTPU_DL</th>
 <th></th>
 <th>GTP-U Header, Downlink direction</th>
 </tr>
 <tr class="header">
-<th>49</th>
+<th>45</th>
 <th>ECPRI</th>
 <th></th>
 <th>eCPRI Header</th>
 </tr>
 <tr class="odd">
-<th>50</th>
+<th>46</th>
 <th>VRRP</th>
 <th></th>
 <th>VRRP Header</th>
 </tr>
 <tr class="header">
-<th>51</th>
+<th>47</th>
 <th>OSPF</th>
 <th></th>
 <th>OSPF Header</th>
 </tr>
 <tr class="odd">
-<th>52</th>
+<th>48</th>
 <th>TUN</th>
 <th>YES</th>
 <th>Generic Tunnel Header, no tunnel type provided</th>
 </tr>
 <tr class="header">
-<th>53</th>
+<th>49</th>
 <th>GRE</th>
 <th></th>
 <th>Generic GRE Header</th>
 </tr>
 <tr class="odd">
-<th>54</th>
+<th>50</th>
 <th>NVGRE</th>
 <th></th>
 <th>GRE Header for NVGRE</th>
 </tr>
 <tr class="header">
-<th>55</th>
+<th>51</th>
 <th>VXLAN</th>
 <th></th>
 <th>VXLAN Header</th>
 </tr>
 <tr class="odd">
-<th>56</th>
+<th>52</th>
 <th>VXLAN_GPE</th>
 <th></th>
 <th>VXLAN-GPE Header</th>
 </tr>
 <tr class="header">
-<th>57</th>
+<th>53</th>
 <th>GENEVE</th>
 <th></th>
 <th>GENEVE Header</th>
 </tr>
 <tr class="odd">
-<th>58</th>
+<th>54</th>
 <th>NSH</th>
 <th></th>
 <th>NSH Header, no MD-type provided</th>
 </tr>
 <tr class="header">
-<th>59</th>
-<th>INT</th>
-<th></th>
-<th>Generic In-band Network Telemetry Header</th>
-</tr>
-<tr class="odd">
-<th>60</th>
-<th>IFA</th>
-<th></th>
-<th>In-band Flow Analyzer Header</th>
-</tr>
-<tr class="header">
-<th>61</th>
-<th>IFA_MD</th>
-<th></th>
-<th>In-band FLow Analyzer Metadata Header</th>
-</tr>
-<tr class="odd">
-<th>62</th>
+<th>55</th>
 <th>QUIC</th>
 <th></th>
-<th>QUIC Header</th>
+<th>Quick UDP Internet Connections</th>
 </tr>
-<tr class="header">
-<th>63</th>
+<tr class="odd">
+<th>56</th>
 <th>PFCP</th>
 <th></th>
 <th>Generic PFCP Header, no message type provided</th>
 </tr>
-<tr class="odd">
-<th>64</th>
+<tr class="header">
+<th>57</th>
 <th>PFCP_NODE</th>
 <th></th>
 <th>PFCP Header, Node message type</th>
 </tr>
 <tr class="header">
-<th>65</th>
+<th>58</th>
 <th>PFCP_SESSION</th>
 <th></th>
 <th>PFCP Header, Session message type</th>
 </tr>
 <tr class="odd">
-<th>66</th>
+<th>59</th>
 <th>RTP</th>
 <th></th>
 <th>Real-time Transport Protocol Header</th>
 </tr>
 <tr class="header">
-<th>67</th>
+<th>60</th>
 <th>ROCE</th>
 <th></th>
 <th>RDMA over Converged Ethernet Protocol Header, version is not
 specified</th>
 </tr>
 <tr class="odd">
-<th>68</th>
+<th>61</th>
 <th>ROCEV1</th>
 <th></th>
 <th>RDMA over Converged Ethernet Protocol Header, v1 or v1.5</th>
 </tr>
 <tr class="header">
-<th>69</th>
+<th>62</th>
 <th>ROCEV2</th>
 <th></th>
 <th>RDMA over Converged Ethernet Protocol Header, v2</th>
 </tr>
+<tr class="header">
+<th>63</th>
+<th>PSP</th>
+<th></th>
+<th>Paddywhack Security Protocol</th>
+</tr>
 <tr class="odd">
-<th>70-32767</th>
+<th>64-32767</th>
 <th>Reserved</th>
 <th></th>
 <th>Reserved for future</th>
@@ -9021,6 +8985,7 @@ enum virtchnl2_proto_hdr_type {
 	VIRTCHNL2_PROTO_HDR_ROCE		= 60,
 	VIRTCHNL2_PROTO_HDR_ROCEV1		= 61,
 	VIRTCHNL2_PROTO_HDR_ROCEV2		= 62,
+	VIRTCHNL2_PROTO_HDR_PSP         = 63,
 	/* Protocol ids up to 32767 are reserved */
 	/* 32768 - 65534 are used for user defined protocol ids */
 	/* VIRTCHNL2_PROTO_HDR_NO_PROTO is a mandatory protocol id */
